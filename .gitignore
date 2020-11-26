@@ -32,3 +32,6 @@ tmp/
 
 config.yml
 barnbridge-backend
+.dump/
+.volumes
+/dashboard/web/assets/css/tailwind.min.css

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/gin-gonic/gin"
 	formatter "github.com/kwix/logrus-module-formatter"
 	"github.com/sirupsen/logrus"
@@ -11,19 +12,19 @@ import (
 
 func initLogging() {
 	logging := viper.GetString("logging")
-	
+
 	if verbose {
 		logging = "*=debug"
 	}
-	
+
 	if vverbose {
 		logging = "*=trace"
 	}
-	
+
 	if logging == "" {
 		logging = "*=info"
 	}
-	
+
 	gin.SetMode(gin.DebugMode)
 
 	modules := formatter.NewModulesMap(logging)
@@ -42,9 +43,9 @@ func initLogging() {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	logrus.SetFormatter(f)
-	
+
 	log.Debug("Debug mode")
 }
 
@@ -53,8 +54,8 @@ func addDBFlags(cmd *cobra.Command) {
 	cmd.Flags().String("db.host", "localhost", "Database host")
 	cmd.Flags().String("db.port", "5432", "Database port")
 	cmd.Flags().String("db.sslmode", "disable", "Database sslmode")
-	cmd.Flags().String("db.dbname", "database", "Database name")
-	cmd.Flags().String("db.user", "user", "Database user (also allowed via PG_USER env)")
+	cmd.Flags().String("db.dbname", "coriolis", "Database name")
+	cmd.Flags().String("db.user", "", "Database user (also allowed via PG_USER env)")
 }
 
 func bindViperToDBFlags(cmd *cobra.Command) {
@@ -66,6 +67,16 @@ func bindViperToDBFlags(cmd *cobra.Command) {
 	viper.BindPFlag("db.user", cmd.Flag("db.user"))
 }
 
+func addRedisFlags(cmd *cobra.Command) {
+	cmd.Flags().String("redis.server", "localhost:6379", "Redis server URL")
+	cmd.Flags().String("redis.list", "todo", "The name of the list to be used for task management")
+}
+
+func bindViperToRedisFlags(cmd *cobra.Command) {
+	viper.BindPFlag("redis.server", cmd.Flag("redis.server"))
+	viper.BindPFlag("redis.list", cmd.Flag("redis.list"))
+}
+
 func buildDBConnectionString() {
 	if viper.GetString("db.connection-string") == "" {
 		var user, pass string
@@ -74,9 +85,9 @@ func buildDBConnectionString() {
 		} else {
 			user = viper.GetString("db.user")
 		}
-		
+
 		pass = viper.GetString("PG_PASSWORD")
-		
+
 		p := fmt.Sprintf("host=%s port=%s sslmode=%s dbname=%s user=%s password=%s", viper.GetString("db.host"), viper.GetString("db.port"), viper.GetString("db.sslmode"), viper.GetString("db.dbname"), user, pass)
 		viper.Set("db.connection-string", p)
 	}
