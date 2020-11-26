@@ -1,14 +1,5 @@
-.vscode
-
-Dockerfile
-.dockerignore
-
 .git
-.gitignore
-
-# .gitignore stuff
-
-coverage
-.nyc_output
 .idea
-.env
+.dockerignore
+.volumes
+Dockerfile

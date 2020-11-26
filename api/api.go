@@ -1,9 +1,9 @@
 package api
 
 import (
+	"github.com/barnbridge/barnbridge-backend/core"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
-	"github.com/barnbridge/barnbridge-backend/db"
 	"github.com/sirupsen/logrus"
 )
 
@@ -13,24 +13,26 @@ type Config struct {
 	Port           string
 	DevCorsEnabled bool
 	DevCorsHost    string
+	EthClientURL   string
 }
 
 type API struct {
 	config Config
 	engine *gin.Engine
-	db     *db.DB
+
+	core *core.Core
 }
 
-func New(config Config, db *db.DB) *API {
+func New(core *core.Core, config Config) *API {
 	return &API{
 		config: config,
-		db:     db,
+		core:   core,
 	}
 }
 
 func (a *API) Run() {
 	a.engine = gin.Default()
-	
+
 	if a.config.DevCorsEnabled {
 		a.engine.Use(cors.New(cors.Config{
 			AllowOrigins:     []string{a.config.DevCorsHost},
@@ -40,9 +42,9 @@ func (a *API) Run() {
 			AllowCredentials: true,
 		}))
 	}
-	
+
 	a.setRoutes()
-	
+
 	err := a.engine.Run(":" + a.config.Port)
 	if err != nil {
 		log.Fatal(err)

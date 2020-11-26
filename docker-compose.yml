@@ -1,0 +1,33 @@
+version: '3.7'
+services:
+  redis:
+    container_name: barnbridge-backend-redis
+    image: redis:5.0.5-alpine
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - .volumes/redis:/data
+  postgres:
+    container_name: barnbridge-backend-postgres
+    image: postgres:11.5-alpine
+    restart: always
+    environment:
+      - POSTGRES_USER=barnbridge-backend
+      - POSTGRES_DB=barnbridge-backend
+      - POSTGRES_PASSWORD=password
+    volumes:
+      - .volumes/postgresql:/var/lib/postgresql/data
+  barnbridge-backend:
+    container_name: barnbridge-backend
+    image: barnbridge/barnbridge-backend:latest
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+    ports:
+      - 127.0.0.1:3001:3001
+      - 127.0.0.1:3000:3000
+    environment:
+      - PG_PASSWORD=password
+    volumes:
+      - .volumes/barnbridge-backend:/config
