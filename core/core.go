@@ -29,6 +29,8 @@ type Core struct {
 	scraper     *scraper.Scraper
 	db          *sql.DB
 
+	abis map[string][]byte
+
 	stopMu sync.Mutex
 }
 
@@ -92,14 +94,25 @@ func New(config Config) *Core {
 
 	log.Info("connected to postgres successfuly")
 
-	return &Core{
+	c := Core{
 		config:      config,
 		metrics:     m,
 		bbtracker:   bbtracker,
 		taskmanager: tm,
 		scraper:     s,
 		db:          db,
+		abis:        make(map[string][]byte),
 	}
+
+	log.Info("loading ABIs from contracts by given path")
+
+	err = c.loadABIs()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Info("done getting ABIs")
+
+	return &c
 }
 
 func (c *Core) Run() {

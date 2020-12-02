@@ -61,6 +61,7 @@ var runCmd = &cobra.Command{
 				Automigrate: viper.GetBool("feature.automigrate.enabled"),
 				Uncles:      viper.GetBool("feature.uncles.enabled"),
 			},
+			AbiPath: viper.GetString("abi-path"),
 		})
 		c.Run()
 
@@ -136,4 +137,8 @@ func init() {
 
 	runCmd.Flags().Bool("dashboard.config-management.enabled", true, "Enable/disable the config management option from dashboard")
 	viper.BindPFlag("dashboard.config-management.enabled", runCmd.Flag("dashboard.config-management.enabled"))
+
+	//abi
+	runCmd.Flags().String("abi-path", "./abis", "Path of directory from which to read contract ABIs")
+	viper.BindPFlag("abi-path", runCmd.Flag("abi-path"))
 }

@@ -24,4 +24,5 @@ type Config struct {
 	Scraper                  scraper.Config
 	PostgresConnectionString string
 	Features                 Features
+	AbiPath                  string
 }
