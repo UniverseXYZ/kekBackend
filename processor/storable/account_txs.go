@@ -5,6 +5,8 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/barnbridge/barnbridge-backend/utils"
+
 	"github.com/lib/pq"
 
 	"github.com/alethio/web3-go/types"
@@ -112,15 +114,15 @@ func (atg *AccountTxsGroup) buildStorableAccountTx(tx types.Transaction, txIndex
 	at := &AccountTx{}
 	at.IncludedInBlock = atg.blockNumber
 	at.TxIndex = txIndex
-	at.TxHash = Trim0x(tx.Hash)
+	at.TxHash = utils.Trim0x(tx.Hash)
 	at.Out = out
 
 	if out {
-		at.Address = Trim0x(tx.From)
-		at.Counterparty = Trim0x(tx.To)
+		at.Address = utils.Trim0x(tx.From)
+		at.Counterparty = utils.Trim0x(tx.To)
 	} else {
-		at.Address = Trim0x(tx.To)
-		at.Counterparty = Trim0x(tx.From)
+		at.Address = utils.Trim0x(tx.To)
+		at.Counterparty = utils.Trim0x(tx.From)
 	}
 
 	return at, nil

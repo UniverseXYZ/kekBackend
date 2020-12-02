@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/barnbridge/barnbridge-backend/api/types"
-	"github.com/barnbridge/barnbridge-backend/data/storable"
+	types2 "github.com/barnbridge/barnbridge-backend/types"
 )
 
 func (a *API) getBlockTxs(number int64) ([]types.Tx, error) {
@@ -20,8 +20,8 @@ func (a *API) getBlockTxs(number int64) ([]types.Tx, error) {
 			txIndex  int32
 			txHash   string
 			value    string
-			from     storable.ByteArray
-			to       storable.ByteArray
+			from     types2.ByteArray
+			to       types2.ByteArray
 			gasLimit string
 			gasUsed  string
 			gasPrice string

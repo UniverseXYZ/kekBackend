@@ -2,6 +2,7 @@ package core
 
 import (
 	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
+	"github.com/barnbridge/barnbridge-backend/processor"
 	"github.com/barnbridge/barnbridge-backend/scraper"
 	"github.com/barnbridge/barnbridge-backend/taskmanager"
 )
@@ -25,4 +26,5 @@ type Config struct {
 	PostgresConnectionString string
 	Features                 Features
 	AbiPath                  string
+	Processor                processor.Config
 }

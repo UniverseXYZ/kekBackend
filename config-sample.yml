@@ -86,3 +86,8 @@ redis:
   # The name of the redis list the scraper will use for task management (default: "todo")
   list: "todo"
 
+abi-path: "./abis"
+
+storable:
+  bond:
+    address: "0x0391D2021f89DC339F60Fff84546EA23E337750f"

@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	types2 "github.com/barnbridge/barnbridge-backend/types"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
+
 	"github.com/lib/pq"
 
 	"github.com/sirupsen/logrus"
@@ -19,21 +23,21 @@ type Block struct {
 	Number               int64
 	BlockHash            string
 	ParentBlockHash      string
-	BlockCreationTime    DatetimeToJSONUnix
+	BlockCreationTime    types2.DatetimeToJSONUnix
 	BlockGasLimit        string
 	BlockGasUsed         string
 	BlockDifficulty      string
 	TotalBlockDifficulty string
-	BlockExtraData       ByteArray
-	BlockMixHash         ByteArray
-	BlockNonce           ByteArray
+	BlockExtraData       types2.ByteArray
+	BlockMixHash         types2.ByteArray
+	BlockNonce           types2.ByteArray
 	BlockSize            int64
-	BlockLogsBloom       ByteArray
-	IncludesUncle        JSONStringArray
-	HasBeneficiary       ByteArray
-	HasReceiptsTrie      ByteArray
-	HasTxTrie            ByteArray
-	Sha3Uncles           ByteArray
+	BlockLogsBloom       types2.ByteArray
+	IncludesUncle        types2.JSONStringArray
+	HasBeneficiary       types2.ByteArray
+	HasReceiptsTrie      types2.ByteArray
+	HasTxTrie            types2.ByteArray
+	Sha3Uncles           types2.ByteArray
 	NumberOfUncles       int32
 	NumberOfTxs          int32
 }
@@ -84,17 +88,17 @@ func (sb *Block) enhance() error {
 		b.Miner = b.Author
 	}
 
-	sb.BlockHash = Trim0x(b.Hash)
-	sb.ParentBlockHash = Trim0x(b.ParentHash)
-	sb.BlockExtraData = ByteArray(Trim0x(b.ExtraData))
-	sb.BlockMixHash = ByteArray(Trim0x(b.MixHash))
-	sb.BlockNonce = ByteArray(Trim0x(b.Nonce))
-	sb.BlockLogsBloom = ByteArray(Trim0x(b.LogsBloom))
-	sb.IncludesUncle = JSONStringArray(b.Uncles)
-	sb.HasBeneficiary = ByteArray(Trim0x(b.Miner))
-	sb.HasReceiptsTrie = ByteArray(Trim0x(b.ReceiptsRoot))
-	sb.HasTxTrie = ByteArray(Trim0x(b.TransactionsRoot))
-	sb.Sha3Uncles = ByteArray(Trim0x(b.Sha3Uncles))
+	sb.BlockHash = utils.Trim0x(b.Hash)
+	sb.ParentBlockHash = utils.Trim0x(b.ParentHash)
+	sb.BlockExtraData = types2.ByteArray(utils.Trim0x(b.ExtraData))
+	sb.BlockMixHash = types2.ByteArray(utils.Trim0x(b.MixHash))
+	sb.BlockNonce = types2.ByteArray(utils.Trim0x(b.Nonce))
+	sb.BlockLogsBloom = types2.ByteArray(utils.Trim0x(b.LogsBloom))
+	sb.IncludesUncle = types2.JSONStringArray(b.Uncles)
+	sb.HasBeneficiary = types2.ByteArray(utils.Trim0x(b.Miner))
+	sb.HasReceiptsTrie = types2.ByteArray(utils.Trim0x(b.ReceiptsRoot))
+	sb.HasTxTrie = types2.ByteArray(utils.Trim0x(b.TransactionsRoot))
+	sb.Sha3Uncles = types2.ByteArray(utils.Trim0x(b.Sha3Uncles))
 
 	// -- ints
 	number, err := strconv.ParseInt(b.Number, 0, 64)
@@ -112,28 +116,28 @@ func (sb *Block) enhance() error {
 	sb.BlockSize = size
 
 	// --hexes
-	gasLimit, err := HexStrToBigIntStr(b.GasLimit)
+	gasLimit, err := utils.HexStrToBigIntStr(b.GasLimit)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	sb.BlockGasLimit = gasLimit
 
-	gasUsed, err := HexStrToBigIntStr(b.GasUsed)
+	gasUsed, err := utils.HexStrToBigIntStr(b.GasUsed)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	sb.BlockGasUsed = gasUsed
 
-	difficulty, err := HexStrToBigIntStr(b.Difficulty)
+	difficulty, err := utils.HexStrToBigIntStr(b.Difficulty)
 	if err != nil {
 		log.Error(err)
 		return err
 	}
 	sb.BlockDifficulty = difficulty
 
-	totalDifficulty, err := HexStrToBigIntStr(b.TotalDifficulty)
+	totalDifficulty, err := utils.HexStrToBigIntStr(b.TotalDifficulty)
 	if err != nil {
 		log.Error(err)
 		return err
@@ -146,7 +150,7 @@ func (sb *Block) enhance() error {
 		log.Error(err)
 		return err
 	}
-	sb.BlockCreationTime = DatetimeToJSONUnix(time.Unix(timestamp, 0))
+	sb.BlockCreationTime = types2.DatetimeToJSONUnix(time.Unix(timestamp, 0))
 
 	// -- computed
 	sb.NumberOfTxs = int32(len(b.Transactions))

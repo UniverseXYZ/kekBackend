@@ -1,15 +1,15 @@
-package data
+package processor
 
 import (
 	"database/sql"
 	"strconv"
 
-	"github.com/barnbridge/barnbridge-backend/data/storable"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 // extractBlockNumber returns the block number as int64 by extracting it from the raw data
-func (fb *FullBlock) extractBlockNumber() (int64, error) {
-	number, err := strconv.ParseInt(fb.Block.Number, 0, 64)
+func (fb *Processor) extractBlockNumber() (int64, error) {
+	number, err := strconv.ParseInt(fb.Raw.Block.Number, 0, 64)
 	if err != nil {
 		log.Error(err)
 		return 0, err
@@ -19,12 +19,12 @@ func (fb *FullBlock) extractBlockNumber() (int64, error) {
 }
 
 // extractBlockHash returns the block hash as string by extracting it from the raw data
-func (fb *FullBlock) extractBlockHash() string {
-	return storable.Trim0x(fb.Block.Hash)
+func (fb *Processor) extractBlockHash() string {
+	return utils.Trim0x(fb.Raw.Block.Hash)
 }
 
 // checkBlockExists verifies if the current block matches any other block in the database by hash
-func (fb *FullBlock) checkBlockExists(db *sql.DB) (bool, error) {
+func (fb *Processor) checkBlockExists(db *sql.DB) (bool, error) {
 	hash := fb.extractBlockHash()
 
 	var count int
@@ -44,7 +44,7 @@ func (fb *FullBlock) checkBlockExists(db *sql.DB) (bool, error) {
 // checkBlockReorged verifies if the current block matches any block in the database on number
 // this is meant to be used in order to detect if the database contains a blocks with the same number
 // but different hash if the checkBlockExists function returns false
-func (fb *FullBlock) checkBlockReorged(db *sql.DB) (bool, error) {
+func (fb *Processor) checkBlockReorged(db *sql.DB) (bool, error) {
 	number, err := fb.extractBlockNumber()
 	if err != nil {
 		return false, err

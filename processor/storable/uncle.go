@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	types2 "github.com/barnbridge/barnbridge-backend/types"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
+
 	"github.com/lib/pq"
 
 	"github.com/alethio/web3-go/types"
@@ -23,16 +27,16 @@ type Uncle struct {
 	BlockHash         string
 	IncludedInBlock   int64
 	Number            int64
-	BlockCreationTime DatetimeToJSONUnix
+	BlockCreationTime types2.DatetimeToJSONUnix
 	UncleIndex        int32
 	BlockGasLimit     string
 	BlockGasUsed      string
-	HasBeneficiary    ByteArray
+	HasBeneficiary    types2.ByteArray
 	BlockDifficulty   string
-	BlockExtraData    ByteArray
-	BlockMixHash      ByteArray
-	BlockNonce        ByteArray
-	Sha3Uncles        ByteArray
+	BlockExtraData    types2.ByteArray
+	BlockMixHash      types2.ByteArray
+	BlockNonce        types2.ByteArray
+	Sha3Uncles        types2.ByteArray
 }
 
 func NewStorableUncles(block types.Block, uncles []types.Block) *UnclesGroup {
@@ -110,12 +114,12 @@ func (ug *UnclesGroup) buildStorableUncle(uncle types.Block, index int32) (*Uncl
 	}
 
 	// -- raw
-	u.BlockHash = Trim0x(uncle.Hash)
-	u.HasBeneficiary = ByteArray(Trim0x(uncle.Miner))
-	u.BlockExtraData = ByteArray(Trim0x(uncle.ExtraData))
-	u.BlockMixHash = ByteArray(Trim0x(uncle.MixHash))
-	u.BlockNonce = ByteArray(Trim0x(uncle.Nonce))
-	u.Sha3Uncles = ByteArray(Trim0x(uncle.Sha3Uncles))
+	u.BlockHash = utils.Trim0x(uncle.Hash)
+	u.HasBeneficiary = types2.ByteArray(utils.Trim0x(uncle.Miner))
+	u.BlockExtraData = types2.ByteArray(utils.Trim0x(uncle.ExtraData))
+	u.BlockMixHash = types2.ByteArray(utils.Trim0x(uncle.MixHash))
+	u.BlockNonce = types2.ByteArray(utils.Trim0x(uncle.Nonce))
+	u.Sha3Uncles = types2.ByteArray(utils.Trim0x(uncle.Sha3Uncles))
 
 	// -- int64
 	number, err := strconv.ParseInt(uncle.Number, 0, 64)
@@ -126,21 +130,21 @@ func (ug *UnclesGroup) buildStorableUncle(uncle types.Block, index int32) (*Uncl
 	u.Number = number
 
 	// -- hexes
-	gasLimit, err := HexStrToBigIntStr(uncle.GasLimit)
+	gasLimit, err := utils.HexStrToBigIntStr(uncle.GasLimit)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	u.BlockGasLimit = gasLimit
 
-	gasUsed, err := HexStrToBigIntStr(uncle.GasUsed)
+	gasUsed, err := utils.HexStrToBigIntStr(uncle.GasUsed)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	u.BlockGasUsed = gasUsed
 
-	difficulty, err := HexStrToBigIntStr(uncle.Difficulty)
+	difficulty, err := utils.HexStrToBigIntStr(uncle.Difficulty)
 	if err != nil {
 		log.Error(err)
 		return nil, err
@@ -153,7 +157,7 @@ func (ug *UnclesGroup) buildStorableUncle(uncle types.Block, index int32) (*Uncl
 		log.Error(err)
 		return nil, err
 	}
-	u.BlockCreationTime = DatetimeToJSONUnix(time.Unix(timestamp, 0))
+	u.BlockCreationTime = types2.DatetimeToJSONUnix(time.Unix(timestamp, 0))
 
 	return u, nil
 }

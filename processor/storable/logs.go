@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	types2 "github.com/barnbridge/barnbridge-backend/types"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
+
 	"github.com/lib/pq"
 
 	"github.com/alethio/web3-go/types"
@@ -22,7 +26,7 @@ type LogEntriesGroup struct {
 type LogEntry struct {
 	TxHash          string
 	LogIndex        int32
-	LogData         ByteArray
+	LogData         types2.ByteArray
 	LoggedBy        string
 	Topic0          string
 	Topic1          string
@@ -103,26 +107,26 @@ func (leg *LogEntriesGroup) enhance() error {
 func (leg *LogEntriesGroup) buildStorableLogEntry(log types.Log, txHash string, index int32) (*LogEntry, error) {
 	l := &LogEntry{}
 	l.IncludedInBlock = leg.blockNumber
-	l.TxHash = Trim0x(txHash)
+	l.TxHash = utils.Trim0x(txHash)
 	l.LogIndex = index // = transaction log index
 
-	l.LogData = ByteArray(Trim0x(log.Data))
-	l.LoggedBy = Trim0x(log.Address)
+	l.LogData = types2.ByteArray(utils.Trim0x(log.Data))
+	l.LoggedBy = utils.Trim0x(log.Address)
 
 	if len(log.Topics) > 0 {
-		l.Topic0 = Trim0x(log.Topics[0])
+		l.Topic0 = utils.Trim0x(log.Topics[0])
 	}
 
 	if len(log.Topics) > 1 {
-		l.Topic1 = Trim0x(log.Topics[1])
+		l.Topic1 = utils.Trim0x(log.Topics[1])
 	}
 
 	if len(log.Topics) > 2 {
-		l.Topic2 = Trim0x(log.Topics[2])
+		l.Topic2 = utils.Trim0x(log.Topics[2])
 	}
 
 	if len(log.Topics) > 3 {
-		l.Topic3 = Trim0x(log.Topics[3])
+		l.Topic3 = utils.Trim0x(log.Topics[3])
 	}
 
 	return l, nil

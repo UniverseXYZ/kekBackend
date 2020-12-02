@@ -1,36 +1,41 @@
-package data
+package processor
 
 import (
 	"database/sql"
-	"strconv"
+	"errors"
 
-	"github.com/barnbridge/barnbridge-backend/metrics"
-
-	"github.com/barnbridge/barnbridge-backend/data/storable"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/sirupsen/logrus"
 
-	"github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/metrics"
+	"github.com/barnbridge/barnbridge-backend/processor/storable"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
+	"github.com/barnbridge/barnbridge-backend/types"
 )
 
 var log = logrus.WithField("module", "data")
 
-type FullBlock struct {
-	Block    types.Block
-	Receipts Receipts
-	Uncles   []types.Block
+type Processor struct {
+	config Config
 
+	Raw       *types.RawData
+	abis      map[string]abi.ABI
 	storables []Storable
 }
 
-type Receipts []types.Receipt
+func New(config Config, raw *types.RawData, abis map[string]abi.ABI) (*Processor, error) {
+	p := &Processor{
+		config: config,
+		Raw:    raw,
+		abis:   abis,
+	}
 
-func (a Receipts) Len() int      { return len(a) }
-func (a Receipts) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
-func (a Receipts) Less(i, j int) bool {
-	iIdx, _ := strconv.ParseInt(a[i].TransactionIndex, 0, 64)
-	jIdx, _ := strconv.ParseInt(a[j].TransactionIndex, 0, 64)
+	err := p.registerStorables()
+	if err != nil {
+		return nil, err
+	}
 
-	return iIdx < jIdx
+	return p, nil
 }
 
 // Storable
@@ -43,16 +48,25 @@ type Storable interface {
 
 // RegisterStorables instantiates all the storables defined via code with the requested raw data
 // Only the storables that are registered will be executed when the Store function is called
-func (fb *FullBlock) RegisterStorables() {
-	fb.storables = append(fb.storables, storable.NewStorableBlock(fb.Block))
-	fb.storables = append(fb.storables, storable.NewStorableTxs(fb.Block, fb.Receipts))
-	fb.storables = append(fb.storables, storable.NewStorableUncles(fb.Block, fb.Uncles))
-	fb.storables = append(fb.storables, storable.NewStorableLogEntries(fb.Block, fb.Receipts))
-	fb.storables = append(fb.storables, storable.NewStorableAccountTxs(fb.Block))
+func (fb *Processor) registerStorables() error {
+	fb.storables = append(fb.storables, storable.NewStorableBlock(fb.Raw.Block))
+	fb.storables = append(fb.storables, storable.NewStorableTxs(fb.Raw.Block, fb.Raw.Receipts))
+	fb.storables = append(fb.storables, storable.NewStorableUncles(fb.Raw.Block, fb.Raw.Uncles))
+	fb.storables = append(fb.storables, storable.NewStorableLogEntries(fb.Raw.Block, fb.Raw.Receipts))
+	fb.storables = append(fb.storables, storable.NewStorableAccountTxs(fb.Raw.Block))
+	{
+		if _, exist := fb.abis["bond"]; !exist {
+			return errors.New("could not find abi for bond contract")
+		}
+
+		fb.storables = append(fb.storables, bond.NewBondStorable(fb.config.Bond, fb.Raw, fb.abis["bond"]))
+	}
+
+	return nil
 }
 
 // Store will open a database transaction and execute all the registered Storables in the said transaction
-func (fb *FullBlock) Store(db *sql.DB, m *metrics.Provider) error {
+func (fb *Processor) Store(db *sql.DB, m *metrics.Provider) error {
 	exists, err := fb.checkBlockExists(db)
 	if err != nil {
 		return err

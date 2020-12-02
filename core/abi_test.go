@@ -1,7 +1,10 @@
 package core
 
 import (
+	"fmt"
 	"testing"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
 
 	"github.com/stretchr/testify/assert"
 )
@@ -9,7 +12,7 @@ import (
 func TestNew(t *testing.T) {
 	c := &Core{
 		config: Config{AbiPath: "../abis"},
-		abis:   make(map[string][]byte),
+		abis:   make(map[string]abi.ABI),
 	}
 	err := c.loadABIs()
 
@@ -17,5 +20,6 @@ func TestNew(t *testing.T) {
 	assert.Len(t, c.abis, 3)
 	for _, v := range c.abis {
 		assert.NotEmpty(t, v)
+		fmt.Println(v.Events)
 	}
 }
