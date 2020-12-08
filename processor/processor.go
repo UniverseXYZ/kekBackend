@@ -9,6 +9,7 @@ import (
 
 	"github.com/barnbridge/barnbridge-backend/metrics"
 	"github.com/barnbridge/barnbridge-backend/processor/storable"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/types"
 )
@@ -60,6 +61,13 @@ func (fb *Processor) registerStorables() error {
 		}
 
 		fb.storables = append(fb.storables, bond.NewBondStorable(fb.config.Bond, fb.Raw, fb.abis["bond"]))
+	}
+
+	{
+		if _, exist := fb.abis["barn"]; !exist {
+			return errors.New("could not find abi for barn contract")
+		}
+		fb.storables = append(fb.storables, barn.NewBarnStorable(fb.config.Barn, fb.Raw, fb.abis["barn"]))
 	}
 
 	return nil

@@ -7,7 +7,6 @@ import (
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -28,10 +27,6 @@ type Transfer struct {
 	TransactionHash  string
 	TransactionIndex int64
 	LogIndex         int64
-
-	//from ,to(String) ,value(big.int) maybe pointers
-	//txHash(string)
-	//txIndex logIndex(int)
 }
 
 func NewBondStorable(config Config, raw *types.RawData, bondAbi abi.ABI) *BondStorable {
@@ -77,18 +72,17 @@ func (b BondStorable) ToDB(tx *sql.Tx) error {
 		t.To = utils.Topic2Address(log.Topics[2])
 		t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 		if err != nil {
-			return errors.Wrap(err, "could not convert transactionIndex to int64")
+			return errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
 		}
 
 		t.TransactionHash = log.TransactionHash
 		t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
 		if err != nil {
-			return errors.Wrap(err, "could not convert logIndex to int64")
+			return errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
 		}
 
 		transfers = append(transfers, t)
 	}
-	spew.Dump(transfers)
 
 	stmt, err := tx.Prepare(pq.CopyIn("bond_transfers", "tx_hash", "tx_index", "log_index", "sender", "receiver", "value", "included_in_block"))
 	if err != nil {

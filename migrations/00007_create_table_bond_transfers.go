@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBondTransfers, downCreateTableBondTransfers)
+	goose.AddMigration(upCreateTableLBondTransfers, downCreateTableBondTransfers)
 }
 
-func upCreateTableBondTransfers(tx *sql.Tx) error {
+func upCreateTableLBondTransfers(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	create table bond_transfers
 	(

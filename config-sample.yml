@@ -91,3 +91,5 @@ abi-path: "./abis"
 storable:
   bond:
     address: "0x0391D2021f89DC339F60Fff84546EA23E337750f"
+  barn:
+    address: "0x9b24CA2bd6C44490F0529bCa48E837E2ad26BaFa"

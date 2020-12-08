@@ -7,20 +7,22 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBarnEvents, downCreateTableBarnEvents)
+	goose.AddMigration(upCreateTableBarnStakingActions, downCreateTableBarnStakingActions)
 }
 
-func upCreateTableBarnEvents(tx *sql.Tx) error {
+func upCreateTableBarnStakingActions(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-	create table bond_transfers
+	create type action_type as enum('DEPOSIT','WITHDRAW');
+	create table barn_staking_actions
 	(
 		tx_hash                    text    not null,
 		tx_index 				   integer not null,
 		log_index                  integer not null,
 		address					   text not null,
-		userAddress				text not null,
-		
-		value 					   numeric (78),
+		user_address			   text not null,
+		action_type				   action_type not null,
+		amount					   numeric(78) not null,
+		balance_after			   numeric(78) not null,
 		included_in_block          bigint  not null,
 		created_at                 timestamp default now()
 	);
@@ -29,7 +31,7 @@ func upCreateTableBarnEvents(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableBarnEvents(tx *sql.Tx) error {
-	_, err := tx.Exec("drop table bond_transfers")
+func downCreateTableBarnStakingActions(tx *sql.Tx) error {
+	_, err := tx.Exec("drop table barn_staking_actions")
 	return err
 }
