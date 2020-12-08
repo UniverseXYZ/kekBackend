@@ -7,18 +7,19 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBondTransfers, downCreateTableBondTransfers)
+	goose.AddMigration(upCreateTableBarnEvents, downCreateTableBarnEvents)
 }
 
-func upCreateTableBondTransfers(tx *sql.Tx) error {
+func upCreateTableBarnEvents(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	create table bond_transfers
 	(
 		tx_hash                    text    not null,
 		tx_index 				   integer not null,
 		log_index                  integer not null,
-		sender 					   text not null ,
-		receiver 				   text not null,
+		address					   text not null,
+		userAddress				text not null,
+		
 		value 					   numeric (78),
 		included_in_block          bigint  not null,
 		created_at                 timestamp default now()
@@ -28,7 +29,7 @@ func upCreateTableBondTransfers(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableBondTransfers(tx *sql.Tx) error {
+func downCreateTableBarnEvents(tx *sql.Tx) error {
 	_, err := tx.Exec("drop table bond_transfers")
 	return err
 }
