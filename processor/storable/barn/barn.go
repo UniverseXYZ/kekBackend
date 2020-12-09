@@ -97,7 +97,7 @@ func (b BarnStorable) ToDB(tx *sql.Tx) error {
 			}
 
 			if stakingActionWithdraw != nil {
-				stakingActions = append(stakingActions, *stakingActionDeposit)
+				stakingActions = append(stakingActions, *stakingActionWithdraw)
 				continue
 			}
 		}
@@ -107,8 +107,8 @@ func (b BarnStorable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
-	for _, stakingAction := range stakingActions {
-		_, err = stmt.Exec(stakingAction.TransactionHash, stakingAction.TransactionIndex, stakingAction.LogIndex, stakingAction.Address, stakingAction.UserAddress, stakingAction.ActionType, stakingAction.Amount, stakingAction.BalanceAfter, b.BlockNumber, b.BlockTimestamp)
+	for _, a := range stakingActions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.Address, a.UserAddress, a.ActionType, a.Amount, a.BalanceAfter, b.BlockNumber, b.BlockTimestamp)
 		if err != nil {
 			return err
 		}

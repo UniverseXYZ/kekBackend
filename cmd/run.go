@@ -158,6 +158,6 @@ func init() {
 	viper.BindPFlag("storable.bond.address", runCmd.Flag("storable.bond.address"))
 
 	//barn
-	runCmd.Flags().String("storable.barn.address", "0x9b24CA2bd6C44490F0529bCa48E837E2ad26BaFa", "Address of the barn token")
+	runCmd.Flags().String("storable.barn.address", "0x9b24CA2bd6C44490F0529bCa48E837E2ad26BaFa", "Address of the barn contract")
 	viper.BindPFlag("storable.barn.address", runCmd.Flag("storable.barn.address"))
 }
