@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
+	types2 "github.com/barnbridge/barnbridge-backend/types"
+
 	"github.com/barnbridge/barnbridge-backend/api/types"
-	"github.com/barnbridge/barnbridge-backend/data/storable"
 	"github.com/barnbridge/barnbridge-backend/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -18,19 +19,19 @@ func (a *API) TxDetailsHandler(c *gin.Context) {
 		txHash              string
 		includedInBlock     int64
 		txIndex             int32
-		from                storable.ByteArray
-		to                  storable.ByteArray
+		from                types2.ByteArray
+		to                  types2.ByteArray
 		value               string
 		txNonce             int64
 		msgGasLimit         string
 		txGasUsed           string
 		txGasPrice          string
 		cumulativeGasUsed   string
-		msgPayload          storable.ByteArray
+		msgPayload          types2.ByteArray
 		msgStatus           string
-		creates             storable.ByteArray
-		txLogsBloom         storable.ByteArray
-		blockCreationTime   storable.DatetimeToJSONUnix
+		creates             types2.ByteArray
+		txLogsBloom         types2.ByteArray
+		blockCreationTime   types2.DatetimeToJSONUnix
 		logEntriesTriggered int32
 	)
 	err := a.core.DB().QueryRow(`select tx_hash, included_in_block, tx_index, "from", "to", value, tx_nonce, msg_gas_limit, tx_gas_used, tx_gas_price, cumulative_gas_used, msg_payload, msg_status, creates, tx_logs_bloom, block_creation_time, log_entries_triggered from txs where tx_hash = $1 limit 1`, searchHash).Scan(&txHash, &includedInBlock, &txIndex, &from, &to, &value, &txNonce, &msgGasLimit, &txGasUsed, &txGasPrice, &cumulativeGasUsed, &msgPayload, &msgStatus, &creates, &txLogsBloom, &blockCreationTime, &logEntriesTriggered)
@@ -217,10 +218,10 @@ func (a *API) AccountTxsHandler(c *gin.Context) {
 		var (
 			txHash            string
 			txIndex           int32
-			from              storable.ByteArray
-			to                storable.ByteArray
+			from              types2.ByteArray
+			to                types2.ByteArray
 			value             string
-			blockCreationTime storable.DatetimeToJSONUnix
+			blockCreationTime types2.DatetimeToJSONUnix
 			includedInBlock   int64
 			txGasUsed         string
 			txGasPrice        string

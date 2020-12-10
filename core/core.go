@@ -5,6 +5,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/accounts/abi"
+
+	"github.com/barnbridge/barnbridge-backend/processor"
+
 	"github.com/barnbridge/barnbridge-backend/metrics"
 
 	"github.com/pressly/goose"
@@ -29,7 +33,7 @@ type Core struct {
 	scraper     *scraper.Scraper
 	db          *sql.DB
 
-	abis map[string][]byte
+	abis map[string]abi.ABI
 
 	stopMu sync.Mutex
 }
@@ -101,7 +105,7 @@ func New(config Config) *Core {
 		taskmanager: tm,
 		scraper:     s,
 		db:          db,
-		abis:        make(map[string][]byte),
+		abis:        make(map[string]abi.ABI),
 	}
 
 	log.Info("loading ABIs from contracts by given path")
@@ -202,8 +206,19 @@ func (c *Core) Run() {
 			log.Debug("storing block into the database")
 
 			indexingStart := time.Now()
-			blk.RegisterStorables()
-			err = blk.Store(c.db, c.metrics)
+
+			p, err := processor.New(c.config.Processor, blk, c.abis)
+			if err != nil {
+				c.stopMu.Unlock()
+				log.Error("error storing block: ", err)
+				err1 := c.taskmanager.Todo(b)
+				if err1 != nil {
+					log.Fatal(err1)
+				}
+				continue
+			}
+
+			err = p.Store(c.db, c.metrics)
 			if err != nil {
 				c.stopMu.Unlock()
 				log.Error("error storing block: ", err)

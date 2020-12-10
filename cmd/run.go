@@ -7,6 +7,9 @@ import (
 	"time"
 
 	"github.com/barnbridge/barnbridge-backend/dashboard"
+	"github.com/barnbridge/barnbridge-backend/processor"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 
 	"github.com/barnbridge/barnbridge-backend/api"
 
@@ -62,6 +65,14 @@ var runCmd = &cobra.Command{
 				Uncles:      viper.GetBool("feature.uncles.enabled"),
 			},
 			AbiPath: viper.GetString("abi-path"),
+			Processor: processor.Config{
+				Bond: bond.Config{
+					BondAddress: viper.GetString("storable.bond.address"),
+				},
+				Barn: barn.Config{
+					BarnAddress: viper.GetString("storable.barn.address"),
+				},
+			},
 		})
 		c.Run()
 
@@ -141,4 +152,12 @@ func init() {
 	//abi
 	runCmd.Flags().String("abi-path", "./abis", "Path of directory from which to read contract ABIs")
 	viper.BindPFlag("abi-path", runCmd.Flag("abi-path"))
+
+	//bond
+	runCmd.Flags().String("storable.bond.address", "0x0391D2021f89DC339F60Fff84546EA23E337750f", "Address of the bond token")
+	viper.BindPFlag("storable.bond.address", runCmd.Flag("storable.bond.address"))
+
+	//barn
+	runCmd.Flags().String("storable.barn.address", "0x9b24CA2bd6C44490F0529bCa48E837E2ad26BaFa", "Address of the barn contract")
+	viper.BindPFlag("storable.barn.address", runCmd.Flag("storable.barn.address"))
 }

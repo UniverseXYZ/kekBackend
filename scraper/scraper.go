@@ -6,10 +6,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/barnbridge/barnbridge-backend/types"
+
 	"github.com/alethio/web3-go/ethrpc/provider/httprpc"
 	"github.com/pkg/errors"
-
-	"github.com/barnbridge/barnbridge-backend/data"
 
 	"github.com/alethio/web3-go/ethrpc"
 	"github.com/sirupsen/logrus"
@@ -55,10 +55,10 @@ func New(config Config) (*Scraper, error) {
 // - scrapes the block using eth_getBlockByNumber
 // - for each transaction in the block, scrapes the receipts using eth_getTransactionReceipt
 // - for each uncle in the block, scrapes the data using eth_getUncleByBlockHashAndIndex
-func (s *Scraper) Exec(block int64) (*data.FullBlock, error) {
+func (s *Scraper) Exec(block int64) (*types.RawData, error) {
 	log = log.WithField("block", block)
 
-	b := &data.FullBlock{}
+	b := &types.RawData{}
 
 	log.Debug("getting block")
 	start := time.Now()
@@ -95,7 +95,12 @@ func (s *Scraper) Exec(block int64) (*data.FullBlock, error) {
 		}()
 	}
 	wg.Wait()
-	sort.Sort(b.Receipts)
+	sort.Slice(b.Receipts, func(i, j int) bool {
+		iIdx, _ := strconv.ParseInt(b.Receipts[i].TransactionIndex, 0, 64)
+		jIdx, _ := strconv.ParseInt(b.Receipts[j].TransactionIndex, 0, 64)
+
+		return iIdx < jIdx
+	})
 
 	log.WithField("duration", time.Since(start)).Debugf("got %d receipts", len(b.Receipts))
 	if len(errs) > 0 {

@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
+	types2 "github.com/barnbridge/barnbridge-backend/types"
 
-	"github.com/barnbridge/barnbridge-backend/data/storable"
+	"github.com/barnbridge/barnbridge-backend/api/types"
 
 	"github.com/gin-gonic/gin"
 )
@@ -103,8 +103,8 @@ func (a *API) BlockRangeHandler(c *gin.Context) {
 	for rows.Next() {
 		var (
 			number         int64
-			creationTime   storable.DatetimeToJSONUnix
-			hasBeneficiary storable.ByteArray
+			creationTime   types2.DatetimeToJSONUnix
+			hasBeneficiary types2.ByteArray
 			numberOfTxs    int32
 		)
 

@@ -1,11 +1,13 @@
 package types
 
-import "github.com/barnbridge/barnbridge-backend/data/storable"
+import (
+	"github.com/barnbridge/barnbridge-backend/types"
+)
 
 type LogEntry struct {
 	TxHash            string                 `json:"txHash"`
 	LogIndex          int32                  `json:"logIndex"`
-	LogData           storable.ByteArray     `json:"logData"`
+	LogData           types.ByteArray        `json:"logData"`
 	LoggedBy          string                 `json:"loggedBy"`
 	HasLogTopics      []string               `json:"hasLogTopics"`
 	EventDecoded      map[string]interface{} `json:"eventDecoded"`

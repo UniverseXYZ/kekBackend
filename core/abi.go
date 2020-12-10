@@ -1,8 +1,12 @@
 package core
 
 import (
+	"bytes"
 	"io/ioutil"
 	"strings"
+
+	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/pkg/errors"
 )
 
 func (c *Core) loadABIs() error {
@@ -18,8 +22,13 @@ func (c *Core) loadABIs() error {
 				return err
 			}
 
-			key := strings.TrimSuffix(file.Name(), ".json")
-			c.abis[key] = byteValue
+			a, err := abi.JSON(bytes.NewReader(byteValue))
+			if err != nil {
+				return errors.Wrap(err, "could not decode abi")
+			}
+
+			key := strings.ToLower(strings.TrimSuffix(file.Name(), ".json"))
+			c.abis[key] = a
 		}
 	}
 

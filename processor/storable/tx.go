@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"time"
 
+	types2 "github.com/barnbridge/barnbridge-backend/types"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
+
 	"github.com/lib/pq"
 
 	"github.com/alethio/web3-go/types"
@@ -15,7 +19,7 @@ type TxsGroup struct {
 	RawReceipts []types.Receipt
 
 	blockNumber       int64
-	blockCreationTime DatetimeToJSONUnix
+	blockCreationTime types2.DatetimeToJSONUnix
 	txs               []*Tx
 }
 
@@ -23,19 +27,19 @@ type Tx struct {
 	TxHash              string
 	IncludedInBlock     int64
 	TxIndex             int32
-	From                ByteArray
-	To                  ByteArray
+	From                types2.ByteArray
+	To                  types2.ByteArray
 	Value               string
 	TxNonce             int64
 	MsgGasLimit         string
 	TxGasUsed           string
 	TxGasPrice          string
 	CumulativeGasUsed   string
-	MsgPayload          ByteArray
+	MsgPayload          types2.ByteArray
 	MsgStatus           string
-	Creates             ByteArray
-	TxLogsBloom         ByteArray
-	BlockCreationTime   DatetimeToJSONUnix
+	Creates             types2.ByteArray
+	TxLogsBloom         types2.ByteArray
+	BlockCreationTime   types2.DatetimeToJSONUnix
 	LogEntriesTriggered int32
 }
 
@@ -99,7 +103,7 @@ func (t *TxsGroup) enhance() error {
 		log.Error(err)
 		return err
 	}
-	t.blockCreationTime = DatetimeToJSONUnix(time.Unix(timestamp, 0))
+	t.blockCreationTime = types2.DatetimeToJSONUnix(time.Unix(timestamp, 0))
 
 	for index, tx := range t.RawBlock.Transactions {
 		storableTx, err := t.buildStorableTx(tx, t.RawReceipts[index])
@@ -118,22 +122,22 @@ func (t *TxsGroup) buildStorableTx(tx types.Transaction, receipt types.Receipt) 
 	sTx.IncludedInBlock = t.blockNumber
 	sTx.BlockCreationTime = t.blockCreationTime
 
-	sTx.TxHash = Trim0x(tx.Hash)
-	sTx.From = ByteArray(Trim0x(tx.From))
-	sTx.To = ByteArray(Trim0x(tx.To))
+	sTx.TxHash = utils.Trim0x(tx.Hash)
+	sTx.From = types2.ByteArray(utils.Trim0x(tx.From))
+	sTx.To = types2.ByteArray(utils.Trim0x(tx.To))
 	if tx.To == "" {
 		if contractAddress, ok := receipt.ContractAddress.(string); ok && contractAddress != "" {
-			sTx.To = ByteArray(Trim0x(contractAddress))
-			sTx.Creates = ByteArray(Trim0x(contractAddress))
+			sTx.To = types2.ByteArray(utils.Trim0x(contractAddress))
+			sTx.Creates = types2.ByteArray(utils.Trim0x(contractAddress))
 		}
 	}
 
 	if tx.Creates != "" {
-		sTx.Creates = ByteArray(Trim0x(tx.Creates))
+		sTx.Creates = types2.ByteArray(utils.Trim0x(tx.Creates))
 	}
 
-	sTx.MsgPayload = ByteArray(Trim0x(tx.Input))
-	sTx.TxLogsBloom = ByteArray(Trim0x(receipt.LogsBloom))
+	sTx.MsgPayload = types2.ByteArray(utils.Trim0x(tx.Input))
+	sTx.TxLogsBloom = types2.ByteArray(utils.Trim0x(receipt.LogsBloom))
 	sTx.MsgStatus = receipt.Status
 
 	// -- int
@@ -152,35 +156,35 @@ func (t *TxsGroup) buildStorableTx(tx types.Transaction, receipt types.Receipt) 
 	sTx.TxNonce = txNonce
 
 	// -- bigint
-	gasLimit, err := HexStrToBigIntStr(tx.Gas)
+	gasLimit, err := utils.HexStrToBigIntStr(tx.Gas)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	sTx.MsgGasLimit = gasLimit
 
-	value, err := HexStrToBigIntStr(tx.Value)
+	value, err := utils.HexStrToBigIntStr(tx.Value)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	sTx.Value = value
 
-	gasUsed, err := HexStrToBigIntStr(receipt.GasUsed)
+	gasUsed, err := utils.HexStrToBigIntStr(receipt.GasUsed)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	sTx.TxGasUsed = gasUsed
 
-	gasPrice, err := HexStrToBigIntStr(tx.GasPrice)
+	gasPrice, err := utils.HexStrToBigIntStr(tx.GasPrice)
 	if err != nil {
 		log.Error(err)
 		return nil, err
 	}
 	sTx.TxGasPrice = gasPrice
 
-	cumulativeGasUsed, err := HexStrToBigIntStr(receipt.CumulativeGasUsed)
+	cumulativeGasUsed, err := utils.HexStrToBigIntStr(receipt.CumulativeGasUsed)
 	if err != nil {
 		log.Error(err)
 		return nil, err
