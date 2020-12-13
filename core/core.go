@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/ethclient"
 
 	"github.com/barnbridge/barnbridge-backend/processor"
 
@@ -33,7 +34,8 @@ type Core struct {
 	scraper     *scraper.Scraper
 	db          *sql.DB
 
-	abis map[string]abi.ABI
+	abis    map[string]abi.ABI
+	ethConn *ethclient.Client
 
 	stopMu sync.Mutex
 }
@@ -115,6 +117,14 @@ func New(config Config) *Core {
 		log.Fatal(err)
 	}
 	log.Info("done getting ABIs")
+
+	// Create an IPC based RPC connection to a remote node
+	conn, err := ethclient.Dial(config.Scraper.NodeURL)
+	if err != nil {
+		log.Fatalf("failed to connect to the Ethereum client: %v", err)
+	}
+
+	c.ethConn = conn
 
 	return &c
 }

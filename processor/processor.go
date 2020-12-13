@@ -11,6 +11,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 	"github.com/barnbridge/barnbridge-backend/types"
 )
 
@@ -69,7 +70,12 @@ func (fb *Processor) registerStorables() error {
 		}
 		fb.storables = append(fb.storables, barn.NewBarnStorable(fb.config.Barn, fb.Raw, fb.abis["barn"]))
 	}
-
+	{
+		if _, exist := fb.abis["governance"]; !exist {
+			return errors.New("could not find abi for governance contract")
+		}
+		fb.storables = append(fb.storables, governance.NewGovernance(fb.config.Governance, fb.Raw, fb.abis["governance"]))
+	}
 	return nil
 }
 
