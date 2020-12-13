@@ -52,10 +52,12 @@ type Storable interface {
 // Only the storables that are registered will be executed when the Store function is called
 func (fb *Processor) registerStorables() error {
 	fb.storables = append(fb.storables, storable.NewStorableBlock(fb.Raw.Block))
-	fb.storables = append(fb.storables, storable.NewStorableTxs(fb.Raw.Block, fb.Raw.Receipts))
-	fb.storables = append(fb.storables, storable.NewStorableUncles(fb.Raw.Block, fb.Raw.Uncles))
-	fb.storables = append(fb.storables, storable.NewStorableLogEntries(fb.Raw.Block, fb.Raw.Receipts))
-	fb.storables = append(fb.storables, storable.NewStorableAccountTxs(fb.Raw.Block))
+
+	// fb.storables = append(fb.storables, storable.NewStorableTxs(fb.Raw.Block, fb.Raw.Receipts))
+	// fb.storables = append(fb.storables, storable.NewStorableUncles(fb.Raw.Block, fb.Raw.Uncles))
+	// fb.storables = append(fb.storables, storable.NewStorableLogEntries(fb.Raw.Block, fb.Raw.Receipts))
+	// fb.storables = append(fb.storables, storable.NewStorableAccountTxs(fb.Raw.Block))
+
 	{
 		if _, exist := fb.abis["bond"]; !exist {
 			return errors.New("could not find abi for bond contract")
