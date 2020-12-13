@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+
+	web3types "github.com/alethio/web3-go/types"
+	"github.com/ethereum/go-ethereum/accounts/abi"
 )
 
 func CleanUpHex(s string) string {
@@ -56,4 +59,12 @@ func Trim0x(str string) string {
 func Topic2Address(topic string) string {
 	topic = Trim0x(topic)
 	return "0x" + topic[24:]
+}
+
+func LogIsEvent(log web3types.Log, abi abi.ABI, event string) bool {
+	if len(log.Topics) == 0 {
+		return false
+	}
+
+	return CleanUpHex(log.Topics[0]) == CleanUpHex(abi.Events[event].ID.String())
 }
