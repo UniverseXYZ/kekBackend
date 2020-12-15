@@ -34,3 +34,8 @@ type Action struct {
 	Signatures []string
 	Calldatas  [][]byte
 }
+
+type Event struct {
+	ProposerID *big.Int
+	EventType  int
+}

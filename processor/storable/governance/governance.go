@@ -76,5 +76,10 @@ func (g GovStorable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
+	err = g.handleEvents(govLogs, tx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
