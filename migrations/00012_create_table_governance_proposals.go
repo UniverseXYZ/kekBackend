@@ -33,8 +33,9 @@ func upCreateTableGovernanceProposals(tx *sql.Tx) error {
 		signatures					jsonb not null,
 		calldatas					jsonb not null,
 		
-		included_in_block          bigint  not null,
-		created_at                 timestamp default now()
+		timestamp				    bigint,
+		included_in_block           bigint  not null,
+		created_at                  timestamp default now()
 	);
 	
 	`)

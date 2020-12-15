@@ -67,7 +67,7 @@ func (g GovStorable) ToDB(tx *sql.Tx) error {
 	}
 
 	if len(govLogs) == 0 {
-		log.Debug("nothing to process")
+		log.Debug("no events found")
 		return nil
 	}
 

@@ -27,6 +27,7 @@ func (b *BarnStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
 
 	// if no lock was identified, fail fast to avoid extra processing
 	if len(locks) == 0 {
+		log.Debug("no events found")
 		return nil
 	}
 

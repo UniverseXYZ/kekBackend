@@ -28,14 +28,27 @@ type BaseLog struct {
 	LogIndex         int64
 }
 
-type Action struct {
+type ProposalActions struct {
 	Targets    []common.Address
 	Values     []*big.Int
 	Signatures []string
 	Calldatas  [][]byte
 }
 
-type Event struct {
-	ProposerID *big.Int
+type ProposalEvent struct {
+	BaseLog
+
+	ProposalID *big.Int
 	EventType  int
+}
+
+type Vote struct {
+	BaseLog
+
+	ProposalID *big.Int
+	User       string
+	Support    *bool
+	Canceled   bool
+	Power      *big.Int
+	Timestamp  int64
 }

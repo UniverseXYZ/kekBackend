@@ -58,6 +58,7 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 
 func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx) error {
 	if len(actions) == 0 {
+		log.Debug("no events found")
 		return nil
 	}
 
@@ -88,6 +89,7 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 
 func (b *BarnStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx) error {
 	if len(changes) == 0 {
+		log.Debug("no events found")
 		return nil
 	}
 

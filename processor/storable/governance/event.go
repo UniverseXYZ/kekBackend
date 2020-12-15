@@ -12,16 +12,26 @@ import (
 )
 
 func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
-	var events []Event
+	var events []ProposalEvent
 
 	for _, log := range logs {
+
+		baseLog, err := g.getBaseLog(log)
+		if err != nil {
+			return err
+		}
+
 		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalCreated"].ID.String()) {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
 			}
 
-			events = append(events, Event{proposalID, CREATED})
+			events = append(events, ProposalEvent{
+				BaseLog:    *baseLog,
+				ProposalID: proposalID,
+				EventType:  CREATED,
+			})
 
 			continue
 		}
@@ -32,7 +42,11 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 				return err
 			}
 
-			events = append(events, Event{proposalID, QUEUED})
+			events = append(events, ProposalEvent{
+				BaseLog:    *baseLog,
+				ProposalID: proposalID,
+				EventType:  QUEUED,
+			})
 
 			continue
 		}
@@ -43,7 +57,11 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 				return err
 			}
 
-			events = append(events, Event{proposalID, EXECUTED})
+			events = append(events, ProposalEvent{
+				BaseLog:    *baseLog,
+				ProposalID: proposalID,
+				EventType:  EXECUTED,
+			})
 
 			continue
 		}
@@ -54,7 +72,11 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 				return err
 			}
 
-			events = append(events, Event{proposalID, CANCELED})
+			events = append(events, ProposalEvent{
+				BaseLog:    *baseLog,
+				ProposalID: proposalID,
+				EventType:  CANCELED,
+			})
 
 			continue
 		}
@@ -62,17 +84,18 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 	}
 
 	if len(events) == 0 {
-		log.Debug("Nothing to process...")
+		log.Debug("no events found")
 		return nil
 	}
-	stmt, err := tx.Prepare(pq.CopyIn("governance_events", "proposal_ID", "event_type", "included_in_block", "created_at"))
+
+	stmt, err := tx.Prepare(pq.CopyIn("governance_events", "proposal_ID", "event_type", "timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
 
 	for _, e := range events {
 
-		_, err = stmt.Exec(e.ProposerID, e.EventType, g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
+		_, err = stmt.Exec(e.ProposalID, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
