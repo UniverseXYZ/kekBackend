@@ -48,7 +48,15 @@ type Vote struct {
 	ProposalID *big.Int
 	User       string
 	Support    *bool
-	Canceled   bool
 	Power      *big.Int
+	Timestamp  int64
+}
+
+type VoteCanceled struct {
+	BaseLog
+
+	ProposalID *big.Int
+	User       string
+	Canceled   bool
 	Timestamp  int64
 }
