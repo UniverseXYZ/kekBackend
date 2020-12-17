@@ -25,7 +25,6 @@ func upCreateTableGovernanceVotes(tx *sql.Tx) error {
 		proposal_ID				   bigint not null ,
 		user_ID					   text not null ,
 		support 				   bool not null,
-		canceled				   bool not null,
 		power 					   bigint not null,
 		timestamp				   bigint,
 		

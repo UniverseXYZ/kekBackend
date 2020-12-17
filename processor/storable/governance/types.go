@@ -57,6 +57,5 @@ type VoteCanceled struct {
 
 	ProposalID *big.Int
 	User       string
-	Canceled   bool
 	Timestamp  int64
 }

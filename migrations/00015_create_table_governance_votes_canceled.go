@@ -24,7 +24,6 @@ func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	(
 		proposal_ID				   bigint not null ,
 		user_ID					   text not null ,
-		canceled				   bool not null,
 		timestamp				   bigint,
 		
 		tx_hash                    text    not null,
