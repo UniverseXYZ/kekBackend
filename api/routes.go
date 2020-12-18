@@ -12,4 +12,7 @@ func (a *API) setRoutes() {
 	explorer.GET("/account/:address/txs", a.AccountTxsHandler)
 	explorer.GET("/account/:address/code", a.AccountCodeHandler)
 	explorer.GET("/account/:address/balance", a.AccountBalanceHandler)
+
+	explorer.GET("/proposal/:proposalID", a.proposalDetailsHandler)
+
 }
