@@ -6,21 +6,13 @@ import (
 	"github.com/pressly/goose"
 )
 
-package migrations
-
-import (
-"database/sql"
-
-"github.com/pressly/goose"
-)
-
 func init() {
 	goose.AddMigration(upCreateTableGovernanceVotesCanceled, downCreateTableGovernanceVotesCanceled)
 }
 
 func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-	create table governance_votes
+	create table governance_votes_canceled
 	(
 		proposal_ID				   bigint not null ,
 		user_ID					   text not null ,
