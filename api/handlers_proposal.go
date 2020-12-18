@@ -31,7 +31,7 @@ func (a *API) proposalDetailsHandler(c *gin.Context) {
 		Calldatas    types2.JSONStringArray
 	)
 	err := a.core.DB().QueryRow(`select proposal_ID,proposer,description,title,create_time,start_time,quorum,eta,for_votes,against_votes,canceled,executed,targets,"values",signatures,calldatas,"timestamp"
-     , from governance_proposals where proposal_ID = $1 limit 1`, proposalID).Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &StartTime, &Quorum, &Eta, &ForVotes, &AgainstVotes, &Canceled, &Executed, &Targets,
+     from governance_proposals where proposal_ID = $1 limit 1`, proposalID).Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &StartTime, &Quorum, &Eta, &ForVotes, &AgainstVotes, &Canceled, &Executed, &Targets,
 		&Values, &Signatures, &Calldatas)
 
 	if err != nil && err != sql.ErrNoRows {
