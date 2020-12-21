@@ -7,17 +7,15 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableGovernanceVotes, downCreateTableGovernanceVotes)
+	goose.AddMigration(upCreateTableGovernanceVotesCanceled, downCreateTableGovernanceVotesCanceled)
 }
 
-func upCreateTableGovernanceVotes(tx *sql.Tx) error {
+func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-	create table governance_votes
+	create table governance_votes_canceled
 	(
 		proposal_id				   bigint not null ,
 		user_id					   text not null ,
-		support 				   bool not null,
-		power 					   bigint not null,
 		timestamp				   bigint,
 		
 		tx_hash                    text    not null,
@@ -28,14 +26,12 @@ func upCreateTableGovernanceVotes(tx *sql.Tx) error {
 		included_in_block          bigint  not null,
 		created_at                 timestamp default now()
 	);
-	create unique index on governance_votes (proposal_id,user_id)
+	create unique index on governance_votes_canceled (proposal_id,user_id)
 	`)
 	return err
 }
 
-func downCreateTableGovernanceVotes(tx *sql.Tx) error {
-	_, err := tx.Exec("drop table governance_votes")
+func downCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
+	_, err := tx.Exec("drop table governance_votes_canceled")
 	return err
 }
-
-//
