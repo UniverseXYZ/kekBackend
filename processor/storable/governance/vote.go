@@ -93,13 +93,13 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 }
 
 func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
-	stmt, err := tx.Prepare(pq.CopyIn("governance_votes", "proposal_ID", "user_ID", "timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block", "support", "power"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
 
 	for _, v := range votes {
-		_, err = stmt.Exec(v.ProposalID, v.User, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber, v.Support, v.Power)
+		_, err = stmt.Exec(v.ProposalID, v.User, v.Support, v.Power, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
@@ -119,7 +119,7 @@ func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
 }
 
 func (g GovStorable) insertVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
-	stmt, err := tx.Prepare(pq.CopyIn("governance_votes_canceled", "proposal_ID", "user_ID", "timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}

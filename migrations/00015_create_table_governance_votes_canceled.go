@@ -16,7 +16,7 @@ func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	(
 		proposal_id				   bigint not null ,
 		user_id					   text not null ,
-		timestamp				   bigint,
+		block_timestamp				   bigint,
 		
 		tx_hash                    text    not null,
 		tx_index                   integer not null,
@@ -26,7 +26,6 @@ func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 		included_in_block          bigint  not null,
 		created_at                 timestamp default now()
 	);
-	create unique index on governance_votes_canceled (proposal_id,user_id)
 	`)
 	return err
 }

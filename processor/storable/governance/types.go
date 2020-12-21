@@ -37,7 +37,8 @@ type ProposalEvent struct {
 	BaseLog
 
 	ProposalID *big.Int
-	EventType  int
+
+	EventType int
 }
 
 type Vote struct {

@@ -18,7 +18,7 @@ func upCreateTableGovernanceVotes(tx *sql.Tx) error {
 		user_id					   text not null ,
 		support 				   bool not null,
 		power 					   bigint not null,
-		timestamp				   bigint,
+		block_timestamp				   bigint,
 		
 		tx_hash                    text    not null,
 		tx_index                   integer not null,
@@ -28,7 +28,6 @@ func upCreateTableGovernanceVotes(tx *sql.Tx) error {
 		included_in_block          bigint  not null,
 		created_at                 timestamp default now()
 	);
-	create unique index on governance_votes (proposal_id,user_id)
 	`)
 	return err
 }

@@ -88,7 +88,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_events", "proposal_ID", "event_type", "timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_events", "proposal_id", "event_type", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
