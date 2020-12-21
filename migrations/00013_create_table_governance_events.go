@@ -16,6 +16,7 @@ func upCreateTableGovernanceEvents(tx *sql.Tx) error {
 	create table governance_events
 	(
 		proposal_id				   bigint not null ,
+		caller					   text not null,
 		event_type				   event_type not null ,
 		block_timestamp			   bigint,
 		
