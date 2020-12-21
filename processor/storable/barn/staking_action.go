@@ -35,6 +35,10 @@ func (b *BarnStorable) handleStakingActions(logs []web3types.Log, tx *sql.Tx) er
 			continue
 		}
 	}
+	if len(stakingActions) == 0 {
+		log.Debug("no events found")
+		return nil
+	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("barn_staking_actions", "tx_hash", "tx_index", "log_index", "address", "user_address", "action_type", "amount", "balance_after", "included_in_block"))
 	if err != nil {

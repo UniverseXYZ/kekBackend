@@ -92,4 +92,6 @@ storable:
   bond:
     address: "0x0391D2021f89DC339F60Fff84546EA23E337750f"
   barn:
-    address: "0x9b24CA2bd6C44490F0529bCa48E837E2ad26BaFa"
+    address: "0xc05d8A23221c48c10fBAD322f8bF133945Cd35d1"
+  governance:
+    address: "0x188f848591e6aE4A4Cc728d36Dcf8eCC1b44fEC5"
