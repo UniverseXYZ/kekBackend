@@ -14,8 +14,8 @@ func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	create table governance_votes_canceled
 	(
-		proposal_ID				   bigint not null ,
-		user_ID					   text not null ,
+		proposal_id				   bigint not null ,
+		user_id					   text not null ,
 		timestamp				   bigint,
 		
 		tx_hash                    text    not null,
@@ -26,7 +26,7 @@ func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 		included_in_block          bigint  not null,
 		created_at                 timestamp default now()
 	);
-	create unique index on governance_votes (proposal_ID,user_ID)
+	create unique index on governance_votes_canceled (proposal_id,user_id)
 	`)
 	return err
 }
@@ -35,5 +35,3 @@ func downCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	_, err := tx.Exec("drop table governance_votes_canceled")
 	return err
 }
-
-//
