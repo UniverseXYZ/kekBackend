@@ -6,14 +6,6 @@ import (
 	"github.com/pressly/goose"
 )
 
-package migrations
-
-import (
-"database/sql"
-
-"github.com/pressly/goose"
-)
-
 func init() {
 	goose.AddMigration(upCreateTableGovernanceVotes, downCreateTableGovernanceVotes)
 }

@@ -20,8 +20,6 @@ func upCreateTableGovernanceProposals(tx *sql.Tx) error {
 		description					text not null,
 		title						text not null,
 		create_time					bigint not null,
-		start_time					bigint not null,
-		quorum						bigint not null,
 		eta							bigint not null,
 		for_votes					bigint not null,
 		against_votes				bigint not null,

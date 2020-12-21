@@ -52,7 +52,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_ID", "proposer", "description", "title", "create_time", "start_time", "quorum", "eta", "for_votes", "against_votes", "canceled", "executed", "targets", "values", "signatures", "calldatas", "included_in_block", "timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_ID", "proposer", "description", "title", "create_time", "eta", "for_votes", "against_votes", "canceled", "executed", "targets", "values", "signatures", "calldatas", "included_in_block", "timestamp"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
@@ -68,7 +68,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 			calldatas = append(calldatas, hex.EncodeToString(a.Calldatas[i]))
 		}
 
-		_, err = stmt.Exec(p.Id, p.Proposer, p.Description, p.Title, p.CreateTime, p.StartTime, p.Quorum, p.Eta, p.ForVotes, p.AgainstVotes, p.Canceled, p.Executed, targets, values, signatures, calldatas, g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
+		_, err = stmt.Exec(p.Id, p.Proposer, p.Description, p.Title, p.CreateTime, p.Eta, p.ForVotes, p.AgainstVotes, p.Canceled, p.Executed, targets, values, signatures, calldatas, g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

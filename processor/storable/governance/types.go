@@ -12,8 +12,6 @@ type Proposal struct {
 	Description  string
 	Title        string
 	CreateTime   *big.Int
-	StartTime    *big.Int
-	Quorum       *big.Int
 	Eta          *big.Int
 	ForVotes     *big.Int
 	AgainstVotes *big.Int
