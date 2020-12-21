@@ -12,7 +12,7 @@ func init() {
 
 func upCreateTableGovernanceVotesCanceled(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-	create table governance_votes
+	create table governance_votes_canceled
 	(
 		proposal_ID				   bigint not null ,
 		user_ID					   text not null ,

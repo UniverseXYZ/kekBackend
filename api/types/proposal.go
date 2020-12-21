@@ -22,4 +22,6 @@ type Proposal struct {
 	Values     types2.JSONStringArray `json:"values,omitempty"`
 	Signatures types2.JSONStringArray `json:"signatures,omitempty"`
 	Calldatas  types2.JSONStringArray `json:"calldatas,omitempty"`
+
+	Timestamp int64 `json:"timestamp"`
 }

@@ -13,6 +13,8 @@ func (a *API) setRoutes() {
 	explorer.GET("/account/:address/code", a.AccountCodeHandler)
 	explorer.GET("/account/:address/balance", a.AccountBalanceHandler)
 
-	explorer.GET("/proposal/:proposalID", a.proposalDetailsHandler)
-
+	governance := a.engine.Group("/api/governance")
+	governance.GET("/proposals/:proposalID", a.ProposalDetailsHandler)
+	governance.GET("/proposals/", a.AllProposalHandler)
+	governance.GET("/votes/:proposalID", a.VoteDetailsHandler)
 }
