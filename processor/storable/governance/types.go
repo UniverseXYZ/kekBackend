@@ -59,3 +59,11 @@ type VoteCanceled struct {
 	User       string
 	Timestamp  int64
 }
+
+type CancellationProposal struct {
+	BaseLog
+
+	ProposalID big.Int
+	CreateTime int64
+	Creator    string
+}
