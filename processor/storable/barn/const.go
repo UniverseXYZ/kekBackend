@@ -5,8 +5,8 @@ const (
 	WithdrawEvent               = "Withdraw"
 	LockEvent                   = "Lock"
 	DelegateEvent               = "Delegate"
-	DelegatePowerIncreasedEvent = "DelegatePowerIncreased"
-	DelegatePowerDecreasedEvent = "DelegatePowerDecreased"
+	DelegatePowerIncreasedEvent = "DelegatedPowerIncreased"
+	DelegatePowerDecreasedEvent = "DelegatedPowerDecreased"
 )
 
 type ActionType string

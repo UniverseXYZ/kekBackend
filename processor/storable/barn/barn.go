@@ -82,5 +82,10 @@ func (b *BarnStorable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
+	err = b.handleDelegate(barnLogs, tx)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

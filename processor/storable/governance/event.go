@@ -126,7 +126,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 	}
 
 	if len(events) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "proposal event").Debug("no events found")
 		return nil
 	}
 
@@ -142,7 +142,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			eventData = make(types.JSONObject)
 			eventData["eta"] = e.Eta.Int64()
 		}
-		_, err = stmt.Exec(e.ProposalID, *e.Caller, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(e.ProposalID.Int64(), *e.Caller, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

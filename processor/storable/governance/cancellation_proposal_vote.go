@@ -84,7 +84,7 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 
 func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.Tx) error {
 	if len(votes) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "cancellation proposal vote").Debug("no events found")
 		return nil
 	}
 
@@ -94,7 +94,7 @@ func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.
 	}
 
 	for _, v := range votes {
-		_, err = stmt.Exec(v.ProposalID, v.User, v.Support, v.Power, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(v.ProposalID.Int64(), v.User, *v.Support, v.Power.String(), v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
@@ -115,7 +115,7 @@ func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.
 
 func (g GovStorable) insertCancellationProposalVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
 	if len(votes) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "cancellation proposal cancel vote").Debug("no events found")
 		return nil
 	}
 
@@ -125,7 +125,7 @@ func (g GovStorable) insertCancellationProposalVotesCanceledToDB(votes []VoteCan
 	}
 
 	for _, v := range votes {
-		_, err = stmt.Exec(v.ProposalID, v.User, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(v.ProposalID.Int64(), v.User, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

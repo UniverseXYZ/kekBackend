@@ -16,7 +16,7 @@ import (
 	"github.com/alethio/web3-go/types"
 )
 
-var log = logrus.WithField("module", "data")
+var log = logrus.WithField("module", "storable(block)")
 
 type Block struct {
 	RawBlock             types.Block

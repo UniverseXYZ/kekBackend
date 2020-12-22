@@ -16,9 +16,9 @@ func (d *Dashboard) getDBEntries() (types.DBEntries, error) {
 	err := d.core.DB().QueryRow(`
 	select
 	       (select count(*) from blocks)::text as blocks,
-	       (select count(*) from txs)::text as txs,
-	       (select count(*) from uncles)::text as uncles,
-	       (select count(*) from log_entries)::text as log_entries
+	       0 as txs,
+	       0 as uncles,
+	       0 as log_entries
 	`).Scan(&dbEntries.Blocks, &dbEntries.Txs, &dbEntries.Uncles, &dbEntries.LogEntries)
 	if err != nil {
 		log.Error(err)

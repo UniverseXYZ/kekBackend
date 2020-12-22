@@ -26,8 +26,8 @@ type BaseLog struct {
 type Lock struct {
 	BaseLog
 
-	User        string
-	LockedUntil *big.Int
+	User      string
+	Timestamp *big.Int
 }
 
 type StakingAction struct {
@@ -53,6 +53,6 @@ type DelegateChange struct {
 	ActionType          ActionType
 	Sender              string
 	Receiver            string
-	Amount              *big.Int
-	ToNewDelegatedPower *big.Int
+	Amount              *big.Int `abi:"amount"`
+	ToNewDelegatedPower *big.Int `abi:"to_newDelegatedPower"`
 }

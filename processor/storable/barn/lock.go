@@ -27,9 +27,11 @@ func (b *BarnStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
 
 	// if no lock was identified, fail fast to avoid extra processing
 	if len(locks) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "locks").Debug("no events found")
 		return nil
 	}
+
+	log.WithField("handler", "locks").WithField("count", len(locks)).Trace("found Lock events")
 
 	stmt, err := tx.Prepare(pq.CopyIn("barn_locks", "tx_hash", "tx_index", "log_index", "logged_by", "user_address", "locked_until", "locked_at", "included_in_block"))
 	if err != nil {
@@ -37,11 +39,13 @@ func (b *BarnStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
 	}
 
 	for _, l := range locks {
-		_, err = stmt.Exec(l.TransactionHash, l.TransactionIndex, l.LogIndex, l.LoggedBy, l.User, l.LockedUntil, b.Preprocessed.BlockTimestamp, b.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(l.TransactionHash, l.TransactionIndex, l.LogIndex, l.LoggedBy, l.User, l.Timestamp.Int64(), b.Preprocessed.BlockTimestamp, b.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
 	}
+
+	log.Trace("flushing data to db")
 
 	_, err = stmt.Exec()
 	if err != nil {
