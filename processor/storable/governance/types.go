@@ -12,8 +12,6 @@ type Proposal struct {
 	Description  string
 	Title        string
 	CreateTime   *big.Int
-	StartTime    *big.Int
-	Quorum       *big.Int
 	Eta          *big.Int
 	ForVotes     *big.Int
 	AgainstVotes *big.Int
@@ -39,6 +37,8 @@ type ProposalEvent struct {
 	BaseLog
 
 	ProposalID *big.Int
+	Caller     *string
+	Eta        *big.Int
 	EventType  int
 }
 
@@ -58,4 +58,12 @@ type VoteCanceled struct {
 	ProposalID *big.Int
 	User       string
 	Timestamp  int64
+}
+
+type CancellationProposal struct {
+	BaseLog
+
+	ProposalID big.Int
+	CreateTime int64
+	Creator    string
 }
