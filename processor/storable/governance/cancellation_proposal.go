@@ -2,14 +2,13 @@ package governance
 
 import (
 	"database/sql"
+	"encoding/hex"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/log"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/contracts"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
@@ -18,11 +17,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 
 	for _, log := range logs {
 		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["CancellationProposalStarted"].ID.String()) {
-			ctr, err := contracts.NewGovernance(common.HexToAddress(g.config.GovernanceAddress), &g.GovernanceClient)
-			if err != nil {
-				return err
-			}
-
+			var cp CancellationProposal
 			baseLog, err := g.getBaseLog(log)
 			if err != nil {
 				return err
@@ -33,15 +28,18 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 				return err
 			}
 
-			p, err := ctr.CancellationProposals(nil, proposalID)
+			data, err := hex.DecodeString(utils.Trim0x(log.Data))
 			if err != nil {
-				return errors.Wrap(err, "could not get the proposals from contract")
+				return errors.Wrap(err, "could not decode log data")
 			}
-			var cp CancellationProposal
+
+			err = g.govAbi.UnpackIntoInterface(&cp, "CancellationProposalStarted", data)
+			if err != nil {
+				return errors.Wrap(err, "could not unpack log data")
+			}
 
 			cp.ProposalID = *proposalID
-			cp.CreateTime = p.CreateTime.Int64()
-			cp.Creator = p.Creator.String()
+			cp.CreateTime = g.Preprocessed.BlockTimestamp
 			cp.BaseLog = *baseLog
 			cancellationProposals = append(cancellationProposals, cp)
 		}
@@ -59,7 +57,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 
 	for _, cp := range cancellationProposals {
 
-		_, err = stmt.Exec(cp.ProposalID, cp.Creator, cp.CreateTime, cp.TransactionHash, cp.TransactionIndex, cp.LogIndex, cp.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(cp.ProposalID, cp.Caller, cp.CreateTime, cp.TransactionHash, cp.TransactionIndex, cp.LogIndex, cp.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
