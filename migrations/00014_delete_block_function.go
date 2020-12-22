@@ -26,10 +26,18 @@ func Up00006(tx *sql.Tx) error {
 		tbl    varchar;
 	begin
 		tables := array [
-			'uncles',
-			'txs',
-			'log_entries',
-			'account_txs'
+			'bond_transfers',
+			'barn_staking_actions',
+			'barn_locks',
+			'barn_delegate_changes',
+			'barn_delegate_actions',
+			'governance_proposals',
+			'governance_events',
+			'governance_votes',
+			'governance_votes_canceled',
+			'governance_cancellation_proposals',
+			'governance_cancellation_votes',
+			'governance_cancellation_votes_canceled'
 			];
 	
 		foreach tbl in array tables

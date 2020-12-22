@@ -53,11 +53,6 @@ type Storable interface {
 func (fb *Processor) registerStorables() error {
 	fb.storables = append(fb.storables, storable.NewStorableBlock(fb.Raw.Block))
 
-	// fb.storables = append(fb.storables, storable.NewStorableTxs(fb.Raw.Block, fb.Raw.Receipts))
-	// fb.storables = append(fb.storables, storable.NewStorableUncles(fb.Raw.Block, fb.Raw.Uncles))
-	// fb.storables = append(fb.storables, storable.NewStorableLogEntries(fb.Raw.Block, fb.Raw.Receipts))
-	// fb.storables = append(fb.storables, storable.NewStorableAccountTxs(fb.Raw.Block))
-
 	{
 		if _, exist := fb.abis["bond"]; !exist {
 			return errors.New("could not find abi for bond contract")
@@ -72,12 +67,14 @@ func (fb *Processor) registerStorables() error {
 		}
 		fb.storables = append(fb.storables, barn.NewBarnStorable(fb.config.Barn, fb.Raw, fb.abis["barn"]))
 	}
+
 	{
 		if _, exist := fb.abis["governance"]; !exist {
 			return errors.New("could not find abi for governance contract")
 		}
 		fb.storables = append(fb.storables, governance.NewGovernance(fb.config.Governance, fb.Raw, fb.abis["governance"]))
 	}
+
 	return nil
 }
 
