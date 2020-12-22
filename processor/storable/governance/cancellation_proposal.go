@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
@@ -16,7 +15,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 	var cancellationProposals []CancellationProposal
 
 	for _, log := range logs {
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["CancellationProposalStarted"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalStarted") {
 			var cp CancellationProposal
 			baseLog, err := g.getBaseLog(log)
 			if err != nil {

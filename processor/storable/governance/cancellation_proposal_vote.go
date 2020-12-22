@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
@@ -16,7 +15,7 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 	var cancellationProposalVotes []Vote
 	var cancellationProposalCancelledVotes []VoteCanceled
 	for _, log := range logs {
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["CancellationProposalVote"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalVote") {
 			var vote Vote
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
@@ -46,7 +45,8 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 			vote.Timestamp = g.Preprocessed.BlockTimestamp
 			cancellationProposalVotes = append(cancellationProposalVotes, vote)
 		}
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["CancellationProposalVoteCancelled"].ID.String()) {
+
+		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalVoteCancelled") {
 			var vote VoteCanceled
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {

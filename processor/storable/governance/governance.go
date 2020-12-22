@@ -7,12 +7,14 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
+
+var log = logrus.WithField("module", "storable(governance)")
 
 type GovStorable struct {
 	config Config
