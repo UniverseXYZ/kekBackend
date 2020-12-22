@@ -69,22 +69,12 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 
 	}
 
-	if len(cancellationProposalVotes) == 0 {
-		log.Debug("no events found")
-		return nil
-	}
-
-	err := g.insertVotesToDB(cancellationProposalVotes, tx)
+	err := g.insertCancellationProposalVotesToDB(cancellationProposalVotes, tx)
 	if err != nil {
 		return err
 	}
 
-	if len(cancellationProposalCancelledVotes) == 0 {
-		log.Debug("no events found")
-		return nil
-	}
-
-	err = g.insertVotesCanceledToDB(cancellationProposalCancelledVotes, tx)
+	err = g.insertCancellationProposalVotesCanceledToDB(cancellationProposalCancelledVotes, tx)
 	if err != nil {
 		return err
 	}
@@ -93,6 +83,11 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 }
 
 func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.Tx) error {
+	if len(votes) == 0 {
+		log.Debug("no events found")
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
@@ -119,6 +114,11 @@ func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.
 }
 
 func (g GovStorable) insertCancellationProposalVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
+	if len(votes) == 0 {
+		log.Debug("no events found")
+		return nil
+	}
+
 	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
