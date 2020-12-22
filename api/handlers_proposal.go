@@ -13,27 +13,18 @@ import (
 func (a *API) ProposalDetailsHandler(c *gin.Context) {
 	proposalID := utils.CleanUpHex(c.Param("proposalID"))
 	var (
-		Id           uint64
-		Proposer     string
-		Description  string
-		Title        string
-		CreateTime   uint64
-		StartTime    uint64
-		Quorum       string
-		Eta          uint64
-		ForVotes     string
-		AgainstVotes string
-		Canceled     bool
-		Executed     bool
-		Targets      types2.JSONStringArray
-		Values       types2.JSONStringArray
-		Signatures   types2.JSONStringArray
-		Calldatas    types2.JSONStringArray
-		Timestamp    int64
+		Id          uint64
+		Proposer    string
+		Description string
+		Title       string
+		CreateTime  uint64
+		Targets     types2.JSONStringArray
+		Values      types2.JSONStringArray
+		Signatures  types2.JSONStringArray
+		Calldatas   types2.JSONStringArray
+		Timestamp   int64
 	)
-	err := a.core.DB().QueryRow(`select proposal_ID,proposer,description,title,create_time,start_time,quorum,eta,for_votes,against_votes,canceled,executed,targets,"values",signatures,calldatas,"timestamp"
-     from governance_proposals where proposal_ID = $1 limit 1`, proposalID).Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &StartTime, &Quorum, &Eta, &ForVotes, &AgainstVotes, &Canceled, &Executed, &Targets,
-		&Values, &Signatures, &Calldatas, &Timestamp)
+	err := a.core.DB().QueryRow(`select proposal_id,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp from governance_proposals where proposal_ID = $1 `, proposalID).Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &Targets, &Values, &Signatures, &Calldatas, &Timestamp)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -46,30 +37,23 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 	}
 
 	proposal := types.Proposal{
-		Id:           Id,
-		Proposer:     Proposer,
-		Description:  Description,
-		Title:        Title,
-		CreateTime:   CreateTime,
-		StartTime:    StartTime,
-		Quorum:       Quorum,
-		Eta:          Eta,
-		ForVotes:     ForVotes,
-		AgainstVotes: AgainstVotes,
-		Canceled:     Canceled,
-		Executed:     Executed,
-		Targets:      Targets,
-		Values:       Values,
-		Signatures:   Signatures,
-		Calldatas:    Calldatas,
-		Timestamp:    Timestamp,
+		Id:             Id,
+		Proposer:       Proposer,
+		Description:    Description,
+		Title:          Title,
+		CreateTime:     CreateTime,
+		Targets:        Targets,
+		Values:         Values,
+		Signatures:     Signatures,
+		Calldatas:      Calldatas,
+		BlockTimestamp: Timestamp,
 	}
 
 	OK(c, proposal)
 }
 
 func (a *API) AllProposalHandler(c *gin.Context) {
-	rows, err := a.core.DB().Query(`select proposal_ID,proposer,description,title,create_time,start_time,quorum,eta,for_votes,against_votes,canceled,executed,targets,"values",signatures,calldatas,"timestamp" from governance_proposals order by "timestamp" desc`)
+	rows, err := a.core.DB().Query(`select proposal_ID,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp from governance_proposals order by block_timestamp desc`)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -81,48 +65,34 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 
 	for rows.Next() {
 		var (
-			Id           uint64
-			Proposer     string
-			Description  string
-			Title        string
-			CreateTime   uint64
-			StartTime    uint64
-			Quorum       string
-			Eta          uint64
-			ForVotes     string
-			AgainstVotes string
-			Canceled     bool
-			Executed     bool
-			Targets      types2.JSONStringArray
-			Values       types2.JSONStringArray
-			Signatures   types2.JSONStringArray
-			Calldatas    types2.JSONStringArray
-			Timestamp    int64
+			Id          uint64
+			Proposer    string
+			Description string
+			Title       string
+			CreateTime  uint64
+			Targets     types2.JSONStringArray
+			Values      types2.JSONStringArray
+			Signatures  types2.JSONStringArray
+			Calldatas   types2.JSONStringArray
+			Timestamp   int64
 		)
-		err := rows.Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &StartTime, &Quorum, &Eta, &ForVotes, &AgainstVotes, &Canceled, &Executed, &Targets, &Values, &Signatures, &Calldatas, &Timestamp)
+		err := rows.Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &Targets, &Values, &Signatures, &Calldatas, &Timestamp)
 		if err != nil {
 			Error(c, err)
 			return
 		}
 
 		proposal := types.Proposal{
-			Id:           Id,
-			Proposer:     Proposer,
-			Description:  Description,
-			Title:        Title,
-			CreateTime:   CreateTime,
-			StartTime:    StartTime,
-			Quorum:       Quorum,
-			Eta:          Eta,
-			ForVotes:     ForVotes,
-			AgainstVotes: AgainstVotes,
-			Canceled:     Canceled,
-			Executed:     Executed,
-			Targets:      Targets,
-			Values:       Values,
-			Signatures:   Signatures,
-			Calldatas:    Calldatas,
-			Timestamp:    Timestamp,
+			Id:             Id,
+			Proposer:       Proposer,
+			Description:    Description,
+			Title:          Title,
+			CreateTime:     CreateTime,
+			Targets:        Targets,
+			Values:         Values,
+			Signatures:     Signatures,
+			Calldatas:      Calldatas,
+			BlockTimestamp: Timestamp,
 		}
 		proposalList = append(proposalList, proposal)
 	}

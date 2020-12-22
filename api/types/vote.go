@@ -5,6 +5,7 @@ type Vote struct {
 	TransactionHash  string
 	TransactionIndex int64
 	LogIndex         int64
+	Canceled         bool
 
 	ProposalID uint64
 	User       string
