@@ -52,7 +52,7 @@ var runCmd = &cobra.Command{
 			},
 			Scraper: scraper.Config{
 				NodeURL:      viper.GetString("eth.client.http"),
-				EnableUncles: viper.GetBool("feature.uncles.enabled"),
+				EnableUncles: false,
 			},
 			PostgresConnectionString: viper.GetString("db.connection-string"),
 			Features: core.Features{
@@ -118,9 +118,6 @@ func init() {
 
 	runCmd.Flags().Bool("feature.automigrate.enabled", true, "Enable/disable the automatic migrations feature")
 	viper.BindPFlag("feature.automigrate.enabled", runCmd.Flag("feature.automigrate.enabled"))
-
-	runCmd.Flags().Bool("feature.uncles.enabled", true, "Enable/disable uncles scraping")
-	viper.BindPFlag("feature.uncles.enabled", runCmd.Flag("feature.uncles.enabled"))
 
 	// eth
 	runCmd.Flags().String("eth.client.http", "", "HTTP endpoint of JSON-RPC enabled Ethereum node")

@@ -1,8 +1,10 @@
 package governance
 
+type ActionType string
+
 const (
-	CREATED = iota
-	QUEUED
-	EXECUTED
-	CANCELED
+	CREATED  ActionType = "CREATED"
+	QUEUED   ActionType = "QUEUED"
+	EXECUTED ActionType = "EXECUTED"
+	CANCELED ActionType = "CANCELED"
 )

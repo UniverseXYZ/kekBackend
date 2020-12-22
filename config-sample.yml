@@ -70,11 +70,6 @@ feature:
     # Enable/disable the automatic migrations
     enabled: true
 
-  # Uncles scraping
-  uncles:
-    # Enable/disabled the uncles scraping
-    enabled: true
-
 # Control what to be logged using format "module=level,module=level"; `*` means all other modules
 logging: "*=info"
 

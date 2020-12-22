@@ -34,7 +34,7 @@ type StakingAction struct {
 	BaseLog
 
 	UserAddress  string
-	ActionType   int
+	ActionType   ActionType
 	Amount       string
 	BalanceAfter string
 }
@@ -44,13 +44,13 @@ type DelegateAction struct {
 
 	Sender     string
 	Receiver   string
-	ActionType int
+	ActionType ActionType
 }
 
 type DelegateChange struct {
 	BaseLog
 
-	ActionType          int
+	ActionType          ActionType
 	Sender              string
 	Receiver            string
 	Amount              *big.Int

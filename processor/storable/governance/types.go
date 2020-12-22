@@ -39,7 +39,7 @@ type ProposalEvent struct {
 	ProposalID *big.Int
 	Caller     *string
 	Eta        *big.Int
-	EventType  int
+	EventType  ActionType
 }
 
 type Vote struct {

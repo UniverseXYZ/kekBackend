@@ -131,7 +131,7 @@ func (b *BarnStorable) decodeDelegateEvent(log web3types.Log) (*DelegateAction, 
 	sender := utils.Topic2Address(log.Topics[1])
 	receiver := utils.Topic2Address(log.Topics[2])
 
-	var action int
+	var action ActionType
 	if receiver == ZeroAddress {
 		action = DELEGATE_STOP
 	} else {

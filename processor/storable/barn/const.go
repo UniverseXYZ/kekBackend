@@ -9,19 +9,21 @@ const (
 	DelegatePowerDecreasedEvent = "DelegatePowerDecreased"
 )
 
+type ActionType string
+
 const (
-	DEPOSIT = iota
-	WITHDRAW
+	DEPOSIT  ActionType = "DEPOSIT"
+	WITHDRAW ActionType = "WITHDRAW"
 )
 
 const (
-	DELEGATE_START = iota
-	DELEGATE_STOP
+	DELEGATE_START ActionType = "START"
+	DELEGATE_STOP  ActionType = "STOP"
 )
 
 const (
-	DELEGATE_INCREASE = iota
-	DELEGATE_DECREASE
+	DELEGATE_INCREASE ActionType = "INCREASE"
+	DELEGATE_DECREASE ActionType = "DECREASE"
 )
 
 const ZeroAddress = "0x0000000000000000000000000000000000000000"
