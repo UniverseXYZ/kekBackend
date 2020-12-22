@@ -93,7 +93,7 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 }
 
 func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.Tx) error {
-	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_proposal_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
@@ -119,7 +119,7 @@ func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.
 }
 
 func (g GovStorable) insertCancellationProposalVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
-	stmt, err := tx.Prepare(pq.CopyIn("governance_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}

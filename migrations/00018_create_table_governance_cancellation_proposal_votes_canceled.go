@@ -7,17 +7,15 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableGovernanceCancellationProposalsVotes, downCreateTableGovernanceCancellationProposalsVotes)
+	goose.AddMigration(upCreateTableGovernanceCancellationVotesCanceled, downCreateTableGovernanceCancellationVotesCanceled)
 }
 
-func upCreateTableGovernanceCancellationProposalsVotes(tx *sql.Tx) error {
+func upCreateTableGovernanceCancellationVotesCanceled(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-	create table governance_cancellation_votes
+	create table governance_cancellation_votes_canceled
 	(
 		proposal_id				   bigint not null ,
 		user_id					   text not null ,
-		support 				   bool not null,
-		power 					   bigint not null,
 		block_timestamp				   bigint,
 		
 		tx_hash                    text    not null,
@@ -32,7 +30,7 @@ func upCreateTableGovernanceCancellationProposalsVotes(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableGovernanceCancellationProposalsVotes(tx *sql.Tx) error {
-	_, err := tx.Exec("drop table governance_cancellation_votes")
+func downCreateTableGovernanceCancellationVotesCanceled(tx *sql.Tx) error {
+	_, err := tx.Exec("drop table governance_cancellation_votes_canceled")
 	return err
 }
