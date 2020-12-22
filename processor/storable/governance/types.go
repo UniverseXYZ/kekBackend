@@ -65,5 +65,5 @@ type CancellationProposal struct {
 
 	ProposalID big.Int
 	CreateTime int64
-	Creator    string
+	Caller     *string
 }

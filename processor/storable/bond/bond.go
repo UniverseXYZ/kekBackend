@@ -50,7 +50,7 @@ func (b BondStorable) ToDB(tx *sql.Tx) error {
 				continue
 			}
 
-			if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(b.bondAbi.Events["Transfer"].ID.String()) {
+			if utils.LogIsEvent(log, b.bondAbi, "Transfer") {
 				bondTransfers = append(bondTransfers, log)
 			}
 		}

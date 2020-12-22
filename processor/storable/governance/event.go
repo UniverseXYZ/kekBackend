@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
@@ -23,7 +22,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			return err
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalCreated"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalCreated") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
@@ -49,7 +48,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			continue
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalQueued"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalQueued") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
@@ -74,7 +73,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			continue
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalExecuted"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalExecuted") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
@@ -99,7 +98,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			continue
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalCanceled"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalCanceled") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
