@@ -11,11 +11,11 @@ import (
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
-	var votes []Vote
-	var canceledVotes []VoteCanceled
+func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *sql.Tx) error {
+	var cancellationProposalVotes []Vote
+	var cancellationProposalCancelledVotes []VoteCanceled
 	for _, log := range logs {
-		if utils.LogIsEvent(log, g.govAbi, "Vote") {
+		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalVote") {
 			var vote Vote
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
@@ -43,9 +43,10 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 			vote.User = user
 			vote.BaseLog = *baseLog
 			vote.Timestamp = g.Preprocessed.BlockTimestamp
-			votes = append(votes, vote)
+			cancellationProposalVotes = append(cancellationProposalVotes, vote)
 		}
-		if utils.LogIsEvent(log, g.govAbi, "VoteCanceled") {
+
+		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalVoteCancelled") {
 			var vote VoteCanceled
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
@@ -63,17 +64,17 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 			vote.BaseLog = *baseLog
 			vote.Timestamp = g.Preprocessed.BlockTimestamp
 
-			canceledVotes = append(canceledVotes, vote)
+			cancellationProposalCancelledVotes = append(cancellationProposalCancelledVotes, vote)
 		}
 
 	}
 
-	err := g.insertVotesToDB(votes, tx)
+	err := g.insertCancellationProposalVotesToDB(cancellationProposalVotes, tx)
 	if err != nil {
 		return err
 	}
 
-	err = g.insertVotesCanceledToDB(canceledVotes, tx)
+	err = g.insertCancellationProposalVotesCanceledToDB(cancellationProposalCancelledVotes, tx)
 	if err != nil {
 		return err
 	}
@@ -81,13 +82,13 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 	return nil
 }
 
-func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
+func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.Tx) error {
 	if len(votes) == 0 {
 		log.Debug("no events found")
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
@@ -112,13 +113,13 @@ func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
 	return nil
 }
 
-func (g GovStorable) insertVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
+func (g GovStorable) insertCancellationProposalVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
 	if len(votes) == 0 {
 		log.Debug("no events found")
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}

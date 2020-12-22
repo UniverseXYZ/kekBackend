@@ -6,7 +6,6 @@ import (
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
@@ -20,7 +19,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 	var actions []ProposalActions
 
 	for _, log := range logs {
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalCreated"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalCreated") {
 			ctr, err := contracts.NewGovernance(common.HexToAddress(g.config.GovernanceAddress), &g.GovernanceClient)
 			if err != nil {
 				return err

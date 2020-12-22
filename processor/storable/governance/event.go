@@ -2,12 +2,13 @@ package governance
 
 import (
 	"database/sql"
+	"encoding/hex"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/ethereum/go-ethereum/log"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
@@ -21,63 +22,104 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			return err
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalCreated"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalCreated") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
 			}
 
-			events = append(events, ProposalEvent{
-				BaseLog:    *baseLog,
-				ProposalID: proposalID,
-				EventType:  CREATED,
-			})
+			var e ProposalEvent
+			e.BaseLog = *baseLog
+			e.ProposalID = proposalID
+			e.EventType = CREATED
+
+			data, err := hex.DecodeString(utils.Trim0x(log.Data))
+			if err != nil {
+				return errors.Wrap(err, "could not decode log data")
+			}
+
+			err = g.govAbi.UnpackIntoInterface(&e, "ProposalCreated", data)
+			if err != nil {
+				return errors.Wrap(err, "could not unpack log data")
+			}
+
+			events = append(events, e)
 
 			continue
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalQueued"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalQueued") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
 			}
 
-			events = append(events, ProposalEvent{
-				BaseLog:    *baseLog,
-				ProposalID: proposalID,
-				EventType:  QUEUED,
-			})
+			var e ProposalEvent
+			e.BaseLog = *baseLog
+			e.ProposalID = proposalID
+			e.EventType = QUEUED
 
+			data, err := hex.DecodeString(utils.Trim0x(log.Data))
+			if err != nil {
+				return errors.Wrap(err, "could not decode log data")
+			}
+
+			err = g.govAbi.UnpackIntoInterface(&e, "ProposalQueued", data)
+			if err != nil {
+				return errors.Wrap(err, "could not unpack log data")
+			}
+
+			events = append(events, e)
 			continue
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalExecuted"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalExecuted") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
 			}
 
-			events = append(events, ProposalEvent{
-				BaseLog:    *baseLog,
-				ProposalID: proposalID,
-				EventType:  EXECUTED,
-			})
+			var e ProposalEvent
+			e.BaseLog = *baseLog
+			e.ProposalID = proposalID
+			e.EventType = EXECUTED
 
+			data, err := hex.DecodeString(utils.Trim0x(log.Data))
+			if err != nil {
+				return errors.Wrap(err, "could not decode log data")
+			}
+
+			err = g.govAbi.UnpackIntoInterface(&e, "ProposalExecuted", data)
+			if err != nil {
+				return errors.Wrap(err, "could not unpack log data")
+			}
+
+			events = append(events, e)
 			continue
 		}
 
-		if utils.CleanUpHex(log.Topics[0]) == utils.CleanUpHex(g.govAbi.Events["ProposalCanceled"].ID.String()) {
+		if utils.LogIsEvent(log, g.govAbi, "ProposalCanceled") {
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
 				return err
 			}
 
-			events = append(events, ProposalEvent{
-				BaseLog:    *baseLog,
-				ProposalID: proposalID,
-				EventType:  CANCELED,
-			})
+			var e ProposalEvent
+			e.BaseLog = *baseLog
+			e.ProposalID = proposalID
+			e.EventType = CANCELED
 
+			data, err := hex.DecodeString(utils.Trim0x(log.Data))
+			if err != nil {
+				return errors.Wrap(err, "could not decode log data")
+			}
+
+			err = g.govAbi.UnpackIntoInterface(&e, "ProposalExecuted", data)
+			if err != nil {
+				return errors.Wrap(err, "could not unpack log data")
+			}
+
+			events = append(events, e)
 			continue
 		}
 
@@ -88,14 +130,19 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_events", "proposal_id", "event_type", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_events", "proposal_id", "caller", "event_type", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "event_data", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
 
 	for _, e := range events {
+		var eventData types.JSONObject
 
-		_, err = stmt.Exec(e.ProposalID, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, g.Preprocessed.BlockNumber)
+		if e.Eta != nil {
+			eventData = make(types.JSONObject)
+			eventData["eta"] = e.Eta.Int64()
+		}
+		_, err = stmt.Exec(e.ProposalID, *e.Caller, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
