@@ -14,7 +14,7 @@ var canceledVotesList []types.VoteCanceled
 
 func (a *API) VoteDetailsHandler(proposalID string) {
 
-	rows, err := a.core.DB().Query(`select proposal_ID,user_ID,support,power,block_timestamp,tx_hash,tx_index,log_index,logged_by from governance_votes where proposal_ID =$1 order by "timestamp" desc`, proposalID)
+	rows, err := a.core.DB().Query(`select proposal_ID,user_ID,support,power,block_timestamp,tx_hash,tx_index,log_index,logged_by from governance_votes where proposal_ID =$1 order by block_timestamp desc`, proposalID)
 	if err != nil && err != sql.ErrNoRows {
 		//Error(c, err)
 		return

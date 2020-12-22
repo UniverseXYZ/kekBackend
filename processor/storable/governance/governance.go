@@ -21,7 +21,7 @@ type GovStorable struct {
 	Raw    *types.RawData
 	govAbi abi.ABI
 
-	GovernanceClient ethclient.Client
+	ethConn *ethclient.Client
 
 	Preprocessed struct {
 		BlockTimestamp int64
@@ -29,11 +29,12 @@ type GovStorable struct {
 	}
 }
 
-func NewGovernance(config Config, raw *types.RawData, govAbi abi.ABI) *GovStorable {
+func NewGovernance(config Config, raw *types.RawData, govAbi abi.ABI, ethConn *ethclient.Client) *GovStorable {
 	return &GovStorable{
-		config: config,
-		Raw:    raw,
-		govAbi: govAbi,
+		config:  config,
+		Raw:     raw,
+		govAbi:  govAbi,
+		ethConn: ethConn,
 	}
 }
 

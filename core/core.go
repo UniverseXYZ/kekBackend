@@ -217,7 +217,7 @@ func (c *Core) Run() {
 
 			indexingStart := time.Now()
 
-			p, err := processor.New(c.config.Processor, blk, c.abis)
+			p, err := processor.New(c.config.Processor, blk, c.abis, c.ethConn)
 			if err != nil {
 				c.stopMu.Unlock()
 				log.Error("error storing block: ", err)
