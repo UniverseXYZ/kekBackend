@@ -7,12 +7,12 @@ import (
 )
 
 type Overview struct {
-	AvgLockTimeSeconds  int64
-	Holders             int64
-	TotalDelegatedPower int64
-	TotalVBond          int64
-	Voters              int64
-	BarnUsers           int64
+	AvgLockTimeSeconds  string
+	Holders             string
+	TotalDelegatedPower string
+	TotalVBond          string
+	Voters              string
+	BarnUsers           string
 }
 
 func (a *API) BondOverview(c *gin.Context) {
