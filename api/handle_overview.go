@@ -12,6 +12,7 @@ type Overview struct {
 	TotalDelegatedPower int64
 	TotalVBond          int64
 	Voters              int64
+	BarnUsers           int64
 }
 
 func (a *API) BondOverview(c *gin.Context) {
@@ -35,4 +36,33 @@ func (a *API) BondOverview(c *gin.Context) {
 		return
 	}
 
+	err = a.core.DB().QueryRow(`select sum(total) from ( select case when action_type = 'INCREASE' then sum(amount)
+		when action_type = 'DECREASE' then -sum(amount) end total
+		from barn_delegate_changes
+		group by action_type ) x;
+    `).Scan(&overview.TotalDelegatedPower)
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+
+	err = a.core.DB().QueryRow(`select count(*)
+	from ( select distinct user_id as address
+		   from governance_votes
+		   union
+		   select distinct user_id
+		   from governance_cancellation_votes ) x; 
+		   `).Scan(&overview.Voters)
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+
+	err = a.core.DB().QueryRow(`select count(*) from barn_users;`).Scan(&overview.BarnUsers)
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+
+	OK(c, overview)
 }
