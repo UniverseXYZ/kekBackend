@@ -21,10 +21,10 @@ func (a *API) handleVoters(c *gin.Context) {
 	var votersList []Voter
 
 	rows, err := a.core.DB().Query(`select user_address,balance_of(user_address) as bond_staked,
-		   ( select locked_until
+		   ( select coalesce(locked_until,0)
 			 from barn_locks
 			 where user_address = barn_users.user_address
-			 order by included_in_block desc, log_index desc )                                            as locked_until,
+			 order by included_in_block desc, log_index desc ),0                                            as locked_until,
 		   delegated_power(user_address),
 		   ( select count(*) from governance_votes where user_id = barn_users.user_address ) +
 		   ( select count(*) from governance_cancellation_votes where user_id = barn_users.user_address ) as votes,
