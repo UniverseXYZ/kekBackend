@@ -7,24 +7,24 @@ import (
 )
 
 type Overview struct {
-	AvgLockTimeSeconds  string
-	Holders             string
+	AvgLockTimeSeconds  int64
+	Holders             int64
 	TotalDelegatedPower string
 	TotalVBond          string
-	Voters              string
-	BarnUsers           string
+	Voters              int64
+	BarnUsers           int64
 }
 
 func (a *API) BondOverview(c *gin.Context) {
 	var overview Overview
 
-	err := a.core.DB().QueryRow(`select avg(locked_until - locked_at) from barn_locks;`).Scan(&overview.AvgLockTimeSeconds)
+	err := a.core.DB().QueryRow(`select coalesce(avg(locked_until - locked_at),0) from barn_locks;`).Scan(&overview.AvgLockTimeSeconds)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
 	}
 
-	err = a.core.DB().QueryRow(`select sum(voting_power(user_address)) as total_voting_power from barn_users;`).Scan(&overview.TotalVBond)
+	err = a.core.DB().QueryRow(`select coalesce(sum(voting_power(user_address)),0) as total_voting_power from barn_users;`).Scan(&overview.TotalVBond)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -36,7 +36,7 @@ func (a *API) BondOverview(c *gin.Context) {
 		return
 	}
 
-	err = a.core.DB().QueryRow(`select sum(total) from ( select case when action_type = 'INCREASE' then sum(amount)
+	err = a.core.DB().QueryRow(`select coalesce(sum(total),0) from ( select case when action_type = 'INCREASE' then sum(amount)
 		when action_type = 'DECREASE' then -sum(amount) end total
 		from barn_delegate_changes
 		group by action_type ) x;
