@@ -9,15 +9,12 @@ import (
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-var votesList []types.Vote
-var canceledVotesList []types.VoteCanceled
-
-func (a *API) VoteDetailsHandler(proposalID string) {
-
+func (a *API) VoteDetailsHandler(proposalID string) []types.Vote {
+	var votesList []types.Vote
 	rows, err := a.core.DB().Query(`select proposal_ID,user_ID,support,power,block_timestamp,tx_hash,tx_index,log_index,logged_by from governance_votes where proposal_ID =$1 order by block_timestamp desc`, proposalID)
 	if err != nil && err != sql.ErrNoRows {
 		//Error(c, err)
-		return
+		return nil
 	}
 	defer rows.Close()
 
@@ -37,7 +34,7 @@ func (a *API) VoteDetailsHandler(proposalID string) {
 		err := rows.Scan(&ProposalID, &User, &Support, &Power, &Timestamp, &TransactionHash, &TransactionIndex, &LogIndex, &LoggedBy)
 		if err != nil {
 			//Error(c, err)
-			return
+			return nil
 		}
 
 		vote := types.Vote{
@@ -54,21 +51,17 @@ func (a *API) VoteDetailsHandler(proposalID string) {
 		}
 		votesList = append(votesList, vote)
 	}
-	/*
-		if len(votesList) == 0 {
-			NotFound(c)
-			return
-		}
-
-		OK(c, votesList)*/
+	if len(votesList) == 0 {
+		return nil
+	}
+	return votesList
 }
 
-func (a *API) VoteCanceledDetailsHandler(proposalID string) {
-
+func (a *API) VoteCanceledDetailsHandler(proposalID string) []types.VoteCanceled {
+	var canceledVotesList []types.VoteCanceled
 	rows, err := a.core.DB().Query(`select proposal_ID,user_ID,block_timestamp,tx_hash,tx_index,log_index,logged_by from governance_votes where proposal_ID =$1 order by "timestamp" desc`, proposalID)
 	if err != nil && err != sql.ErrNoRows {
-		//Error(c, err)
-		return
+		return nil
 	}
 	defer rows.Close()
 
@@ -86,8 +79,7 @@ func (a *API) VoteCanceledDetailsHandler(proposalID string) {
 
 		err := rows.Scan(&ProposalID, &User, &Timestamp, &TransactionHash, &TransactionIndex, &LogIndex, &LoggedBy)
 		if err != nil {
-			//Error(c, err)
-			return
+			return nil
 		}
 		canceledVote := types.VoteCanceled{
 			ProposalID: ProposalID,
@@ -102,23 +94,23 @@ func (a *API) VoteCanceledDetailsHandler(proposalID string) {
 		canceledVotesList = append(canceledVotesList, canceledVote)
 	}
 
-	/*if len(canceledVotesList) == 0 {
-		NotFound(c)
-		return
+	if len(canceledVotesList) == 0 {
+		return nil
 	}
 
-	OK(c, canceledVotesList)*/
+	return canceledVotesList
 }
 
 func (a *API) VotesHandler(c *gin.Context) {
 	proposalID := utils.CleanUpHex(c.Param("proposalID"))
 
-	a.VoteDetailsHandler(proposalID)
+	votesList := a.VoteDetailsHandler(proposalID)
 	if len(votesList) == 0 {
 		NotFound(c)
 		return
 	}
 
+	canceledVotesList := a.VoteCanceledDetailsHandler(proposalID)
 	if len(canceledVotesList) == 0 {
 		OK(c, votesList)
 		return
