@@ -18,7 +18,7 @@ type Overview struct {
 func (a *API) BondOverview(c *gin.Context) {
 	var overview Overview
 
-	err := a.core.DB().QueryRow(`select coalesce(avg(locked_until - locked_at),0) from barn_locks;`).Scan(&overview.AvgLockTimeSeconds)
+	err := a.core.DB().QueryRow(`select coalesce(avg(locked_until - locked_at),0)::bigint from barn_locks;`).Scan(&overview.AvgLockTimeSeconds)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
