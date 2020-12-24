@@ -11,6 +11,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo .
 
 FROM scratch
 COPY --from=build /barnbridge/abis /abis
+COPY --from=build /barnbridge/dashboard/web /dashboard/web
 COPY --from=build /barnbridge/barnbridge-backend /barnbridge-backend
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 CMD ["/barnbridge-backend", "run", "--config=/config/config.yml"]
