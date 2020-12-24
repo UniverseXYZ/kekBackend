@@ -2,14 +2,14 @@ version: '3.7'
 services:
   redis:
     container_name: barnbridge-backend-redis
-    image: redis:5.0.5-alpine
+    image: redis:6-alpine
     restart: always
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - .volumes/redis:/data
   postgres:
     container_name: barnbridge-backend-postgres
-    image: postgres:11.5-alpine
+    image: postgres:13-alpine
     restart: always
     environment:
       - POSTGRES_USER=barnbridge-backend
