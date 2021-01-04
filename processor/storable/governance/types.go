@@ -63,7 +63,7 @@ type VoteCanceled struct {
 type CancellationProposal struct {
 	BaseLog
 
-	ProposalID big.Int
+	ProposalID *big.Int
 	CreateTime int64
 	Caller     common.Address
 }
