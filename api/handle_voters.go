@@ -26,9 +26,9 @@ func (a *API) handleVoters(c *gin.Context) {
 			 where user_address = barn_users.user_address
 			 order by included_in_block desc, log_index desc ) ,0)                                          as locked_until,
 		   delegated_power(user_address),
-		   ( select count(*) from governance_votes where user_id = barn_users.user_address ) +
-		   ( select count(*) from governance_cancellation_votes where user_id = barn_users.user_address ) as votes,
-		   ( select count(*) from governance_proposals where proposer = barn_users.user_address )         as proposals,
+		   ( select count(*) from governance_votes where lower(user_id) = lower(barn_users.user_address) ) +
+		   ( select count(*) from governance_cancellation_votes where lower(user_id) = lower(barn_users.user_address) ) as votes,
+		   ( select count(*) from governance_proposals where lower(proposer) = lower(barn_users.user_address) )         as proposals,
 		   voting_power(user_address)                                                                     as voting_power,
 		   has_active_delegation(user_address)
 	from barn_users
