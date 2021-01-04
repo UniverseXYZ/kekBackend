@@ -37,7 +37,7 @@ type ProposalEvent struct {
 	BaseLog
 
 	ProposalID *big.Int
-	Caller     *string
+	Caller     common.Address
 	Eta        *big.Int
 	EventType  ActionType
 }
@@ -65,5 +65,5 @@ type CancellationProposal struct {
 
 	ProposalID big.Int
 	CreateTime int64
-	Caller     *string
+	Caller     common.Address
 }

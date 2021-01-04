@@ -133,12 +133,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			eventData["eta"] = e.Eta.Int64()
 		}
 
-		var caller string
-		if e.Caller != nil {
-			caller = *e.Caller
-		}
-
-		_, err = stmt.Exec(e.ProposalID.Int64(), caller, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(e.ProposalID.Int64(), e.Caller.String(), e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

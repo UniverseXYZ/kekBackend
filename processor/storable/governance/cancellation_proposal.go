@@ -55,7 +55,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 	}
 
 	for _, cp := range cancellationProposals {
-		_, err = stmt.Exec(cp.ProposalID, *cp.Caller, cp.CreateTime, cp.TransactionHash, cp.TransactionIndex, cp.LogIndex, cp.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(cp.ProposalID, cp.Caller.String(), cp.CreateTime, cp.TransactionHash, cp.TransactionIndex, cp.LogIndex, cp.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
