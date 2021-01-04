@@ -104,7 +104,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 				return errors.Wrap(err, "could not decode log data")
 			}
 
-			err = g.govAbi.UnpackIntoInterface(&e, "ProposalExecuted", data)
+			err = g.govAbi.UnpackIntoInterface(&e, "ProposalCanceled", data)
 			if err != nil {
 				return errors.Wrap(err, "could not unpack log data")
 			}

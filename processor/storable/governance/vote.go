@@ -29,7 +29,7 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 				return errors.Wrap(err, "could not decode log data")
 			}
 
-			err = g.govAbi.UnpackIntoInterface(&vote, "vote", data)
+			err = g.govAbi.UnpackIntoInterface(&vote, "Vote", data)
 			if err != nil {
 				return errors.Wrap(err, "could not unpack log data")
 			}
