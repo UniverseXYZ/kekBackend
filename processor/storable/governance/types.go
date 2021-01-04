@@ -47,7 +47,7 @@ type Vote struct {
 
 	ProposalID *big.Int
 	User       string
-	Support    *bool
+	Support    bool
 	Power      *big.Int
 	Timestamp  int64
 }

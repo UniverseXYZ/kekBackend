@@ -93,7 +93,7 @@ func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
 	}
 
 	for _, v := range votes {
-		_, err = stmt.Exec(v.ProposalID.Int64(), v.User, *v.Support, v.Power.String(), v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(v.ProposalID.Int64(), v.User, v.Support, v.Power.String(), v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
