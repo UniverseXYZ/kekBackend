@@ -159,12 +159,14 @@ func (m *Manager) FeedToChan(c chan int64) {
 			if err != nil {
 				log.Error("getting task from redis returned error:", err)
 				doneChan <- false
+				return
 			}
 
 			taskInt, err = strconv.ParseInt(taskResult.Member.(string), 10, 64)
 			if err != nil {
 				log.Error(err)
 				doneChan <- false
+				return
 			}
 
 			doneChan <- true
