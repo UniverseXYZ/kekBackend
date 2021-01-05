@@ -54,7 +54,7 @@ func addDBFlags(cmd *cobra.Command) {
 	cmd.Flags().String("db.host", "localhost", "Database host")
 	cmd.Flags().String("db.port", "5432", "Database port")
 	cmd.Flags().String("db.sslmode", "disable", "Database sslmode")
-	cmd.Flags().String("db.dbname", "coriolis", "Database name")
+	cmd.Flags().String("db.dbname", "name", "Database name")
 	cmd.Flags().String("db.user", "", "Database user (also allowed via PG_USER env)")
 }
 
