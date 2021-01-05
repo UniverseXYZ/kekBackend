@@ -17,14 +17,17 @@ type Checker struct {
 	tracker *bestblock.Tracker
 	tm      *taskmanager.Manager
 	logger  *logrus.Entry
+
+	lag int64
 }
 
-func NewChecker(db *sql.DB, tracker *bestblock.Tracker, tm *taskmanager.Manager) *Checker {
+func NewChecker(db *sql.DB, tracker *bestblock.Tracker, tm *taskmanager.Manager, lag int64) *Checker {
 	return &Checker{
 		db:      db,
 		tracker: tracker,
 		tm:      tm,
 		logger:  logrus.WithField("module", "integrity-checker"),
+		lag:     lag,
 	}
 }
 
@@ -58,19 +61,38 @@ func (c *Checker) lifecycle() error {
 		return nil
 	}
 
-	missing, err := c.checkMissingBlocks(checkpoint, best)
+	var highestBlock int64
+	err = c.db.QueryRow(`select max(number) from blocks;`).Scan(&highestBlock)
+	if err != nil {
+		return errors.Wrap(err, "could not fetch highest block from database")
+	}
+
+	if highestBlock < best-c.lag-10 {
+		c.logger.WithFields(logrus.Fields{
+			"highest-db":    highestBlock,
+			"highest-chain": best,
+			"diff":          best - highestBlock,
+		}).Error("pipeline is falling behind")
+	}
+
+	if checkpoint >= highestBlock {
+		c.logger.Warn("checkpoint is higher than highest block; there's nothing to check")
+		return nil
+	}
+
+	missing, err := c.checkMissingBlocks(checkpoint, highestBlock)
 	if err != nil {
 		return err
 	}
 
-	broken, err := c.checkBrokenHashChain(checkpoint, best)
+	broken, err := c.checkBrokenHashChain(checkpoint, highestBlock)
 	if err != nil {
 		return err
 	}
 
 	all := append(missing, broken...)
 	if len(all) == 0 {
-		_, err = c.db.Exec("insert into integrity_checkpoints (number) values((select max(number) from blocks))")
+		_, err = c.db.Exec("insert into integrity_checkpoints (number) values($1)", highestBlock)
 		if err != nil {
 			return errors.Wrap(err, "could not store new integrity checkpoint")
 		}
@@ -81,7 +103,7 @@ func (c *Checker) lifecycle() error {
 
 	var uniqueBlocks = make(map[int64]bool)
 
-	for _, block := range append(missing, broken...) {
+	for _, block := range all {
 		uniqueBlocks[block] = true
 	}
 

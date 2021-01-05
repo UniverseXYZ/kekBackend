@@ -128,7 +128,7 @@ func New(config Config) *Core {
 
 	c.ethConn = conn
 
-	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager)
+	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag)
 
 	return &c
 }
