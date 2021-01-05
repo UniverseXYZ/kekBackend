@@ -7,24 +7,23 @@ import (
 
 	"github.com/barnbridge/barnbridge-backend/api/types"
 	types2 "github.com/barnbridge/barnbridge-backend/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 func (a *API) ProposalDetailsHandler(c *gin.Context) {
-	proposalID := utils.CleanUpHex(c.Param("proposalID"))
+	proposalID := c.Param("proposalID")
 	var (
-		Id          uint64
-		Proposer    string
-		Description string
-		Title       string
-		CreateTime  uint64
-		Targets     types2.JSONStringArray
-		Values      types2.JSONStringArray
-		Signatures  types2.JSONStringArray
-		Calldatas   types2.JSONStringArray
-		Timestamp   int64
+		id          uint64
+		proposer    string
+		description string
+		title       string
+		createTime  uint64
+		targets     types2.JSONStringArray
+		values      types2.JSONStringArray
+		signatures  types2.JSONStringArray
+		calldatas   types2.JSONStringArray
+		timestamp   int64
 	)
-	err := a.core.DB().QueryRow(`select proposal_id,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp from governance_proposals where proposal_ID = $1 `, proposalID).Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &Targets, &Values, &Signatures, &Calldatas, &Timestamp)
+	err := a.core.DB().QueryRow(`select proposal_id,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp from governance_proposals where proposal_ID = $1 `, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -37,16 +36,16 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 	}
 
 	proposal := types.Proposal{
-		Id:             Id,
-		Proposer:       Proposer,
-		Description:    Description,
-		Title:          Title,
-		CreateTime:     CreateTime,
-		Targets:        Targets,
-		Values:         Values,
-		Signatures:     Signatures,
-		Calldatas:      Calldatas,
-		BlockTimestamp: Timestamp,
+		Id:             id,
+		Proposer:       proposer,
+		Description:    description,
+		Title:          title,
+		CreateTime:     createTime,
+		Targets:        targets,
+		Values:         values,
+		Signatures:     signatures,
+		Calldatas:      calldatas,
+		BlockTimestamp: timestamp,
 	}
 
 	OK(c, proposal)
@@ -65,34 +64,34 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 
 	for rows.Next() {
 		var (
-			Id          uint64
-			Proposer    string
-			Description string
-			Title       string
-			CreateTime  uint64
-			Targets     types2.JSONStringArray
-			Values      types2.JSONStringArray
-			Signatures  types2.JSONStringArray
-			Calldatas   types2.JSONStringArray
-			Timestamp   int64
+			id          uint64
+			proposer    string
+			description string
+			title       string
+			createTime  uint64
+			targets     types2.JSONStringArray
+			values      types2.JSONStringArray
+			signatures  types2.JSONStringArray
+			calldatas   types2.JSONStringArray
+			timestamp   int64
 		)
-		err := rows.Scan(&Id, &Proposer, &Description, &Title, &CreateTime, &Targets, &Values, &Signatures, &Calldatas, &Timestamp)
+		err := rows.Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp)
 		if err != nil {
 			Error(c, err)
 			return
 		}
 
 		proposal := types.Proposal{
-			Id:             Id,
-			Proposer:       Proposer,
-			Description:    Description,
-			Title:          Title,
-			CreateTime:     CreateTime,
-			Targets:        Targets,
-			Values:         Values,
-			Signatures:     Signatures,
-			Calldatas:      Calldatas,
-			BlockTimestamp: Timestamp,
+			Id:             id,
+			Proposer:       proposer,
+			Description:    description,
+			Title:          title,
+			CreateTime:     createTime,
+			Targets:        targets,
+			Values:         values,
+			Signatures:     signatures,
+			Calldatas:      calldatas,
+			BlockTimestamp: timestamp,
 		}
 		proposalList = append(proposalList, proposal)
 	}
