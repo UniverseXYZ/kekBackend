@@ -2,21 +2,14 @@ package api
 
 import (
 	"database/sql"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 
 	"github.com/barnbridge/barnbridge-backend/api/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 func (a *API) CancellationVotesHandler(c *gin.Context) {
-	proposalIDString := utils.CleanUpHex(c.Param("proposalID"))
-
-	proposalID, err := strconv.Atoi(proposalIDString)
-	if err != nil {
-		Error(c, err)
-	}
+	proposalID := c.Param("proposalID")
 
 	var cancellationVotesList []types.Vote
 
@@ -40,22 +33,22 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 
 	for rows.Next() {
 		var (
-			User           string
-			Support        bool
-			BlockTimestamp int64
-			Power          string
+			user           string
+			support        bool
+			blockTimestamp int64
+			power          string
 		)
-		err := rows.Scan(&User, &Support, &BlockTimestamp, &Power)
+		err := rows.Scan(&user, &support, &blockTimestamp, &power)
 		if err != nil {
 			Error(c, err)
 			return
 		}
 
 		cancellationVote := types.Vote{
-			User:           User,
-			BlockTimestamp: BlockTimestamp,
-			Support:        Support,
-			Power:          Power,
+			User:           user,
+			BlockTimestamp: blockTimestamp,
+			Support:        support,
+			Power:          power,
 		}
 
 		cancellationVotesList = append(cancellationVotesList, cancellationVote)

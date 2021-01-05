@@ -6,18 +6,17 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/barnbridge/barnbridge-backend/api/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 func (a *API) CancellationProposalDetailsHandler(c *gin.Context) {
-	proposalID := utils.CleanUpHex(c.Param("proposalID"))
+	proposalID := c.Param("proposalID")
 	var (
-		ProposalID uint64
-		Creator    string
-		CreateTime uint64
+		id         uint64
+		creator    string
+		createTime uint64
 	)
 
-	err := a.core.DB().QueryRow(`select proposal_id, creator ,create_time from governance_cancellation_proposals where proposal_id = $1`, proposalID).Scan(&ProposalID, &Creator, &CreateTime)
+	err := a.core.DB().QueryRow(`select proposal_id, creator ,create_time from governance_cancellation_proposals where proposal_id = $1`, proposalID).Scan(&id, &creator, &createTime)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -30,9 +29,9 @@ func (a *API) CancellationProposalDetailsHandler(c *gin.Context) {
 	}
 
 	cancellationProposal := types.CancellationProposal{
-		ProposalID: ProposalID,
-		Creator:    Creator,
-		CreateTime: CreateTime,
+		ProposalID: id,
+		Creator:    creator,
+		CreateTime: createTime,
 	}
 
 	OK(c, cancellationProposal)
@@ -51,21 +50,21 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 
 	for rows.Next() {
 		var (
-			ProposalID uint64
-			Creator    string
-			CreateTime uint64
+			id         uint64
+			creator    string
+			createTime uint64
 		)
 
-		err := rows.Scan(&ProposalID, &Creator, &CreateTime)
+		err := rows.Scan(&id, &creator, &createTime)
 		if err != nil {
 			Error(c, err)
 			return
 		}
 
 		cancellationProposal := types.CancellationProposal{
-			ProposalID: ProposalID,
-			Creator:    Creator,
-			CreateTime: CreateTime,
+			ProposalID: id,
+			Creator:    creator,
+			CreateTime: createTime,
 		}
 
 		cancellationProposalList = append(cancellationProposalList, cancellationProposal)
