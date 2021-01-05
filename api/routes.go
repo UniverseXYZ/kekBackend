@@ -7,8 +7,7 @@ func (a *API) setRoutes() {
 	governance.GET("/proposals/:proposalID/votes", a.VotesHandler)
 	governance.GET("/overview", a.BondOverview)
 	governance.GET("/voters", a.handleVoters)
-	governance.GET("/cancellationProposal", a.AllCancellationProposals)
-	governance.GET("/cancellationProposal/:proposalID", a.CancellationProposalDetailsHandler)
-	governance.GET("/cancellationProposal/:proposalID/votes", a.CancellationVotesHandler)
-
+	governance.GET("/cancellation-proposals", a.AllCancellationProposals)
+	governance.GET("/cancellation-proposals/:proposalID", a.CancellationProposalDetailsHandler)
+	governance.GET("/cancellation-proposals/:proposalID/votes", a.CancellationVotesHandler)
 }
