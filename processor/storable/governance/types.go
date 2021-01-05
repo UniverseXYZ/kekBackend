@@ -37,9 +37,9 @@ type ProposalEvent struct {
 	BaseLog
 
 	ProposalID *big.Int
-	Caller     *string
+	Caller     common.Address
 	Eta        *big.Int
-	EventType  int
+	EventType  ActionType
 }
 
 type Vote struct {
@@ -47,7 +47,7 @@ type Vote struct {
 
 	ProposalID *big.Int
 	User       string
-	Support    *bool
+	Support    bool
 	Power      *big.Int
 	Timestamp  int64
 }
@@ -63,7 +63,7 @@ type VoteCanceled struct {
 type CancellationProposal struct {
 	BaseLog
 
-	ProposalID big.Int
+	ProposalID *big.Int
 	CreateTime int64
-	Caller     *string
+	Caller     common.Address
 }

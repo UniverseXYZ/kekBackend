@@ -58,7 +58,7 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 
 func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx) error {
 	if len(actions) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "delegate actions").Debug("no events found")
 		return nil
 	}
 
@@ -89,7 +89,7 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 
 func (b *BarnStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx) error {
 	if len(changes) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "delegate changes").Debug("no events found")
 		return nil
 	}
 
@@ -99,7 +99,7 @@ func (b *BarnStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx
 	}
 
 	for _, c := range changes {
-		_, err = stmt.Exec(c.TransactionHash, c.TransactionIndex, c.LogIndex, c.LoggedBy, c.ActionType, c.Sender, c.Receiver, c.Amount, c.ToNewDelegatedPower, b.Preprocessed.BlockTimestamp, b.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(c.TransactionHash, c.TransactionIndex, c.LogIndex, c.LoggedBy, c.ActionType, c.Sender, c.Receiver, c.Amount.String(), c.ToNewDelegatedPower.String(), b.Preprocessed.BlockTimestamp, b.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
@@ -131,7 +131,7 @@ func (b *BarnStorable) decodeDelegateEvent(log web3types.Log) (*DelegateAction, 
 	sender := utils.Topic2Address(log.Topics[1])
 	receiver := utils.Topic2Address(log.Topics[2])
 
-	var action int
+	var action ActionType
 	if receiver == ZeroAddress {
 		action = DELEGATE_STOP
 	} else {
@@ -169,7 +169,7 @@ func (b *BarnStorable) decodeDelegatePowerIncreased(log web3types.Log) (*Delegat
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(&d, DelegatePowerIncreasedEvent, data)
+	err = b.barnAbi.UnpackIntoInterface(d, DelegatePowerIncreasedEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -199,7 +199,7 @@ func (b *BarnStorable) decodeDelegatePowerDecreased(log web3types.Log) (*Delegat
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(&d, DelegatePowerDecreasedEvent, data)
+	err = b.barnAbi.UnpackIntoInterface(d, DelegatePowerDecreasedEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}

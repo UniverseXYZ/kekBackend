@@ -33,16 +33,6 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			e.ProposalID = proposalID
 			e.EventType = CREATED
 
-			data, err := hex.DecodeString(utils.Trim0x(log.Data))
-			if err != nil {
-				return errors.Wrap(err, "could not decode log data")
-			}
-
-			err = g.govAbi.UnpackIntoInterface(&e, "ProposalCreated", data)
-			if err != nil {
-				return errors.Wrap(err, "could not unpack log data")
-			}
-
 			events = append(events, e)
 
 			continue
@@ -114,7 +104,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 				return errors.Wrap(err, "could not decode log data")
 			}
 
-			err = g.govAbi.UnpackIntoInterface(&e, "ProposalExecuted", data)
+			err = g.govAbi.UnpackIntoInterface(&e, "ProposalCanceled", data)
 			if err != nil {
 				return errors.Wrap(err, "could not unpack log data")
 			}
@@ -126,7 +116,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 	}
 
 	if len(events) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "proposal event").Debug("no events found")
 		return nil
 	}
 
@@ -142,7 +132,8 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			eventData = make(types.JSONObject)
 			eventData["eta"] = e.Eta.Int64()
 		}
-		_, err = stmt.Exec(e.ProposalID, *e.Caller, e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
+
+		_, err = stmt.Exec(e.ProposalID.Int64(), e.Caller.String(), e.EventType, g.Preprocessed.BlockTimestamp, e.TransactionHash, e.TransactionIndex, e.LogIndex, e.LoggedBy, eventData, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

@@ -1,15 +1,14 @@
 package api
 
 func (a *API) setRoutes() {
-	explorer := a.engine.Group("/api/explorer")
-	explorer.GET("/block/:block", a.BlockHandler)
-	explorer.GET("/block-range/:start/:end", a.BlockRangeHandler)
-	explorer.GET("/uncle/:hash", a.UncleDetailsHandler)
-	explorer.GET("/tx/:txHash", a.TxDetailsHandler)
-	explorer.GET("/tx/:txHash/log-entries", a.TxLogEntriesHandler)
-	explorer.GET("/search/:query", a.SearchHandler)
+	governance := a.engine.Group("/api/governance")
+	governance.GET("/proposals", a.AllProposalHandler)
+	governance.GET("/proposals/:proposalID", a.ProposalDetailsHandler)
+	governance.GET("/proposals/:proposalID/votes", a.VotesHandler)
+	governance.GET("/overview", a.BondOverview)
+	governance.GET("/voters", a.handleVoters)
+	governance.GET("/cancellationProposal", a.AllCancellationProposals)
+	governance.GET("/cancellationProposal/:proposalID", a.CancellationProposalDetailsHandler)
+	governance.GET("/cancellationProposal/:proposalID/votes", a.CancellationVotesHandler)
 
-	explorer.GET("/account/:address/txs", a.AccountTxsHandler)
-	explorer.GET("/account/:address/code", a.AccountCodeHandler)
-	explorer.GET("/account/:address/balance", a.AccountBalanceHandler)
 }

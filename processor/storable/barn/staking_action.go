@@ -36,7 +36,7 @@ func (b *BarnStorable) handleStakingActions(logs []web3types.Log, tx *sql.Tx) er
 		}
 	}
 	if len(stakingActions) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "staking actions").Debug("no events found")
 		return nil
 	}
 

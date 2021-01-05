@@ -20,7 +20,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 
 	for _, log := range logs {
 		if utils.LogIsEvent(log, g.govAbi, "ProposalCreated") {
-			ctr, err := contracts.NewGovernance(common.HexToAddress(g.config.GovernanceAddress), &g.GovernanceClient)
+			ctr, err := contracts.NewGovernance(common.HexToAddress(g.config.GovernanceAddress), g.ethConn)
 			if err != nil {
 				return err
 			}
@@ -47,7 +47,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 	}
 
 	if len(proposals) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "proposals").Debug("no events found")
 		return nil
 	}
 
@@ -67,7 +67,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 			calldatas = append(calldatas, hex.EncodeToString(a.Calldatas[i]))
 		}
 
-		_, err = stmt.Exec(p.Id, p.Proposer, p.Description, p.Title, p.CreateTime, targets, values, signatures, calldatas, g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
+		_, err = stmt.Exec(p.Id.Int64(), p.Proposer.String(), p.Description, p.Title, p.CreateTime.Int64(), targets, values, signatures, calldatas, g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

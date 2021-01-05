@@ -29,7 +29,7 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 				return errors.Wrap(err, "could not decode log data")
 			}
 
-			err = g.govAbi.UnpackIntoInterface(&vote, "vote", data)
+			err = g.govAbi.UnpackIntoInterface(&vote, "Vote", data)
 			if err != nil {
 				return errors.Wrap(err, "could not unpack log data")
 			}
@@ -83,7 +83,7 @@ func (g *GovStorable) handleVotes(logs []web3types.Log, tx *sql.Tx) error {
 
 func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
 	if len(votes) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "votes").Debug("no events found")
 		return nil
 	}
 
@@ -93,7 +93,7 @@ func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
 	}
 
 	for _, v := range votes {
-		_, err = stmt.Exec(v.ProposalID, v.User, v.Support, v.Power, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(v.ProposalID.Int64(), v.User, v.Support, v.Power.String(), v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
@@ -114,7 +114,7 @@ func (g *GovStorable) insertVotesToDB(votes []Vote, tx *sql.Tx) error {
 
 func (g GovStorable) insertVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
 	if len(votes) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "cancel votes").Debug("no events found")
 		return nil
 	}
 
@@ -124,7 +124,7 @@ func (g GovStorable) insertVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) e
 	}
 
 	for _, v := range votes {
-		_, err = stmt.Exec(v.ProposalID, v.User, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(v.ProposalID.Int64(), v.User, v.Timestamp, v.TransactionHash, v.TransactionIndex, v.LogIndex, v.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

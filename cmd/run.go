@@ -10,6 +10,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 
 	"github.com/barnbridge/barnbridge-backend/api"
 
@@ -52,7 +53,7 @@ var runCmd = &cobra.Command{
 			},
 			Scraper: scraper.Config{
 				NodeURL:      viper.GetString("eth.client.http"),
-				EnableUncles: viper.GetBool("feature.uncles.enabled"),
+				EnableUncles: false,
 			},
 			PostgresConnectionString: viper.GetString("db.connection-string"),
 			Features: core.Features{
@@ -71,6 +72,9 @@ var runCmd = &cobra.Command{
 				},
 				Barn: barn.Config{
 					BarnAddress: viper.GetString("storable.barn.address"),
+				},
+				Governance: governance.Config{
+					GovernanceAddress: viper.GetString("storable.governance.address"),
 				},
 			},
 		})
@@ -119,9 +123,6 @@ func init() {
 	runCmd.Flags().Bool("feature.automigrate.enabled", true, "Enable/disable the automatic migrations feature")
 	viper.BindPFlag("feature.automigrate.enabled", runCmd.Flag("feature.automigrate.enabled"))
 
-	runCmd.Flags().Bool("feature.uncles.enabled", true, "Enable/disable uncles scraping")
-	viper.BindPFlag("feature.uncles.enabled", runCmd.Flag("feature.uncles.enabled"))
-
 	// eth
 	runCmd.Flags().String("eth.client.http", "", "HTTP endpoint of JSON-RPC enabled Ethereum node")
 	viper.BindPFlag("eth.client.http", runCmd.Flag("eth.client.http"))
@@ -158,6 +159,10 @@ func init() {
 	viper.BindPFlag("storable.bond.address", runCmd.Flag("storable.bond.address"))
 
 	//barn
-	runCmd.Flags().String("storable.barn.address", "0x9b24CA2bd6C44490F0529bCa48E837E2ad26BaFa", "Address of the barn contract")
+	runCmd.Flags().String("storable.barn.address", "0x19cFBFd65021af353aB8A7126Caf51920163f0D2", "Address of the barn contract")
 	viper.BindPFlag("storable.barn.address", runCmd.Flag("storable.barn.address"))
+
+	//governance
+	runCmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Addres of the governance contract")
+	viper.BindPFlag("storable.governance.address", runCmd.Flag("storable.governance.address"))
 }

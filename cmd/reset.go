@@ -68,11 +68,8 @@ var resetCmd = &cobra.Command{
 		}
 
 		_, err = tx.Exec(`
-		truncate table blocks restart identity;
-		truncate table uncles restart identity;
-		truncate table txs restart identity;
-		truncate table log_entries restart identity;
-		truncate table account_txs restart identity;
+		drop schema public cascade;
+		create schema public;
 		`)
 		if err != nil {
 			log.Fatal(err)

@@ -1,7 +1,6 @@
 package taskmanager
 
 import (
-	"math"
 	"strconv"
 	"time"
 
@@ -9,8 +8,9 @@ import (
 
 	"github.com/sirupsen/logrus"
 
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 	"github.com/go-redis/redis"
+
+	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 )
 
 var log = logrus.WithField("module", "taskmanager")
@@ -86,9 +86,9 @@ func (m *Manager) Pause() {
 	if !m.paused {
 		log.Trace("attempting task manager pause")
 
-		// add a member with value "-1" to the queue in order to unblock the BZPopMax and pause the manager completely
+		// add a member with value "-1" to the queue in order to unblock the BZPopMin and pause the manager completely
 		err := m.redis.ZAdd(m.config.TodoList, redis.Z{
-			Score:  math.MaxFloat64,
+			Score:  0,
 			Member: "-1",
 		}).Err()
 		if err != nil {
@@ -152,19 +152,21 @@ func (m *Manager) FeedToChan(c chan int64) {
 		doneChan := make(chan bool)
 		var taskInt int64
 		go func() {
-			taskResult, err := m.redis.BZPopMax(0, m.config.TodoList).Result()
+			taskResult, err := m.redis.BZPopMin(0, m.config.TodoList).Result()
 			if err != nil && m.closed {
 				return
 			}
 			if err != nil {
 				log.Error("getting task from redis returned error:", err)
 				doneChan <- false
+				return
 			}
 
 			taskInt, err = strconv.ParseInt(taskResult.Member.(string), 10, 64)
 			if err != nil {
 				log.Error(err)
 				doneChan <- false
+				return
 			}
 
 			doneChan <- true

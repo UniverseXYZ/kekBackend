@@ -37,7 +37,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 				return errors.Wrap(err, "could not unpack log data")
 			}
 
-			cp.ProposalID = *proposalID
+			cp.ProposalID = proposalID
 			cp.CreateTime = g.Preprocessed.BlockTimestamp
 			cp.BaseLog = *baseLog
 			cancellationProposals = append(cancellationProposals, cp)
@@ -45,7 +45,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 	}
 
 	if len(cancellationProposals) == 0 {
-		log.Debug("no events found")
+		log.WithField("handler", "cancellation proposal").Debug("no events found")
 		return nil
 	}
 
@@ -55,8 +55,7 @@ func (g *GovStorable) handleCancellationProposals(logs []web3types.Log, tx *sql.
 	}
 
 	for _, cp := range cancellationProposals {
-
-		_, err = stmt.Exec(cp.ProposalID, cp.Caller, cp.CreateTime, cp.TransactionHash, cp.TransactionIndex, cp.LogIndex, cp.LoggedBy, g.Preprocessed.BlockNumber)
+		_, err = stmt.Exec(cp.ProposalID.Int64(), cp.Caller.String(), cp.CreateTime, cp.TransactionHash, cp.TransactionIndex, cp.LogIndex, cp.LoggedBy, g.Preprocessed.BlockNumber)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

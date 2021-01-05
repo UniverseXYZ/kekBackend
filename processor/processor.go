@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/sirupsen/logrus"
 
 	"github.com/barnbridge/barnbridge-backend/metrics"
@@ -20,16 +21,20 @@ var log = logrus.WithField("module", "data")
 type Processor struct {
 	config Config
 
-	Raw       *types.RawData
-	abis      map[string]abi.ABI
+	Raw *types.RawData
+
+	abis    map[string]abi.ABI
+	ethConn *ethclient.Client
+
 	storables []Storable
 }
 
-func New(config Config, raw *types.RawData, abis map[string]abi.ABI) (*Processor, error) {
+func New(config Config, raw *types.RawData, abis map[string]abi.ABI, ethConn *ethclient.Client) (*Processor, error) {
 	p := &Processor{
-		config: config,
-		Raw:    raw,
-		abis:   abis,
+		config:  config,
+		Raw:     raw,
+		abis:    abis,
+		ethConn: ethConn,
 	}
 
 	err := p.registerStorables()
@@ -53,11 +58,6 @@ type Storable interface {
 func (fb *Processor) registerStorables() error {
 	fb.storables = append(fb.storables, storable.NewStorableBlock(fb.Raw.Block))
 
-	// fb.storables = append(fb.storables, storable.NewStorableTxs(fb.Raw.Block, fb.Raw.Receipts))
-	// fb.storables = append(fb.storables, storable.NewStorableUncles(fb.Raw.Block, fb.Raw.Uncles))
-	// fb.storables = append(fb.storables, storable.NewStorableLogEntries(fb.Raw.Block, fb.Raw.Receipts))
-	// fb.storables = append(fb.storables, storable.NewStorableAccountTxs(fb.Raw.Block))
-
 	{
 		if _, exist := fb.abis["bond"]; !exist {
 			return errors.New("could not find abi for bond contract")
@@ -72,12 +72,14 @@ func (fb *Processor) registerStorables() error {
 		}
 		fb.storables = append(fb.storables, barn.NewBarnStorable(fb.config.Barn, fb.Raw, fb.abis["barn"]))
 	}
+
 	{
 		if _, exist := fb.abis["governance"]; !exist {
 			return errors.New("could not find abi for governance contract")
 		}
-		fb.storables = append(fb.storables, governance.NewGovernance(fb.config.Governance, fb.Raw, fb.abis["governance"]))
+		fb.storables = append(fb.storables, governance.NewGovernance(fb.config.Governance, fb.Raw, fb.abis["governance"], fb.ethConn))
 	}
+
 	return nil
 }
 
