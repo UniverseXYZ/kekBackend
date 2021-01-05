@@ -8,6 +8,7 @@ import (
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 
+	"github.com/barnbridge/barnbridge-backend/integrity"
 	"github.com/barnbridge/barnbridge-backend/processor"
 
 	"github.com/barnbridge/barnbridge-backend/metrics"
@@ -28,11 +29,12 @@ var log = logrus.WithField("module", "core")
 type Core struct {
 	config Config
 
-	metrics     *metrics.Provider
-	bbtracker   *bestblock.Tracker
-	taskmanager *taskmanager.Manager
-	scraper     *scraper.Scraper
-	db          *sql.DB
+	metrics          *metrics.Provider
+	bbtracker        *bestblock.Tracker
+	taskmanager      *taskmanager.Manager
+	scraper          *scraper.Scraper
+	db               *sql.DB
+	integrityChecker *integrity.Checker
 
 	abis    map[string]abi.ABI
 	ethConn *ethclient.Client
@@ -126,6 +128,8 @@ func New(config Config) *Core {
 
 	c.ethConn = conn
 
+	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag)
+
 	return &c
 }
 
@@ -173,6 +177,7 @@ func (c *Core) Run() {
 	}()
 
 	go c.taskmanager.FeedToChan(blockChan)
+	go c.integrityChecker.Run()
 
 	go func() {
 		for b := range blockChan {
