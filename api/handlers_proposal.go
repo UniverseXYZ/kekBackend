@@ -11,6 +11,7 @@ import (
 
 func (a *API) ProposalDetailsHandler(c *gin.Context) {
 	proposalID := c.Param("proposalID")
+
 	var (
 		id          uint64
 		proposer    string
@@ -52,7 +53,11 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 }
 
 func (a *API) AllProposalHandler(c *gin.Context) {
-	rows, err := a.core.DB().Query(`select proposal_ID,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp from governance_proposals order by block_timestamp desc`)
+	limit := c.DefaultQuery("limit", "10")
+	offset := c.DefaultQuery("offset", "10")
+
+	rows, err := a.core.DB().Query(`select proposal_ID,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp from governance_proposals where proposal_id <= $1 order by block_timestamp desc limit $2`, offset, limit)
+
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
