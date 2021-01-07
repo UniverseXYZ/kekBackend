@@ -12,6 +12,13 @@ import (
 
 func (a *API) VotesHandler(c *gin.Context) {
 	proposalIDString := utils.CleanUpHex(c.Param("proposalID"))
+	limit := c.DefaultQuery("limit", "10")
+	page := c.DefaultQuery("page", "1")
+
+	offset, err := calculateOffset(limit, page)
+	if err != nil {
+		Error(c, err)
+	}
 
 	proposalID, err := strconv.Atoi(proposalIDString)
 	if err != nil {
@@ -25,12 +32,12 @@ func (a *API) VotesHandler(c *gin.Context) {
                 first_value(block_timestamp) over (partition by user_id order by block_timestamp desc) as block_timestamp,
                 power
 	from governance_votes
-	where proposal_id = $1
+	where proposal_id = $1 
   	and ( select count(*)
         from governance_votes_canceled
         where governance_votes_canceled.proposal_id = governance_votes.proposal_id
         and governance_votes_canceled.user_id = governance_votes.user_id
-        and governance_votes_canceled.block_timestamp > governance_votes.block_timestamp ) = 0 order by block_timestamp desc`, proposalID)
+        and governance_votes_canceled.block_timestamp > governance_votes.block_timestamp ) = 0 order by power desc offset $2 limit $3`, proposalID, offset, limit)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)

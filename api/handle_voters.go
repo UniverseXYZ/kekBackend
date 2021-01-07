@@ -19,6 +19,13 @@ type Voter struct {
 
 func (a *API) handleVoters(c *gin.Context) {
 	var votersList []Voter
+	limit := c.DefaultQuery("limit", "10")
+	page := c.DefaultQuery("page", "1")
+
+	offset, err := calculateOffset(limit, page)
+	if err != nil {
+		Error(c, err)
+	}
 
 	rows, err := a.core.DB().Query(`select user_address,balance_of(user_address) as bond_staked,
 		   coalesce(( select locked_until
@@ -29,10 +36,10 @@ func (a *API) handleVoters(c *gin.Context) {
 		   ( select count(*) from governance_votes where lower(user_id) = lower(barn_users.user_address) ) +
 		   ( select count(*) from governance_cancellation_votes where lower(user_id) = lower(barn_users.user_address) ) as votes,
 		   ( select count(*) from governance_proposals where lower(proposer) = lower(barn_users.user_address) )         as proposals,
-		   voting_power(user_address)                                                                     as voting_power,
+		   voting_power(user_address)                                                                     as voting_power ,
 		   has_active_delegation(user_address)
 	from barn_users
-	order by voting_power desc;`)
+	order by voting_power desc offset $1 limit $2 ;`, offset, limit)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
