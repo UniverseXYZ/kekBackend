@@ -2,6 +2,8 @@ package api
 
 import (
 	"database/sql"
+	"math"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -39,9 +41,14 @@ func (a *API) CancellationProposalDetailsHandler(c *gin.Context) {
 
 func (a *API) AllCancellationProposals(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
-	offset := c.DefaultQuery("offset", "10")
+	offset := c.DefaultQuery("offset", strconv.FormatInt(math.MaxInt32, 10))
 
-	rows, err := a.core.DB().Query(`select proposal_id, creator ,create_time from governance_cancellation_proposals where proposal_id <= $1 order by create_time desc limit $2`, offset, limit)
+	rows, err := a.core.DB().Query(`select proposal_id, creator, create_time
+	from governance_cancellation_proposals 
+	where proposal_id <= $1
+	order by proposal_id 
+	desc limit $2`, offset, limit)
+
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return

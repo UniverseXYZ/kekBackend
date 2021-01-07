@@ -10,7 +10,6 @@ import (
 
 func (a *API) CancellationVotesHandler(c *gin.Context) {
 	proposalID := c.Param("proposalID")
-	limit := c.DefaultQuery("limit", "10")
 
 	var cancellationVotesList []types.Vote
 
@@ -24,7 +23,7 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
         from governance_cancellation_votes_canceled
         where governance_cancellation_votes_canceled.proposal_id = governance_cancellation_votes.proposal_id
         and governance_cancellation_votes_canceled.user_id = governance_cancellation_votes.user_id
-        and governance_cancellation_votes_canceled.block_timestamp > governance_cancellation_votes.block_timestamp ) = 0 limit $2`, proposalID, limit)
+        and governance_cancellation_votes_canceled.block_timestamp > governance_cancellation_votes.block_timestamp ) = 0`, proposalID)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
