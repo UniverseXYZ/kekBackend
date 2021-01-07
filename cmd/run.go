@@ -165,4 +165,5 @@ func init() {
 	//governance
 	runCmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Addres of the governance contract")
 	viper.BindPFlag("storable.governance.address", runCmd.Flag("storable.governance.address"))
+
 }
