@@ -2,9 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"math"
 	"strconv"
 
-	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/gin-gonic/gin"
 
 	"github.com/barnbridge/barnbridge-backend/api/types"
