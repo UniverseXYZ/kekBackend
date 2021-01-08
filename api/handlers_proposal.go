@@ -63,13 +63,25 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	var rows *sql.Rows
 	var err error
 	if title == "" {
-		rows, err = a.core.DB().Query(`select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp 
-				from governance_proposals where proposal_id <= $1 order by proposal_id desc limit $2`, offset, limit)
+		rows, err = a.core.DB().Query(`
+			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp 
+			from governance_proposals 
+			where proposal_id <= $1 
+			order by proposal_id desc 
+			limit $2
+		`, offset, limit)
 	} else {
 		title = "%" + strings.ToLower(title) + "%"
-		rows, err = a.core.DB().Query(`select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp 
-				from governance_proposals where proposal_id <= $1 and lower(title) like $2 order by proposal_id desc limit $3`, offset, title, limit)
+		rows, err = a.core.DB().Query(`
+			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp 
+			from governance_proposals 
+			where proposal_id <= $1 
+			  and lower(title) like $2 
+			order by proposal_id desc 
+			limit $3
+		`, offset, title, limit)
 	}
+
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
