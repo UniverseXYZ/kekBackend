@@ -108,6 +108,11 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		NotFound(c)
 		return
 	}
+	var count int
+	err = a.core.DB().QueryRow(`select count(*) from governance_proposals`).Scan(&count)
+	if err != nil {
+		Error(c, err)
+	}
 
-	OK(c, proposalList)
+	OK(c, proposalList, map[string]interface{}{"count": count})
 }

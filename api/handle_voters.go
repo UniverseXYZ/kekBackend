@@ -27,19 +27,7 @@ func (a *API) handleVoters(c *gin.Context) {
 		Error(c, err)
 	}
 
-	rows, err := a.core.DB().Query(`select user_address,balance_of(user_address) as bond_staked,
-		   coalesce(( select locked_until
-			 from barn_locks
-			 where user_address = barn_users.user_address
-			 order by included_in_block desc, log_index desc ) ,0)                                          as locked_until,
-		   delegated_power(user_address),
-		   ( select count(*) from governance_votes where lower(user_id) = lower(barn_users.user_address) ) +
-		   ( select count(*) from governance_cancellation_votes where lower(user_id) = lower(barn_users.user_address) ) as votes,
-		   ( select count(*) from governance_proposals where lower(proposer) = lower(barn_users.user_address) )         as proposals,
-		   voting_power(user_address)                                                                     as voting_power ,
-		   has_active_delegation(user_address)
-	from barn_users
-	order by voting_power desc offset $1 limit $2 ;`, offset, limit)
+	rows, err := a.core.DB().Query(` select * from voters order by voting_power desc offset $1 limit $2 ;`, offset, limit)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -60,5 +48,9 @@ func (a *API) handleVoters(c *gin.Context) {
 		NotFound(c)
 		return
 	}
-	OK(c, votersList)
+
+	var count int
+	err = a.core.DB().QueryRow(`select count(*) from voters`).Scan(&count)
+
+	OK(c, votersList, map[string]interface{}{"count": count})
 }

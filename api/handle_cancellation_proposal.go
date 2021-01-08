@@ -84,6 +84,10 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 		NotFound(c)
 		return
 	}
-
-	OK(c, cancellationProposalList)
+	var count int
+	err = a.core.DB().QueryRow(`select count(*) from governance_cancellation_proposals`).Scan(&count)
+	if err != nil {
+		Error(c, err)
+	}
+	OK(c, cancellationProposalList, map[string]interface{}{"count": count})
 }
