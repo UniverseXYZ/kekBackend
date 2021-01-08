@@ -20,17 +20,7 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 
 	var cancellationVotesList []types.Vote
 
-	rows, err := a.core.DB().Query(`select distinct user_id,
-                first_value(support) over (partition by user_id order by block_timestamp desc) as support,
-                first_value(block_timestamp) over (partition by user_id order by block_timestamp desc) as block_timestamp,
-                power
-	from governance_cancellation_votes
-	where proposal_id = $1
-  	and ( select count(*)
-        from governance_cancellation_votes_canceled
-        where governance_cancellation_votes_canceled.proposal_id = governance_cancellation_votes.proposal_id
-        and governance_cancellation_votes_canceled.user_id = governance_cancellation_votes.user_id
-        and governance_cancellation_votes_canceled.block_timestamp > governance_cancellation_votes.block_timestamp ) = 0 order by power desc offset $2 limit $3`, proposalID, offset, limit)
+	rows, err := a.core.DB().Query(`select * from cancellation_proposal_votes($1) order by power desc offset $2 limit $3`, proposalID, offset, limit)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -66,6 +56,9 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 		return
 	}
 
-	OK(c, cancellationVotesList)
+	var count int
+	err = a.core.DB().QueryRow(`select count(*) from cancellation_proposal_votes($1)`, proposalID).Scan(&count)
+
+	OK(c, cancellationVotesList, map[string]interface{}{"count": count})
 
 }
