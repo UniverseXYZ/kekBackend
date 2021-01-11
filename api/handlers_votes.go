@@ -14,6 +14,7 @@ func (a *API) VotesHandler(c *gin.Context) {
 	proposalIDString := utils.CleanUpHex(c.Param("proposalID"))
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
+	supportFilter := c.DefaultQuery("support", "")
 
 	offset, err := calculateOffset(limit, page)
 	if err != nil {
@@ -26,8 +27,18 @@ func (a *API) VotesHandler(c *gin.Context) {
 	}
 
 	var votesList []types.Vote
+	var rows *sql.Rows
 
-	rows, err := a.core.DB().Query(`select * from proposal_votes($1)  order by power desc offset $2 limit $3`, proposalID, offset, limit)
+	if supportFilter == "" {
+		rows, err = a.core.DB().Query(`select * from proposal_votes($1)  order by power desc offset $2 limit $3`, proposalID, offset, limit)
+	} else {
+		rows, err = a.core.DB().Query(`select * from proposal_votes($1) where support = $4  order by power desc offset $2 limit $3`, proposalID, offset, limit, supportFilter)
+	}
+
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
