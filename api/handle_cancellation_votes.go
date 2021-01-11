@@ -12,6 +12,7 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 	proposalID := c.Param("proposalID")
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
+	supportFilter := c.DefaultQuery("support", "")
 
 	offset, err := calculateOffset(limit, page)
 	if err != nil {
@@ -19,9 +20,12 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 	}
 
 	var cancellationVotesList []types.Vote
-
-	rows, err := a.core.DB().Query(`select * from cancellation_proposal_votes($1) order by power desc offset $2 limit $3`, proposalID, offset, limit)
-
+	var rows *sql.Rows
+	if supportFilter == "" {
+		rows, err = a.core.DB().Query(`select * from cancellation_proposal_votes($1) order by power desc offset $2 limit $3`, proposalID, offset, limit)
+	} else {
+		rows, err = a.core.DB().Query(`select * from cancellation_proposal_votes($1) where support = $4 order by power desc offset $2 limit $3`, proposalID, offset, limit, supportFilter)
+	}
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 	}
