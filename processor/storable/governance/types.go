@@ -17,8 +17,16 @@ type Proposal struct {
 	AgainstVotes *big.Int
 	Canceled     bool
 	Executed     bool
+	ProposalParameters
 }
-
+type ProposalParameters struct {
+	WarmUpDuration      *big.Int
+	ActiveDuration      *big.Int
+	QueueDuration       *big.Int
+	GracePeriodDuration *big.Int
+	AcceptanceThreshold *big.Int
+	MinQuorum           *big.Int
+}
 type BaseLog struct {
 	LoggedBy         string
 	TransactionHash  string

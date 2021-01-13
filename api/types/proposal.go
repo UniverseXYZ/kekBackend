@@ -16,5 +16,12 @@ type Proposal struct {
 	Signatures types2.JSONStringArray `json:"signatures,omitempty"`
 	Calldatas  types2.JSONStringArray `json:"calldatas,omitempty"`
 
-	BlockTimestamp int64 `json:"block_timestamp"`
+	BlockTimestamp      int64  `json:"block_timestamp"`
+	WarmUpDuration      uint64 `json:"warm_up_duration"`
+	ActiveDuration      uint64 `json:"active_duration"`
+	QueueDuration       uint64 `json:"queue_duration"`
+	GracePeriodDuration uint64 `json:"grace_period_duration"`
+	AcceptanceThreshold uint64 `json:"acceptance_threshold"`
+	MinQuorum           uint64 `json:"min_quorum"`
+	State               string `json:"state"`
 }

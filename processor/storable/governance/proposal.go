@@ -35,7 +35,26 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 				return errors.Wrap(err, "could not get the proposals from contract")
 			}
 
-			proposals = append(proposals, p)
+			proposals = append(proposals, Proposal{
+				Id:           p.Id,
+				Proposer:     p.Proposer,
+				Description:  p.Description,
+				Title:        p.Title,
+				CreateTime:   p.CreateTime,
+				Eta:          p.Eta,
+				ForVotes:     p.ForVotes,
+				AgainstVotes: p.AgainstVotes,
+				Canceled:     p.Canceled,
+				Executed:     p.Executed,
+				ProposalParameters: ProposalParameters{
+					WarmUpDuration:      p.Parameters.WarmUpDuration,
+					ActiveDuration:      p.Parameters.ActiveDuration,
+					QueueDuration:       p.Parameters.QueueDuration,
+					GracePeriodDuration: p.Parameters.GracePeriodDuration,
+					AcceptanceThreshold: p.Parameters.AcceptanceThreshold,
+					MinQuorum:           p.Parameters.MinQuorum,
+				},
+			})
 
 			a, err := ctr.GetActions(nil, proposalID)
 			if err != nil {
