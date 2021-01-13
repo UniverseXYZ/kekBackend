@@ -70,7 +70,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_id", "proposer", "description", "title", "create_time", "targets", "values", "signatures", "calldatas", "included_in_block", "block_timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_id", "proposer", "description", "title", "create_time", "targets", "values", "signatures", "calldatas", "warm_up_duration", "active_duration", "queue_duration", "grace_period_duration", "acceptance_threshold", "min_quorum", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
@@ -86,7 +86,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 			calldatas = append(calldatas, hex.EncodeToString(a.Calldatas[i]))
 		}
 
-		_, err = stmt.Exec(p.Id.Int64(), p.Proposer.String(), p.Description, p.Title, p.CreateTime.Int64(), targets, values, signatures, calldatas, g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
+		_, err = stmt.Exec(p.Id.Int64(), p.Proposer.String(), p.Description, p.Title, p.CreateTime.Int64(), targets, values, signatures, calldatas, p.WarmUpDuration.Int64(), p.ActiveDuration.Int64(), p.QueueDuration.Int64(), p.GracePeriodDuration.Int64(), p.AcceptanceThreshold.Int64(), p.MinQuorum.Int64(), g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}

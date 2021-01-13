@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 
 	"github.com/barnbridge/barnbridge-backend/api/types"
 	types2 "github.com/barnbridge/barnbridge-backend/types"
@@ -81,13 +82,13 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
 	offset := c.DefaultQuery("offset", strconv.FormatInt(math.MaxInt32, 10))
 	title := c.DefaultQuery("title", "")
-	proposalState := strings.ToLower(c.DefaultQuery("state", ""))
+	proposalState := strings.ToLower(c.DefaultQuery("state", "all"))
 
 	var rows *sql.Rows
 	var err error
 
-	if !checkStateExist(proposalState) {
-		NotFound(c)
+	if proposalState != "all" && !checkStateExist(proposalState) {
+		BadRequest(c, errors.New("unknown state"))
 		return
 	}
 
@@ -165,22 +166,22 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			AcceptanceThreshold: acceptanceThreshold,
 			MinQuorum:           minQuorum,
 		}
-		state, err := a.calculateState(proposal)
+		proposal.State, err = a.calculateState(proposal)
 		if err != nil {
 			Error(c, err)
 			return
 		}
-		if state == proposalState {
-			proposal.State = state
+
+		if proposalState == "all" || proposal.State == proposalState {
 			proposalList = append(proposalList, proposal)
 		}
-
 	}
 
 	if len(proposalList) == 0 {
 		NotFound(c)
 		return
 	}
+
 	var count int
 	err = a.core.DB().QueryRow(`select count(*) from governance_proposals`).Scan(&count)
 	if err != nil {

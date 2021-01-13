@@ -676,7 +676,7 @@ func (_Governance *GovernanceCaller) Proposals(opts *bind.CallOpts, arg0 *big.In
 	outstruct.AgainstVotes = out[7].(*big.Int)
 	outstruct.Canceled = out[8].(bool)
 	outstruct.Executed = out[9].(bool)
-	outstruct.Parameters = out[10].(GovernanceProposalParameters)
+	outstruct.Parameters = *abi.ConvertType(out[10], new(GovernanceProposalParameters)).(*GovernanceProposalParameters)
 
 	return *outstruct, err
 
@@ -1363,7 +1363,6 @@ func (_Governance *GovernanceFilterer) ParseCancellationProposalExecuted(log typ
 	if err := _Governance.contract.UnpackLog(event, "CancellationProposalExecuted", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -1508,7 +1507,6 @@ func (_Governance *GovernanceFilterer) ParseCancellationProposalStarted(log type
 	if err := _Governance.contract.UnpackLog(event, "CancellationProposalStarted", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -1663,7 +1661,6 @@ func (_Governance *GovernanceFilterer) ParseCancellationProposalVote(log types.L
 	if err := _Governance.contract.UnpackLog(event, "CancellationProposalVote", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -1816,7 +1813,6 @@ func (_Governance *GovernanceFilterer) ParseCancellationProposalVoteCancelled(lo
 	if err := _Governance.contract.UnpackLog(event, "CancellationProposalVoteCancelled", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -1961,7 +1957,6 @@ func (_Governance *GovernanceFilterer) ParseProposalCanceled(log types.Log) (*Go
 	if err := _Governance.contract.UnpackLog(event, "ProposalCanceled", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -2105,7 +2100,6 @@ func (_Governance *GovernanceFilterer) ParseProposalCreated(log types.Log) (*Gov
 	if err := _Governance.contract.UnpackLog(event, "ProposalCreated", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -2250,7 +2244,6 @@ func (_Governance *GovernanceFilterer) ParseProposalExecuted(log types.Log) (*Go
 	if err := _Governance.contract.UnpackLog(event, "ProposalExecuted", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -2396,7 +2389,6 @@ func (_Governance *GovernanceFilterer) ParseProposalQueued(log types.Log) (*Gove
 	if err := _Governance.contract.UnpackLog(event, "ProposalQueued", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -2551,7 +2543,6 @@ func (_Governance *GovernanceFilterer) ParseVote(log types.Log) (*GovernanceVote
 	if err := _Governance.contract.UnpackLog(event, "Vote", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
 
@@ -2704,6 +2695,5 @@ func (_Governance *GovernanceFilterer) ParseVoteCanceled(log types.Log) (*Govern
 	if err := _Governance.contract.UnpackLog(event, "VoteCanceled", log); err != nil {
 		return nil, err
 	}
-	event.Raw = log
 	return event, nil
 }
