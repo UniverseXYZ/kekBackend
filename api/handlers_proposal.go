@@ -308,8 +308,8 @@ func (a *API) checkForExecutedEvent(proposalID uint64) bool {
 }
 
 func checkStateExist(state string) bool {
-	ProposalStates := [9]string{"WarmUp", "Active", "Canceled", "Failed", "Accepted", "Queued", "Grace", "Expired", "Executed"}
-	for _, s := range ProposalStates {
+	proposalStates := [9]string{"WarmUp", "Active", "Canceled", "Failed", "Accepted", "Queued", "Grace", "Expired", "Executed"}
+	for _, s := range proposalStates {
 		if strings.ToLower(s) == strings.ToLower(state) {
 			return true
 		}
