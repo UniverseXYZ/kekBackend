@@ -194,68 +194,100 @@ func (a *API) calculateState(p types.Proposal) (string, error) {
 	now := time.Now()
 	timestampNow := uint64(now.Unix())
 	warmUpDuration := p.CreateTime + p.WarmUpDuration
-	activeDuration := p.CreateTime + p.WarmUpDuration + 1
+	activeDuration := p.CreateTime + p.WarmUpDuration + p.ActiveDuration
 	queuedDuration := p.CreateTime + p.WarmUpDuration + p.ActiveDuration + p.QueueDuration
 	graceDuration := queuedDuration + p.GracePeriodDuration
 
-	if timestampNow > queuedDuration {
-		if timestampNow < graceDuration {
-			existQueued := a.checkForQueuedEvent(p.Id)
-			if existQueued {
-				return "Grace", nil
-			}
+	events, err := a.getAllEvents(p.Id)
+	if err != nil {
+		return "", err
+	}
 
-			existCanceled := a.checkForCanceledEvent(p.Id)
-			if existCanceled {
-				return "Canceled", nil
-			}
-		} else {
-			existExecuted := a.checkForExecutedEvent(p.Id)
-			if existExecuted {
-				return "Executed", nil
-			}
-		}
-	} else {
-		if timestampNow > activeDuration {
-			existQueued := a.checkForQueuedEvent(p.Id)
-			if existQueued {
-				return "Queued", nil
-			} else {
-				state, err := a.checkVotesForProposal(p.Id)
-				if err != nil {
-					return "", err
-				}
+	existCanceled := a.checkForCanceledEvent(events)
+	if existCanceled {
+		return "Canceled", nil
+	}
 
-				return state, nil
-			}
+	existExecuted := a.checkForExecutedEvent(events)
+	if existExecuted {
+		return "Executed", nil
+	}
+
+	if timestampNow <= warmUpDuration {
+		return "WarmUp", nil
+	}
+
+	if timestampNow <= activeDuration {
+		return "Active", nil
+	}
+
+	if timestampNow < queuedDuration {
+		existQueued := a.checkForQueuedEvent(events)
+		if existQueued {
+			return "Queued", nil
 		} else {
-			if timestampNow < warmUpDuration {
-				if timestampNow <= p.CreateTime {
-					return "Created", nil
-				} else {
-					return "WarmUp", nil
-				}
-			} else {
-				return "Active", nil
+			state, err := a.checkVotesForProposal(p.Id)
+			if err != nil {
+				return "", err
 			}
+			return state, err
 		}
 	}
-	return "", nil
-}
 
-func (a *API) checkForQueuedEvent(proposalID uint64) bool {
-	var event types.Event
-	err := a.core.DB().QueryRow(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1 and event_type = 'QUEUED' 
-	order by block_timestamp limit 1 `, proposalID).Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
+	if timestampNow < graceDuration {
+		return "Grace", nil
+	}
+
+	return "Expired", nil
+
+}
+func (a *API) getAllEvents(proposalID uint64) ([]types.Event, error) {
+
+	rows, err := a.core.DB().Query(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1`, proposalID)
 
 	if err != nil && err != sql.ErrNoRows {
-		return false
+		return nil, err
 	}
-	if err == sql.ErrNoRows {
+	var eventsList []types.Event
 
-		return false
+	for rows.Next() {
+		var event types.Event
+		err := rows.Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
+		if err != nil {
+
+			return nil, err
+		}
+
+		eventsList = append(eventsList, event)
 	}
-	return true
+	return eventsList, nil
+}
+
+func (a *API) checkForQueuedEvent(events []types.Event) bool {
+	for _, event := range events {
+		if strings.ToLower(event.EventType) == strings.ToLower("QUEUED") {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *API) checkForCanceledEvent(events []types.Event) bool {
+	for _, event := range events {
+		if strings.ToLower(event.EventType) == strings.ToLower("CANCELED") {
+			return true
+		}
+	}
+	return false
+}
+
+func (a *API) checkForExecutedEvent(events []types.Event) bool {
+	for _, event := range events {
+		if strings.ToLower(event.EventType) == strings.ToLower("EXECUTED") {
+			return true
+		}
+	}
+	return false
 }
 
 func (a *API) checkVotesForProposal(proposalID uint64) (string, error) {
@@ -275,36 +307,6 @@ func (a *API) checkVotesForProposal(proposalID uint64) (string, error) {
 		state = "Accepted"
 	}
 	return state, nil
-}
-
-func (a *API) checkForCanceledEvent(proposalID uint64) bool {
-	var event types.Event
-	err := a.core.DB().QueryRow(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1 and event_type = 'CANCELED' 
-	order by block_timestamp limit 1 `, proposalID).Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
-
-	if err != nil && err != sql.ErrNoRows {
-		return false
-	}
-	if err == sql.ErrNoRows {
-
-		return false
-	}
-	return true
-}
-
-func (a *API) checkForExecutedEvent(proposalID uint64) bool {
-	var event types.Event
-	err := a.core.DB().QueryRow(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1 and event_type = 'EXECUTED' 
-	order by block_timestamp limit 1 `, proposalID).Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
-
-	if err != nil && err != sql.ErrNoRows {
-		return false
-	}
-	if err == sql.ErrNoRows {
-
-		return false
-	}
-	return true
 }
 
 func checkStateExist(state string) bool {
