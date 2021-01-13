@@ -25,6 +25,13 @@ func upAddParametersColumnToProposalTable(tx *sql.Tx) error {
 
 func downAddParametersColumnToProposalTable(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-		alter table governance_proposals  ;`)
+		alter table governance_proposals 
+		    drop column if exists  warm_up_duration ,
+		    drop column if exists active_duration,
+		    drop column if exists queue_duration,
+		    drop column if exists grace_period_duration,
+		    drop column if exists acceptance_threshold,
+		    drop column if exists min_quorum
+		    ;`)
 	return err
 }
