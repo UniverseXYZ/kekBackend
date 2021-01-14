@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
@@ -78,69 +79,55 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
 	offset := c.DefaultQuery("offset", strconv.FormatInt(math.MaxInt32, 10))
 	title := c.DefaultQuery("title", "")
-	proposalState := strings.ToLower(c.DefaultQuery("state", "all"))
-
-	var rows *sql.Rows
-	var err error
+	proposalState := strings.ToUpper(c.DefaultQuery("state", "all"))
 
 	if proposalState != "all" && !checkStateExist(proposalState) {
 		BadRequest(c, errors.New("unknown state"))
 		return
 	}
 
-	if proposalState == "all" {
-		if title == "" {
-			rows, err = a.core.DB().Query(`
-			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp,warm_up_duration, active_duration ,
-       			queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum
-			from governance_proposals 
-			where proposal_id <= $1 
-			order by proposal_id desc 
-			limit $2
-			and (select * from proposal_state(proposal_id) as proposal_state)
-		`, offset, limit)
-		} else {
-			title = "%" + strings.ToLower(title) + "%"
-			rows, err = a.core.DB().Query(`
-			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas,block_timestamp,warm_up_duration, active_duration ,
-       queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum 
-			from governance_proposals 
-			where proposal_id <= $1 
-			  and lower(title) like $2 
-				
-			order by proposal_id desc 
-			limit $3
-		and (select * from proposal_state(proposal_id) as proposal_state)
-		`, offset, title, limit)
-		}
-	} else {
-		if title == "" {
-			rows, err = a.core.DB().Query(`
-			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp,warm_up_duration, active_duration ,
-       			queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum
-			from governance_proposals 
-			where proposal_id <= $1 
-			and proposal_state(proposal_id) = $3
-			order by proposal_id desc 
-			limit $2
-			and (select * from proposal_state(proposal_id) as proposal_state)
-		`, offset, limit, proposalState)
-		} else {
-			title = "%" + strings.ToLower(title) + "%"
-			rows, err = a.core.DB().Query(`
-			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas,block_timestamp,warm_up_duration, active_duration ,
-       queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum 
-			from governance_proposals 
-			where proposal_id <= $1 
-			  and lower(title) like $2 
-					and proposal_state(proposal_id) = $4
-			order by proposal_id desc 
-			limit $3
-		and (select * from proposal_state(proposal_id) as proposal_state)
-		`, offset, title, limit, proposalState)
-		}
+	query := `
+		select proposal_ID,
+			   proposer,
+			   description,
+			   title,
+			   create_time,
+			   targets,
+			   "values",
+			   signatures,
+			   calldatas,
+			   block_timestamp,
+			   warm_up_duration,
+			   active_duration,
+			   queue_duration,
+			   grace_period_duration,
+			   acceptance_threshold,
+			   min_quorum,
+			   ( select proposal_state(proposal_id) ) as proposal_state
+		from governance_proposals
+		where proposal_id <= $1
+		%s %s
+		order by proposal_id desc
+		limit $2
+	`
+
+	var parameters = []interface{}{offset, limit}
+
+	var stateFilter string
+	if proposalState != "all" {
+		parameters = append(parameters, proposalState)
+		stateFilter = fmt.Sprintf("and ( select proposal_state(proposal_id) ) = $%d", len(parameters))
 	}
 
+	var titleFilter string
+	if title != "" {
+		parameters = append(parameters, "%"+strings.ToLower(title)+"%")
+		titleFilter = fmt.Sprintf("and lower(title) like $%d", len(parameters))
+	}
+
+	query = fmt.Sprintf(query, stateFilter, titleFilter)
+
+	rows, err := a.core.DB().Query(query, parameters...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -195,9 +182,8 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			MinQuorum:           minQuorum,
 			State:               state,
 		}
-		if proposalState == "all" || proposal.State == proposalState {
-			proposalList = append(proposalList, proposal)
-		}
+
+		proposalList = append(proposalList, proposal)
 	}
 
 	if len(proposalList) == 0 {
@@ -215,7 +201,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 }
 
 func checkStateExist(state string) bool {
-	proposalStates := [9]string{"WarmUp", "Active", "Canceled", "Failed", "Accepted", "Queued", "Grace", "Expired", "Executed"}
+	proposalStates := [9]string{"WARMUP", "ACTIVE", "CANCELED", "FAILED", "ACCEPTED", "QUEUED", "GRACE", "EXPIRED", "EXECUTED"}
 	for _, s := range proposalStates {
 		if strings.ToLower(s) == strings.ToLower(state) {
 			return true
