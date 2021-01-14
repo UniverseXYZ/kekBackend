@@ -26,8 +26,8 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 														 order by block_creation_time desc
 														 limit 1 )
 							 group by action_type )
-			select into value ( select amount from values where action_type = 'DEPOSIT' ) -
-							  ( select amount from values where action_type = 'WITHDRAW' );
+			select into value coalesce(( select amount from values where action_type = 'DEPOSIT' ),0) -
+							  coalesce(( select amount from values where action_type = 'WITHDRAW' ),0);
 		
 			return value;
 		end;
@@ -37,17 +37,18 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 			language plpgsql as
 		$$
 		declare
-			createTime          bigint;
-			warmUpDuration      bigint;
-			activeDuration      bigint;
-			queueDuration       bigint;
-			gracePeriodDuration bigint;
-			acceptanceThreshold bigint;
-			minQuorum           bigint;
-			bondStaked          numeric(78);
-			forVotes            numeric(78);
-			againstVotes        numeric(78);
-			eta                 bigint;
+			createTime                 bigint;
+			warmUpDuration             bigint;
+			activeDuration             bigint;
+			queueDuration              bigint;
+			gracePeriodDuration        bigint;
+			acceptanceThreshold        bigint;
+			minQuorum                  bigint;
+			bondStaked                 numeric(78);
+			forVotes                   numeric(78);
+			againstVotes               numeric(78);
+			eta                        bigint;
+			cancellationProposalQuorum numeric(78);
 		begin
 			if ( select count(*) from governance_events where proposal_id = id and event_type = 'CANCELED' ) > 0 then
 				return 'CANCELED';
@@ -75,8 +76,8 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 			select into bondStaked bond_staked_at_ts(to_timestamp(createTime + warmUpDuration));
 		
 			with total_votes as ( select support, sum(power) as power from proposal_votes(id) group by support )
-			select into forVotes, againstVotes ( select power from total_votes where support = true ),
-											   ( select power from total_votes where support = false );
+			select into forVotes, againstVotes coalesce(( select coalesce(power, 0) from total_votes where support = true ), 0),
+											   coalesce(( select coalesce(power, 0) from total_votes where support = false ), 0);
 		
 			-- check if quorum is met
 			if (forVotes + againstVotes < minQuorum / 100 * bondStaked) then return 'FAILED'; end if;
@@ -90,14 +91,21 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 		
 			select into eta event_data -> 'eta' as eta from governance_events where proposal_id = 1 and event_type = 'QUEUED';
 		
-			if ( select extract(epoch from now()) ) < eta then
-				return 'QUEUED';
+			if ( select extract(epoch from now()) ) < eta then return 'QUEUED'; end if;
+		
+			-- check if there's a cancellation proposal that passed
+			if ( select count(*) from governance_cancellation_proposals where proposal_id = id ) > 0 then
+				select into cancellationProposalQuorum bond_staked_at_ts(( select create_time - 1
+																		   from governance_cancellation_proposals
+																		   where proposal_id = id )) / 2;
+		
+				if coalesce(( select power from cancellation_proposal_votes(id) ), 0) >= cancellationProposalQuorum then
+					return 'CANCELED';
+				end if;
 			end if;
 		
-			if ( select extract(epoch from now()) ) <= eta + gracePeriodDuration then
-				return 'GRACE';
-			end if;
-		
+			if ( select extract(epoch from now()) ) <= eta + gracePeriodDuration then return 'GRACE'; end if;
+
 			return 'EXPIRED';
 		end;
 		$$;
