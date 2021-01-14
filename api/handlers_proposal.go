@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -20,19 +21,21 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		proposer            string
 		description         string
 		title               string
-		createTime          uint64
+		createTime          int64
 		targets             types2.JSONStringArray
 		values              types2.JSONStringArray
 		signatures          types2.JSONStringArray
 		calldatas           types2.JSONStringArray
 		timestamp           int64
-		warmUpDuration      uint64
-		activeDuration      uint64
-		queueDuration       uint64
-		gracePeriodDuration uint64
-		acceptanceThreshold uint64
-		minQuorum           uint64
+		warmUpDuration      int64
+		activeDuration      int64
+		queueDuration       int64
+		gracePeriodDuration int64
+		acceptanceThreshold int64
+		minQuorum           int64
 		state               string
+		forVotes            string
+		againstVotes        string
 	)
 
 	err := a.core.DB().QueryRow(`
@@ -52,10 +55,12 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 			   grace_period_duration,
 			   acceptance_threshold,
 			   min_quorum,
-			   ( select * from proposal_state(proposal_id) ) as proposal_state
+			   ( select * from proposal_state(proposal_id) ) as proposal_state,
+		       coalesce(( select power from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
+			   coalesce(( select power from proposal_votes(proposal_id) where support = false ), 0) as against_votes
 		from governance_proposals
 		where proposal_ID = $1
-	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state)
+	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state, &forVotes, &againstVotes)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -85,6 +90,9 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		AcceptanceThreshold: acceptanceThreshold,
 		MinQuorum:           minQuorum,
 		State:               state,
+		StateTimeLeft:       getTimeLeft(state, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration),
+		ForVotes:            forVotes,
+		AgainstVotes:        againstVotes,
 	}
 
 	OK(c, proposal)
@@ -113,18 +121,13 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			   description,
 			   title,
 			   create_time,
-			   targets,
-			   "values",
-			   signatures,
-			   calldatas,
-			   block_timestamp,
 			   warm_up_duration,
 			   active_duration,
 			   queue_duration,
 			   grace_period_duration,
-			   acceptance_threshold,
-			   min_quorum,
-			   ( select proposal_state(proposal_id) ) as proposal_state
+			   ( select proposal_state(proposal_id) ) as proposal_state,
+			   coalesce(( select power from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
+			   coalesce(( select power from proposal_votes(proposal_id) where support = false ), 0) as against_votes
 		from governance_proposals
 		where 1=1 
 		%s %s
@@ -157,7 +160,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 
 	defer rows.Close()
 
-	var proposalList []types.Proposal
+	var proposalList []types.ProposalLite
 
 	for rows.Next() {
 		var (
@@ -165,44 +168,31 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			proposer            string
 			description         string
 			title               string
-			createTime          uint64
-			targets             types2.JSONStringArray
-			values              types2.JSONStringArray
-			signatures          types2.JSONStringArray
-			calldatas           types2.JSONStringArray
-			timestamp           int64
-			warmUpDuration      uint64
-			activeDuration      uint64
-			queueDuration       uint64
-			gracePeriodDuration uint64
-			acceptanceThreshold uint64
-			minQuorum           uint64
+			createTime          int64
+			warmUpDuration      int64
+			activeDuration      int64
+			queueDuration       int64
+			gracePeriodDuration int64
 			state               string
+			forVotes            string
+			againstVotes        string
 		)
-		err := rows.Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state)
+		err := rows.Scan(&id, &proposer, &description, &title, &createTime, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &state, &forVotes, &againstVotes)
 		if err != nil {
 			Error(c, err)
 			return
 		}
 
-		proposal := types.Proposal{
-			Id:                  id,
-			Proposer:            proposer,
-			Description:         description,
-			Title:               title,
-			CreateTime:          createTime,
-			Targets:             targets,
-			Values:              values,
-			Signatures:          signatures,
-			Calldatas:           calldatas,
-			BlockTimestamp:      timestamp,
-			WarmUpDuration:      warmUpDuration,
-			ActiveDuration:      activeDuration,
-			QueueDuration:       queueDuration,
-			GracePeriodDuration: gracePeriodDuration,
-			AcceptanceThreshold: acceptanceThreshold,
-			MinQuorum:           minQuorum,
-			State:               state,
+		proposal := types.ProposalLite{
+			Id:            id,
+			Proposer:      proposer,
+			Description:   description,
+			Title:         title,
+			CreateTime:    createTime,
+			State:         state,
+			StateTimeLeft: getTimeLeft(state, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration),
+			ForVotes:      forVotes,
+			AgainstVotes:  againstVotes,
 		}
 
 		proposalList = append(proposalList, proposal)
@@ -248,4 +238,24 @@ func checkStateExist(state string) bool {
 
 	}
 	return false
+}
+
+func getTimeLeft(state string, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration int64) *int64 {
+	now := time.Now().Unix()
+	var timeLeft int64
+
+	switch state {
+	case "CANCELED", "FAILED", "ACCEPTED", "EXPIRED", "EXECUTED":
+		return nil
+	case "WARMUP":
+		timeLeft = createTime + warmUpDuration - now
+	case "ACTIVE":
+		timeLeft = createTime + warmUpDuration + activeDuration - now
+	case "QUEUED":
+		timeLeft = createTime + warmUpDuration + activeDuration + queueDuration - now
+	case "GRACE":
+		timeLeft = createTime + warmUpDuration + activeDuration + queueDuration + gracePeriodDuration - now
+	}
+
+	return &timeLeft
 }

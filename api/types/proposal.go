@@ -5,23 +5,39 @@ import (
 )
 
 type Proposal struct {
-	Id          uint64 `json:"proposal_id,omitempty"`
-	Proposer    string `json:"proposer,omitempty"`
-	Description string `json:"description,omitempty"`
-	Title       string `json:"title,omitempty"`
-	CreateTime  uint64 `json:"create_time,omitempty"`
+	Id          uint64 `json:"proposalId"`
+	Proposer    string `json:"proposer"`
+	Description string `json:"description"`
+	Title       string `json:"title"`
+	CreateTime  int64  `json:"createTime"`
 
-	Targets    types2.JSONStringArray `json:"targets,omitempty"`
-	Values     types2.JSONStringArray `json:"values,omitempty"`
-	Signatures types2.JSONStringArray `json:"signatures,omitempty"`
-	Calldatas  types2.JSONStringArray `json:"calldatas,omitempty"`
+	Targets    types2.JSONStringArray `json:"targets"`
+	Values     types2.JSONStringArray `json:"values"`
+	Signatures types2.JSONStringArray `json:"signatures"`
+	Calldatas  types2.JSONStringArray `json:"calldatas"`
 
-	BlockTimestamp      int64  `json:"block_timestamp"`
-	WarmUpDuration      uint64 `json:"warm_up_duration"`
-	ActiveDuration      uint64 `json:"active_duration"`
-	QueueDuration       uint64 `json:"queue_duration"`
-	GracePeriodDuration uint64 `json:"grace_period_duration"`
-	AcceptanceThreshold uint64 `json:"acceptance_threshold"`
-	MinQuorum           uint64 `json:"min_quorum"`
-	State               string `json:"state"`
+	BlockTimestamp      int64 `json:"blockTimestamp"`
+	WarmUpDuration      int64 `json:"warmUpDuration"`
+	ActiveDuration      int64 `json:"activeDuration"`
+	QueueDuration       int64 `json:"queueDuration"`
+	GracePeriodDuration int64 `json:"gracePeriodDuration"`
+	AcceptanceThreshold int64 `json:"acceptanceThreshold"`
+	MinQuorum           int64 `json:"minQuorum"`
+
+	State         string `json:"state"`
+	StateTimeLeft *int64 `json:"stateTimeLeft"`
+	ForVotes      string `json:"forVotes"`
+	AgainstVotes  string `json:"againstVotes"`
+}
+
+type ProposalLite struct {
+	Id            uint64 `json:"proposalId"`
+	Proposer      string `json:"proposer"`
+	Description   string `json:"description"`
+	Title         string `json:"title"`
+	CreateTime    int64  `json:"createTime"`
+	State         string `json:"state"`
+	StateTimeLeft *int64 `json:"stateTimeLeft"`
+	ForVotes      string `json:"forVotes"`
+	AgainstVotes  string `json:"againstVotes"`
 }

@@ -5,9 +5,9 @@ import (
 )
 
 type Event struct {
-	ProposalID uint64           `json:"proposal_id"`
+	ProposalID uint64           `json:"proposalId"`
 	Caller     string           `json:"caller"`
-	Eta        types.JSONObject `json:"event_data"`
-	EventType  string           `json:"event_type"`
-	CreateTime uint64           `json:"create_time"`
+	Eta        types.JSONObject `json:"eventData"`
+	EventType  string           `json:"eventType"`
+	CreateTime uint64           `json:"createTime"`
 }
