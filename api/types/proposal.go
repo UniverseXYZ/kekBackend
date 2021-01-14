@@ -1,6 +1,8 @@
 package types
 
 import (
+	"time"
+
 	types2 "github.com/barnbridge/barnbridge-backend/types"
 )
 
@@ -24,10 +26,10 @@ type Proposal struct {
 	AcceptanceThreshold int64 `json:"acceptanceThreshold"`
 	MinQuorum           int64 `json:"minQuorum"`
 
-	State         string `json:"state"`
-	StateTimeLeft *int64 `json:"stateTimeLeft"`
-	ForVotes      string `json:"forVotes"`
-	AgainstVotes  string `json:"againstVotes"`
+	State         ProposalState `json:"state"`
+	StateTimeLeft *int64        `json:"stateTimeLeft"`
+	ForVotes      string        `json:"forVotes"`
+	AgainstVotes  string        `json:"againstVotes"`
 }
 
 type ProposalLite struct {
@@ -40,4 +42,9 @@ type ProposalLite struct {
 	StateTimeLeft *int64 `json:"stateTimeLeft"`
 	ForVotes      string `json:"forVotes"`
 	AgainstVotes  string `json:"againstVotes"`
+}
+
+type ProposalHistory struct {
+	ProposalState ProposalState `json:"proposalState"`
+	EndTime       time.Time     `json:"endTime"`
 }

@@ -33,7 +33,7 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		gracePeriodDuration int64
 		acceptanceThreshold int64
 		minQuorum           int64
-		state               string
+		state               types.ProposalState
 		forVotes            string
 		againstVotes        string
 	)
@@ -190,7 +190,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			Title:         title,
 			CreateTime:    createTime,
 			State:         state,
-			StateTimeLeft: getTimeLeft(state, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration),
+			StateTimeLeft: getTimeLeft(types.ProposalState(state), createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration),
 			ForVotes:      forVotes,
 			AgainstVotes:  againstVotes,
 		}
@@ -240,22 +240,258 @@ func checkStateExist(state string) bool {
 	return false
 }
 
-func getTimeLeft(state string, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration int64) *int64 {
+func getTimeLeft(state types.ProposalState, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration int64) *int64 {
 	now := time.Now().Unix()
 	var timeLeft int64
 
 	switch state {
-	case "CANCELED", "FAILED", "ACCEPTED", "EXPIRED", "EXECUTED":
+	case types.CANCELED, types.FAILED, types.ACCEPTED, types.EXPIRED, types.EXECUTED:
 		return nil
-	case "WARMUP":
+	case types.WARMUP:
 		timeLeft = createTime + warmUpDuration - now
-	case "ACTIVE":
+	case types.ACTIVE:
 		timeLeft = createTime + warmUpDuration + activeDuration - now
-	case "QUEUED":
+	case types.QUEUED:
 		timeLeft = createTime + warmUpDuration + activeDuration + queueDuration - now
-	case "GRACE":
+	case types.GRACE:
 		timeLeft = createTime + warmUpDuration + activeDuration + queueDuration + gracePeriodDuration - now
 	}
 
 	return &timeLeft
+}
+
+func (a *API) handleProposalHistory(c *gin.Context) {
+	proposalID := c.Param("proposalID")
+	var proposal types.Proposal
+	err := a.core.DB().QueryRow(`
+		select
+			   block_timestamp,
+			   warm_up_duration,
+			   active_duration,
+			   queue_duration,
+			   grace_period_duration,
+			   ( select * from proposal_state(proposal_id) ) as proposal_state
+		from governance_proposals
+		where proposal_ID = $1
+	`, proposalID).Scan(&proposal.BlockTimestamp, &proposal.WarmUpDuration, &proposal.ActiveDuration, &proposal.QueueDuration, &proposal.GracePeriodDuration, &proposal.State)
+
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+
+	if err == sql.ErrNoRows {
+		NotFound(c)
+		return
+	}
+
+	eventsList, err := a.getALlEvents(proposalID)
+
+	if err != nil {
+		Error(c, err)
+	}
+
+	for _, event := range eventsList {
+		if event.EventType == "CANCELED" {
+			history, err := getHistoryBeforeCanceled(int64(event.CreateTime), proposal, eventsList)
+			if err != nil {
+				Error(c, err)
+				return
+			}
+			OK(c, history)
+			return
+		}
+	}
+
+	var lastStateTs int64
+	timeLeft := getTimeLeft(proposal.State, proposal.CreateTime, proposal.WarmUpDuration, proposal.ActiveDuration, proposal.QueueDuration, proposal.GracePeriodDuration)
+	if timeLeft == nil {
+		lastStateTs = time.Now().Unix()
+	} else {
+		lastStateTs = *timeLeft + time.Now().Unix()
+	}
+
+	history, err := getHistoryOfProposal(lastStateTs, proposal, eventsList)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+	OK(c, history)
+	return
+}
+
+func (a *API) getALlEvents(proposalID string) ([]types.Event, error) {
+	rows, err := a.core.DB().Query(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events  where proposal_id = $1 order by block_timestamp`, proposalID)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, err
+
+	}
+
+	var eventsList []types.Event
+
+	for rows.Next() {
+		var event types.Event
+		err := rows.Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
+		if err != nil {
+			return nil, err
+		}
+
+		eventsList = append(eventsList, event)
+	}
+
+	return eventsList, nil
+}
+
+func getHistoryOfProposal(lastStateTs int64, proposal types.Proposal, events []types.Event) ([]types.ProposalHistory, error) {
+	var proposalHistory []types.ProposalHistory
+	createdTs := proposal.CreateTime
+	warmUpTs := createdTs + proposal.WarmUpDuration
+	votingTs := warmUpTs + proposal.ActiveDuration
+	queuedTs := votingTs + proposal.QueueDuration
+	graceTs := queuedTs + proposal.GracePeriodDuration
+
+	if lastStateTs > graceTs {
+		execEvent := getExecutedEvent(events)
+		if execEvent.CreateTime != 0 {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.EXECUTED,
+				EndTime:       time.Unix(int64(lastStateTs), 0),
+			})
+		} else {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.EXPIRED,
+				EndTime:       time.Unix(int64(lastStateTs), 0),
+			})
+		}
+	}
+
+	if lastStateTs > queuedTs {
+		queuedEvent := getQueuedEvent(events)
+
+		if time.Now().Unix() > graceTs && queuedEvent.Eta != nil {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.GRACE,
+				EndTime:       time.Unix(int64(graceTs), 0),
+			})
+		}
+
+		if queuedEvent.CreateTime == 0 {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.FAILED,
+				EndTime:       time.Unix(int64(queuedEvent.CreateTime), 0),
+			})
+
+		} else {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.ACCEPTED,
+				EndTime:       time.Unix(int64(queuedEvent.CreateTime), 0),
+			}, types.ProposalHistory{
+				ProposalState: types.QUEUED,
+				EndTime:       time.Unix(queuedTs, 0),
+			})
+		}
+
+	}
+
+	if lastStateTs < queuedTs {
+		proposalHistory = append(proposalHistory, types.ProposalHistory{
+			ProposalState: "VOTING",
+			EndTime:       time.Unix(votingTs, 0),
+		})
+	}
+
+	if lastStateTs > votingTs {
+		proposalHistory = append(proposalHistory, types.ProposalHistory{
+			ProposalState: types.WARMUP,
+			EndTime:       time.Unix(warmUpTs, 0),
+		})
+	}
+
+	if lastStateTs > warmUpTs {
+		proposalHistory = append(proposalHistory, types.ProposalHistory{
+			ProposalState: types.CREATED,
+			EndTime:       time.Unix(createdTs, 0),
+		})
+	}
+
+	return proposalHistory, nil
+}
+
+func getQueuedEvent(events []types.Event) types.Event {
+	var queuedEvent types.Event
+	for _, event := range events {
+		if event.EventType == "QUEUED" {
+			return event
+		}
+	}
+	return queuedEvent
+}
+
+func getExecutedEvent(events []types.Event) types.Event {
+	var execEvent types.Event
+	for _, event := range events {
+		if event.EventType == "EXECUTED" {
+			return event
+		}
+	}
+	return execEvent
+}
+func getHistoryBeforeCanceled(canceledTS int64, proposal types.Proposal, events []types.Event) ([]types.ProposalHistory, error) {
+	var proposalHistory []types.ProposalHistory
+	createdTs := proposal.CreateTime
+	warmUpTs := createdTs + proposal.WarmUpDuration
+	votingTs := warmUpTs + proposal.ActiveDuration
+	queuedTs := votingTs + proposal.QueueDuration
+	graceTs := queuedTs + proposal.GracePeriodDuration
+
+	proposalHistory = append(proposalHistory, types.ProposalHistory{
+		ProposalState: types.CANCELED,
+		EndTime:       time.Unix(int64(canceledTS), 0),
+	})
+
+	if canceledTS > queuedTs {
+		queuedEvent := getQueuedEvent(events)
+
+		if time.Now().Unix() > graceTs && queuedEvent.Eta != nil {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.GRACE,
+				EndTime:       time.Unix(int64(graceTs), 0),
+			})
+		}
+
+		if queuedEvent.CreateTime != 0 {
+			proposalHistory = append(proposalHistory, types.ProposalHistory{
+				ProposalState: types.QUEUED,
+				EndTime:       time.Unix(queuedTs, 0),
+			}, types.ProposalHistory{
+				ProposalState: types.ACCEPTED,
+				EndTime:       time.Unix(int64(queuedEvent.CreateTime), 0),
+			})
+
+		}
+	}
+
+	if canceledTS < queuedTs {
+		proposalHistory = append(proposalHistory, types.ProposalHistory{
+			ProposalState: "VOTING",
+			EndTime:       time.Unix(votingTs, 0),
+		})
+	}
+
+	if canceledTS > votingTs {
+		proposalHistory = append(proposalHistory, types.ProposalHistory{
+			ProposalState: types.WARMUP,
+			EndTime:       time.Unix(warmUpTs, 0),
+		})
+	}
+
+	if canceledTS > warmUpTs {
+		proposalHistory = append(proposalHistory, types.ProposalHistory{
+			ProposalState: types.CREATED,
+			EndTime:       time.Unix(createdTs, 0),
+		})
+	}
+
+	return proposalHistory, nil
 }
