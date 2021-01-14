@@ -3,8 +3,6 @@ package api
 import (
 	"database/sql"
 	"fmt"
-	"math"
-	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -94,12 +92,18 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 
 func (a *API) AllProposalHandler(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
-	offset := c.DefaultQuery("offset", strconv.FormatInt(math.MaxInt32, 10))
+	page := c.DefaultQuery("page", "1")
 	title := c.DefaultQuery("title", "")
 	proposalState := strings.ToUpper(c.DefaultQuery("state", "all"))
 
 	if proposalState != "ALL" && !checkStateExist(proposalState) {
 		BadRequest(c, errors.New("unknown state"))
+		return
+	}
+
+	offset, err := calculateOffset(limit, page)
+	if err != nil {
+		Error(c, err)
 		return
 	}
 
@@ -122,9 +126,10 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			   min_quorum,
 			   ( select proposal_state(proposal_id) ) as proposal_state
 		from governance_proposals
-		where proposal_id <= $1
+		where 1=1 
 		%s %s
 		order by proposal_id desc
+		offset $1
 		limit $2
 	`
 

@@ -19,6 +19,7 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 	offset, err := calculateOffset(limit, page)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	var cancellationVotesList []types.Vote
@@ -35,6 +36,7 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
+		return
 	}
 
 	defer rows.Close()

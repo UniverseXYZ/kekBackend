@@ -25,6 +25,7 @@ func (a *API) handleVoters(c *gin.Context) {
 	offset, err := calculateOffset(limit, page)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	rows, err := a.core.DB().Query(` select * from voters order by voting_power desc offset $1 limit $2 ;`, offset, limit)

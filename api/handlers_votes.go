@@ -21,11 +21,13 @@ func (a *API) VotesHandler(c *gin.Context) {
 	offset, err := calculateOffset(limit, page)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	proposalID, err := strconv.Atoi(proposalIDString)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	var votesList []types.Vote
