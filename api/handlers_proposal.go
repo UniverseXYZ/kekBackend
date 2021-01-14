@@ -81,7 +81,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	title := c.DefaultQuery("title", "")
 	proposalState := strings.ToUpper(c.DefaultQuery("state", "all"))
 
-	if proposalState != "all" && !checkStateExist(proposalState) {
+	if proposalState != "ALL" && !checkStateExist(proposalState) {
 		BadRequest(c, errors.New("unknown state"))
 		return
 	}
@@ -114,7 +114,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	var parameters = []interface{}{offset, limit}
 
 	var stateFilter string
-	if proposalState != "all" {
+	if proposalState != "ALL" {
 		parameters = append(parameters, proposalState)
 		stateFilter = fmt.Sprintf("and ( select proposal_state(proposal_id) ) = $%d", len(parameters))
 	}
