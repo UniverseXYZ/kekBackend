@@ -5,7 +5,6 @@ import (
 	"math"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -34,11 +33,13 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		gracePeriodDuration uint64
 		acceptanceThreshold uint64
 		minQuorum           uint64
+		state               string
 	)
 	err := a.core.DB().QueryRow(`select proposal_id,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp,warm_up_duration, active_duration ,
        queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum 
-       from governance_proposals where proposal_ID = $1 `, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures,
-		&calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum)
+       from governance_proposals where proposal_ID = $1 
+       and (select * from proposal_state($1) as proposal_state)`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures,
+		&calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -67,13 +68,8 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		GracePeriodDuration: gracePeriodDuration,
 		AcceptanceThreshold: acceptanceThreshold,
 		MinQuorum:           minQuorum,
+		State:               state,
 	}
-	state, err := a.calculateState(proposal)
-	if err != nil {
-		Error(c, err)
-		return
-	}
-	proposal.State = state
 
 	OK(c, proposal)
 }
@@ -92,26 +88,57 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		return
 	}
 
-	if title == "" {
-		rows, err = a.core.DB().Query(`
+	if proposalState == "all" {
+		if title == "" {
+			rows, err = a.core.DB().Query(`
 			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp,warm_up_duration, active_duration ,
        			queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum
 			from governance_proposals 
 			where proposal_id <= $1 
 			order by proposal_id desc 
 			limit $2
+			and (select * from proposal_state(proposal_id) as proposal_state)
 		`, offset, limit)
-	} else {
-		title = "%" + strings.ToLower(title) + "%"
-		rows, err = a.core.DB().Query(`
+		} else {
+			title = "%" + strings.ToLower(title) + "%"
+			rows, err = a.core.DB().Query(`
 			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas,block_timestamp,warm_up_duration, active_duration ,
        queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum 
 			from governance_proposals 
 			where proposal_id <= $1 
 			  and lower(title) like $2 
+				
 			order by proposal_id desc 
 			limit $3
+		and (select * from proposal_state(proposal_id) as proposal_state)
 		`, offset, title, limit)
+		}
+	} else {
+		if title == "" {
+			rows, err = a.core.DB().Query(`
+			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas, block_timestamp,warm_up_duration, active_duration ,
+       			queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum
+			from governance_proposals 
+			where proposal_id <= $1 
+			and proposal_state(proposal_id) = $3
+			order by proposal_id desc 
+			limit $2
+			and (select * from proposal_state(proposal_id) as proposal_state)
+		`, offset, limit, proposalState)
+		} else {
+			title = "%" + strings.ToLower(title) + "%"
+			rows, err = a.core.DB().Query(`
+			select proposal_ID, proposer, description, title, create_time, targets, "values", signatures, calldatas,block_timestamp,warm_up_duration, active_duration ,
+       queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum 
+			from governance_proposals 
+			where proposal_id <= $1 
+			  and lower(title) like $2 
+					and proposal_state(proposal_id) = $4
+			order by proposal_id desc 
+			limit $3
+		and (select * from proposal_state(proposal_id) as proposal_state)
+		`, offset, title, limit, proposalState)
+		}
 	}
 
 	if err != nil && err != sql.ErrNoRows {
@@ -141,8 +168,9 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			gracePeriodDuration uint64
 			acceptanceThreshold uint64
 			minQuorum           uint64
+			state               string
 		)
-		err := rows.Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum)
+		err := rows.Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state)
 		if err != nil {
 			Error(c, err)
 			return
@@ -165,13 +193,8 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			GracePeriodDuration: gracePeriodDuration,
 			AcceptanceThreshold: acceptanceThreshold,
 			MinQuorum:           minQuorum,
+			State:               state,
 		}
-		proposal.State, err = a.calculateState(proposal)
-		if err != nil {
-			Error(c, err)
-			return
-		}
-
 		if proposalState == "all" || proposal.State == proposalState {
 			proposalList = append(proposalList, proposal)
 		}
@@ -189,125 +212,6 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	}
 
 	OK(c, proposalList, map[string]interface{}{"count": count})
-}
-
-func (a *API) calculateState(p types.Proposal) (string, error) {
-	now := time.Now()
-	timestampNow := uint64(now.Unix())
-	warmUpDuration := p.CreateTime + p.WarmUpDuration
-	activeDuration := p.CreateTime + p.WarmUpDuration + p.ActiveDuration
-	queuedDuration := p.CreateTime + p.WarmUpDuration + p.ActiveDuration + p.QueueDuration
-	graceDuration := queuedDuration + p.GracePeriodDuration
-
-	events, err := a.getAllEvents(p.Id)
-	if err != nil {
-		return "", err
-	}
-
-	existCanceled := a.checkForCanceledEvent(events)
-	if existCanceled {
-		return "Canceled", nil
-	}
-
-	existExecuted := a.checkForExecutedEvent(events)
-	if existExecuted {
-		return "Executed", nil
-	}
-
-	if timestampNow <= warmUpDuration {
-		return "WarmUp", nil
-	}
-
-	if timestampNow <= activeDuration {
-		return "Active", nil
-	}
-
-	if timestampNow < queuedDuration {
-		existQueued := a.checkForQueuedEvent(events)
-		if existQueued {
-			return "Queued", nil
-		} else {
-			state, err := a.checkVotesForProposal(p.Id)
-			if err != nil {
-				return "", err
-			}
-			return state, err
-		}
-	}
-
-	if timestampNow < graceDuration {
-		return "Grace", nil
-	}
-
-	return "Expired", nil
-
-}
-func (a *API) getAllEvents(proposalID uint64) ([]types.Event, error) {
-
-	rows, err := a.core.DB().Query(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1`, proposalID)
-
-	if err != nil && err != sql.ErrNoRows {
-		return nil, err
-	}
-	var eventsList []types.Event
-
-	for rows.Next() {
-		var event types.Event
-		err := rows.Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
-		if err != nil {
-
-			return nil, err
-		}
-
-		eventsList = append(eventsList, event)
-	}
-	return eventsList, nil
-}
-
-func (a *API) checkForQueuedEvent(events []types.Event) bool {
-	for _, event := range events {
-		if strings.ToLower(event.EventType) == strings.ToLower("QUEUED") {
-			return true
-		}
-	}
-	return false
-}
-
-func (a *API) checkForCanceledEvent(events []types.Event) bool {
-	for _, event := range events {
-		if strings.ToLower(event.EventType) == strings.ToLower("CANCELED") {
-			return true
-		}
-	}
-	return false
-}
-
-func (a *API) checkForExecutedEvent(events []types.Event) bool {
-	for _, event := range events {
-		if strings.ToLower(event.EventType) == strings.ToLower("EXECUTED") {
-			return true
-		}
-	}
-	return false
-}
-
-func (a *API) checkVotesForProposal(proposalID uint64) (string, error) {
-	var forVotes, againstVotes int
-	var state string
-	err := a.core.DB().QueryRow(`select count(*) from proposal_votes($1) where support = 'true'`, proposalID).Scan(&forVotes)
-	if err != nil && err != sql.ErrNoRows {
-		return state, err
-	}
-	err = a.core.DB().QueryRow(`select count(*) from proposal_votes($1) where support = 'false'`, proposalID).Scan(&againstVotes)
-	if err != nil && err != sql.ErrNoRows {
-		return state, err
-	}
-	if forVotes < againstVotes {
-		state = "Failed"
-	} else {
-		state = "Accepted"
-	}
-	return state, nil
 }
 
 func checkStateExist(state string) bool {
