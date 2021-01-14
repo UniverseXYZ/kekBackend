@@ -36,11 +36,28 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		minQuorum           uint64
 		state               string
 	)
-	err := a.core.DB().QueryRow(`select proposal_id,proposer,description,title,create_time,targets,"values",signatures,calldatas,block_timestamp,warm_up_duration, active_duration ,
-       queue_duration ,  grace_period_duration, acceptance_threshold, min_quorum 
-       from governance_proposals where proposal_ID = $1 
-       and (select * from proposal_state($1) as proposal_state)`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures,
-		&calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state)
+
+	err := a.core.DB().QueryRow(`
+		select proposal_id,
+			   proposer,
+			   description,
+			   title,
+			   create_time,
+			   targets,
+			   "values",
+			   signatures,
+			   calldatas,
+			   block_timestamp,
+			   warm_up_duration,
+			   active_duration,
+			   queue_duration,
+			   grace_period_duration,
+			   acceptance_threshold,
+			   min_quorum,
+			   ( select * from proposal_state(proposal_id) ) as proposal_state
+		from governance_proposals
+		where proposal_ID = $1
+	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
