@@ -214,9 +214,26 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	}
 
 	var count int
-	err = a.core.DB().QueryRow(`select count(*) from governance_proposals`).Scan(&count)
+	var parameters2 []interface{}
+
+	var stateFilter2 string
+	if proposalState != "ALL" {
+		parameters2 = append(parameters2, proposalState)
+		stateFilter2 = fmt.Sprintf("and ( select proposal_state(proposal_id) ) = $%d", len(parameters2))
+	}
+
+	var titleFilter2 string
+	if title != "" {
+		parameters2 = append(parameters2, "%"+strings.ToLower(title)+"%")
+		titleFilter2 = fmt.Sprintf("and lower(title) like $%d", len(parameters2))
+	}
+
+	var countQuery = `select count(*) from governance_proposals where 1=1 %s %s`
+
+	err = a.core.DB().QueryRow(fmt.Sprintf(countQuery, stateFilter2, titleFilter2), parameters2...).Scan(&count)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	OK(c, proposalList, map[string]interface{}{"count": count})
