@@ -77,7 +77,11 @@ func (a *API) VotesHandler(c *gin.Context) {
 	}
 
 	var count int
-	err = a.core.DB().QueryRow(`select count(*) from proposal_votes($1)`, proposalID).Scan(&count)
+	if supportFilter == "" {
+		err = a.core.DB().QueryRow(`select count(*) from proposal_votes($1)`, proposalID).Scan(&count)
+	} else {
+		err = a.core.DB().QueryRow(`select count(*) from proposal_votes($1) where support = $2`, proposalID, supportFilter).Scan(&count)
+	}
 
 	OK(c, votesList, map[string]interface{}{"count": count})
 }
