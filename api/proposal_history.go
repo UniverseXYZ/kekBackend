@@ -30,7 +30,24 @@ func (a *API) history(p types.Proposal) ([]types.HistoryEvent, error) {
 		history[i].EndTs = history[i-1].StartTs - 1
 	}
 
+	history[0].EndTs = latestEventEndAt(p, history[0])
+
 	return history, nil
+}
+
+func latestEventEndAt(p types.Proposal, event types.HistoryEvent) int64 {
+	switch event.Name {
+	case string(types.WARMUP):
+		return event.StartTs + p.WarmUpDuration
+	case string(types.ACTIVE):
+		return event.StartTs + p.ActiveDuration
+	case string(types.QUEUED):
+		return event.StartTs + p.QueueDuration
+	case string(types.GRACE):
+		return event.StartTs + p.GracePeriodDuration
+	default:
+		return 0
+	}
 }
 
 // we have events for the following actions: CREATED, QUEUED, CANCELED, EXECUTED
