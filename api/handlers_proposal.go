@@ -33,9 +33,10 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		gracePeriodDuration int64
 		acceptanceThreshold int64
 		minQuorum           int64
-		state               types.ProposalState
 		forVotes            string
 		againstVotes        string
+		bondStaked          string
+		state               types.ProposalState
 	)
 
 	err := a.db.QueryRow(`
@@ -55,12 +56,13 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 			   grace_period_duration,
 			   acceptance_threshold,
 			   min_quorum,
-			   ( select * from proposal_state(proposal_id) ) as proposal_state,
 		       coalesce(( select power from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
-			   coalesce(( select power from proposal_votes(proposal_id) where support = false ), 0) as against_votes
+			   coalesce(( select power from proposal_votes(proposal_id) where support = false ), 0) as against_votes,
+		       coalesce(( select bond_staked_at_ts(to_timestamp(create_time+warm_up_duration)) ), 0) as bond_staked,
+			   ( select * from proposal_state(proposal_id) ) as proposal_state
 		from governance_proposals
 		where proposal_ID = $1
-	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &state, &forVotes, &againstVotes)
+	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &forVotes, &againstVotes, &bondStaked, &state)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -93,9 +95,10 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		StateTimeLeft:       getTimeLeft(state, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration),
 		ForVotes:            forVotes,
 		AgainstVotes:        againstVotes,
+		BondStaked:          bondStaked,
 	}
 
-	history, err := a.buildHistory(proposal)
+	history, err := a.history(proposal)
 	if err != nil {
 		Error(c, err)
 		return

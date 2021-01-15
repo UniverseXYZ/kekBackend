@@ -1,7 +1,7 @@
 package types
 
 type HistoryEvent struct {
-	Name    string
-	StartTs int64
-	EndTs   int64
+	Name    string `json:"name"`
+	StartTs int64  `json:"startTimestamp"`
+	EndTs   int64  `json:"endTimestamp"`
 }
