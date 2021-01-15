@@ -30,6 +30,8 @@ type Proposal struct {
 	StateTimeLeft *int64        `json:"stateTimeLeft"`
 	ForVotes      string        `json:"forVotes"`
 	AgainstVotes  string        `json:"againstVotes"`
+
+	History []HistoryEvent `json:"history"`
 }
 
 type ProposalLite struct {

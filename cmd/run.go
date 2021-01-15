@@ -31,6 +31,7 @@ var runCmd = &cobra.Command{
 	PreRun: func(cmd *cobra.Command, args []string) {
 		bindViperToDBFlags(cmd)
 		bindViperToRedisFlags(cmd)
+		bindViperToAPIFlags(cmd)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		buildDBConnectionString()
@@ -80,7 +81,7 @@ var runCmd = &cobra.Command{
 		})
 		c.Run()
 
-		a := api.New(c, api.Config{
+		a := api.New(c.DB(), api.Config{
 			Port:           viper.GetString("api.port"),
 			DevCorsEnabled: viper.GetBool("api.dev-cors"),
 			DevCorsHost:    viper.GetString("api.dev-cors-host"),
@@ -109,6 +110,7 @@ var runCmd = &cobra.Command{
 func init() {
 	addDBFlags(runCmd)
 	addRedisFlags(runCmd)
+	addAPIFlags(runCmd)
 
 	// feature flags
 	runCmd.Flags().Bool("feature.backfill.enabled", true, "Enable/disable the automatic backfilling of data")
@@ -132,16 +134,6 @@ func init() {
 
 	runCmd.Flags().Duration("eth.client.poll-interval", 15*time.Second, "Interval to be used for polling the Ethereum node for best block")
 	viper.BindPFlag("eth.client.poll-interval", runCmd.Flag("eth.client.poll-interval"))
-
-	// api
-	runCmd.Flags().String("api.port", "3001", "HTTP API port")
-	viper.BindPFlag("api.port", runCmd.Flag("api.port"))
-
-	runCmd.Flags().Bool("api.dev-cors", false, "Enable development cors for HTTP API")
-	viper.BindPFlag("api.dev-cors", runCmd.Flag("api.dev-cors"))
-
-	runCmd.Flags().String("api.dev-cors-host", "", "Allowed host for HTTP API dev cors")
-	viper.BindPFlag("api.dev-cors-host", runCmd.Flag("api.dev-cors-host"))
 
 	// dashboard
 	runCmd.Flags().String("dashboard.port", "3000", "Dashboard port")

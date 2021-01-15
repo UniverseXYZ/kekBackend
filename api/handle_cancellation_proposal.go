@@ -16,7 +16,7 @@ func (a *API) CancellationProposalDetailsHandler(c *gin.Context) {
 		createTime uint64
 	)
 
-	err := a.core.DB().QueryRow(`select proposal_id, creator ,create_time from governance_cancellation_proposals where proposal_id = $1`, proposalID).Scan(&id, &creator, &createTime)
+	err := a.db.QueryRow(`select proposal_id, creator ,create_time from governance_cancellation_proposals where proposal_id = $1`, proposalID).Scan(&id, &creator, &createTime)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -47,7 +47,7 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 		return
 	}
 
-	rows, err := a.core.DB().Query(`select proposal_id, creator, create_time
+	rows, err := a.db.Query(`select proposal_id, creator, create_time
 		from governance_cancellation_proposals 
 		order by proposal_id desc
 		offset $1
@@ -91,7 +91,7 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 	}
 
 	var count int
-	err = a.core.DB().QueryRow(`select count(*) from governance_cancellation_proposals`).Scan(&count)
+	err = a.db.QueryRow(`select count(*) from governance_cancellation_proposals`).Scan(&count)
 	if err != nil {
 		Error(c, err)
 	}

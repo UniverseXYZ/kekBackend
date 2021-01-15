@@ -67,6 +67,18 @@ func bindViperToDBFlags(cmd *cobra.Command) {
 	viper.BindPFlag("db.user", cmd.Flag("db.user"))
 }
 
+func addAPIFlags(cmd *cobra.Command) {
+	cmd.Flags().String("api.port", "3001", "HTTP API port")
+	cmd.Flags().Bool("api.dev-cors", false, "Enable development cors for HTTP API")
+	cmd.Flags().String("api.dev-cors-host", "", "Allowed host for HTTP API dev cors")
+}
+
+func bindViperToAPIFlags(cmd *cobra.Command) {
+	viper.BindPFlag("api.port", cmd.Flag("api.port"))
+	viper.BindPFlag("api.dev-cors", cmd.Flag("api.dev-cors"))
+	viper.BindPFlag("api.dev-cors-host", cmd.Flag("api.dev-cors-host"))
+}
+
 func addRedisFlags(cmd *cobra.Command) {
 	cmd.Flags().String("redis.server", "localhost:6379", "Redis server URL")
 	cmd.Flags().String("redis.list", "todo", "The name of the list to be used for task management")

@@ -28,7 +28,7 @@ func (a *API) handleVoters(c *gin.Context) {
 		return
 	}
 
-	rows, err := a.core.DB().Query(` select * from voters order by voting_power desc offset $1 limit $2 ;`, offset, limit)
+	rows, err := a.db.Query(` select * from voters order by voting_power desc offset $1 limit $2 ;`, offset, limit)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -51,7 +51,7 @@ func (a *API) handleVoters(c *gin.Context) {
 	}
 
 	var count int
-	err = a.core.DB().QueryRow(`select count(*) from voters`).Scan(&count)
+	err = a.db.QueryRow(`select count(*) from voters`).Scan(&count)
 
 	OK(c, votersList, map[string]interface{}{"count": count})
 }

@@ -1,7 +1,8 @@
 package api
 
 import (
-	"github.com/barnbridge/barnbridge-backend/core"
+	"database/sql"
+
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -20,13 +21,13 @@ type API struct {
 	config Config
 	engine *gin.Engine
 
-	core *core.Core
+	db *sql.DB
 }
 
-func New(core *core.Core, config Config) *API {
+func New(db *sql.DB, config Config) *API {
 	return &API{
 		config: config,
-		core:   core,
+		db:     db,
 	}
 }
 

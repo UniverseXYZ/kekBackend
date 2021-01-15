@@ -11,7 +11,7 @@ import (
 func (a *API) handleProposalEvents(c *gin.Context) {
 	proposalID := c.Param("proposalID")
 
-	rows, err := a.core.DB().Query(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1`, proposalID)
+	rows, err := a.db.Query(`select proposal_id ,caller,event_type,event_data,block_timestamp from governance_events where proposal_id = $1`, proposalID)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)

@@ -9,5 +9,5 @@ type Event struct {
 	Caller     string           `json:"caller"`
 	Eta        types.JSONObject `json:"eventData"`
 	EventType  string           `json:"eventType"`
-	CreateTime uint64           `json:"createTime"`
+	CreateTime int64            `json:"createTime"`
 }

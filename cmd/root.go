@@ -104,4 +104,5 @@ func init() {
 	RootCmd.AddCommand(migrateCmd)
 	RootCmd.AddCommand(resetCmd)
 	RootCmd.AddCommand(queueCmd)
+	RootCmd.AddCommand(apiCmd)
 }
