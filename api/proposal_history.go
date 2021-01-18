@@ -154,7 +154,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	if events[0].EventType == string(types.QUEUED) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.QUEUED),
-			StartTs: events[0].CreateTime,
+			StartTs: p.CreateTime + p.WarmUpDuration + p.ActiveDuration + 1,
 		})
 	} else {
 		// the next event must be QUEUED, but just in case ...
