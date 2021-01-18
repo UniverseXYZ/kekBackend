@@ -56,8 +56,8 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 			   grace_period_duration,
 			   acceptance_threshold,
 			   min_quorum,
-		       coalesce(( select power from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
-			   coalesce(( select power from proposal_votes(proposal_id) where support = false ), 0) as against_votes,
+		       coalesce(( select sum(power) from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
+			   coalesce(( select sum(power) from proposal_votes(proposal_id) where support = false ), 0) as against_votes,
 		       coalesce(( select bond_staked_at_ts(to_timestamp(create_time+warm_up_duration)) ), 0) as bond_staked,
 			   ( select * from proposal_state(proposal_id) ) as proposal_state
 		from governance_proposals
@@ -137,8 +137,8 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 			   queue_duration,
 			   grace_period_duration,
 			   ( select proposal_state(proposal_id) ) as proposal_state,
-			   coalesce(( select power from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
-			   coalesce(( select power from proposal_votes(proposal_id) where support = false ), 0) as against_votes
+			   coalesce(( select sum(power) from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
+			   coalesce(( select sum(power) from proposal_votes(proposal_id) where support = false ), 0) as against_votes
 		from governance_proposals
 		where 1=1 
 		%s %s
