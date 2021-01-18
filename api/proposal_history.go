@@ -304,5 +304,5 @@ func isFailedProposal(p types.Proposal) (bool, error) {
 	total := pro.Add(against)
 	minForVotes := total.Mul(acceptance).DivRound(decimal.NewFromInt(100), 18)
 
-	return pro.GreaterThan(minForVotes), nil
+	return pro.LessThanOrEqual(minForVotes), nil
 }
