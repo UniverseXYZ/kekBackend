@@ -23,6 +23,12 @@ func (a *API) history(p types.Proposal) ([]types.HistoryEvent, error) {
 			return true
 		}
 
+		if history[i].Name == string(types.ACCEPTED) && history[j].Name == string(types.QUEUED) {
+			return false
+		} else if history[j].Name == string(types.ACCEPTED) && history[i].Name == string(types.QUEUED) {
+			return true
+		}
+
 		return history[i].StartTs > history[j].StartTs
 	})
 
