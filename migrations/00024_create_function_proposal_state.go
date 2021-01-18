@@ -89,7 +89,7 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 				return 'ACCEPTED';
 			end if;
 		
-			select into eta event_data -> 'eta' as eta from governance_events where proposal_id = 1 and event_type = 'QUEUED';
+			select into eta event_data -> 'eta' as eta from governance_events where proposal_id = id and event_type = 'QUEUED';
 		
 			if ( select extract(epoch from now()) ) < eta then return 'QUEUED'; end if;
 		
