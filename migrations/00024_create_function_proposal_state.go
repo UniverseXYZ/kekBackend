@@ -95,9 +95,9 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 		
 			-- check if there's a cancellation proposal that passed
 			if ( select count(*) from governance_cancellation_proposals where proposal_id = id ) > 0 then
-				select into cancellationProposalQuorum bond_staked_at_ts(( select create_time - 1
+				select into cancellationProposalQuorum bond_staked_at_ts(to_timestamp(( select create_time - 1
 																		   from governance_cancellation_proposals
-																		   where proposal_id = id )) / 2;
+																		   where proposal_id = id ))) / 2;
 		
 				if coalesce(( select power from cancellation_proposal_votes(id) ), 0) >= cancellationProposalQuorum then
 					return 'CANCELED';
