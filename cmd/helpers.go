@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	formatter "github.com/kwix/logrus-module-formatter"
@@ -103,4 +104,43 @@ func buildDBConnectionString() {
 		p := fmt.Sprintf("host=%s port=%s sslmode=%s dbname=%s user=%s password=%s", viper.GetString("db.host"), viper.GetString("db.port"), viper.GetString("db.sslmode"), viper.GetString("db.dbname"), user, pass)
 		viper.Set("db.connection-string", p)
 	}
+}
+
+func addFeatureFlags(cmd *cobra.Command) {
+	cmd.Flags().Bool("feature.backfill.enabled", true, "Enable/disable the automatic backfilling of data")
+	cmd.Flags().Bool("feature.lag.enabled", false, "Enable/disable the lag behind feature (used to avoid reorgs)")
+	cmd.Flags().Int64("feature.lag.value", 10, "The amount of blocks to lag behind the tip of the chain")
+	cmd.Flags().Bool("feature.automigrate.enabled", true, "Enable/disable the automatic migrations feature")
+}
+
+func bindViperToFeatureFlags(cmd *cobra.Command) {
+	viper.BindPFlag("feature.backfill.enabled", cmd.Flag("feature.backfill.enabled"))
+	viper.BindPFlag("feature.lag.enabled", cmd.Flag("feature.lag.enabled"))
+	viper.BindPFlag("feature.lag.value", cmd.Flag("feature.lag.value"))
+	viper.BindPFlag("feature.automigrate.enabled", cmd.Flag("feature.automigrate.enabled"))
+}
+
+func addEthFlags(cmd *cobra.Command) {
+	cmd.Flags().String("eth.client.http", "", "HTTP endpoint of JSON-RPC enabled Ethereum node")
+	cmd.Flags().String("eth.client.ws", "", "WS endpoint of JSON-RPC enabled Ethereum node (provide this only if you want to use websocket subscription for tracking best block)")
+	cmd.Flags().Duration("eth.client.poll-interval", 15*time.Second, "Interval to be used for polling the Ethereum node for best block")
+
+}
+
+func bindViperToEthFlags(cmd *cobra.Command) {
+	viper.BindPFlag("eth.client.http", cmd.Flag("eth.client.http"))
+	viper.BindPFlag("eth.client.ws", cmd.Flag("eth.client.ws"))
+	viper.BindPFlag("eth.client.poll-interval", cmd.Flag("eth.client.poll-interval"))
+}
+
+func addStorableFlags(cmd *cobra.Command) {
+	cmd.Flags().String("storable.bond.address", "0x0391D2021f89DC339F60Fff84546EA23E337750f", "Address of the bond token")
+	cmd.Flags().String("storable.barn.address", "0x19cFBFd65021af353aB8A7126Caf51920163f0D2", "Address of the barn contract")
+	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Addres of the governance contract")
+}
+
+func bindViperToStorableFlags(cmd *cobra.Command) {
+	viper.BindPFlag("storable.bond.address", cmd.Flag("storable.bond.address"))
+	viper.BindPFlag("storable.barn.address", cmd.Flag("storable.barn.address"))
+	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
 }
