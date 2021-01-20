@@ -14,7 +14,6 @@ type Config struct {
 	Port           string
 	DevCorsEnabled bool
 	DevCorsHost    string
-	EthClientURL   string
 }
 
 type API struct {

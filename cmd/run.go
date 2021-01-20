@@ -80,7 +80,6 @@ var runCmd = &cobra.Command{
 			Port:           viper.GetString("api.port"),
 			DevCorsEnabled: viper.GetBool("api.dev-cors"),
 			DevCorsHost:    viper.GetString("api.dev-cors-host"),
-			EthClientURL:   viper.GetString("eth.client.http"),
 		})
 		go a.Run()
 
