@@ -5,13 +5,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/barnbridge/barnbridge-backend/dashboard"
 	"github.com/barnbridge/barnbridge-backend/processor"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
-
-	"github.com/barnbridge/barnbridge-backend/api"
 
 	"github.com/barnbridge/barnbridge-backend/scraper"
 
@@ -24,10 +21,10 @@ import (
 	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 )
 
-var runCmd = &cobra.Command{
-	Use:    "run",
+var scrapeCmd = &cobra.Command{
+	Use:    "scrape",
 	Short:  "Track new blocks and index them",
-	PreRun: runCmdPreRun,
+	PreRun: scrapeCmdPreRun,
 	Run: func(cmd *cobra.Command, args []string) {
 		buildDBConnectionString()
 
@@ -76,20 +73,6 @@ var runCmd = &cobra.Command{
 		})
 		c.Run()
 
-		a := api.New(c.DB(), api.Config{
-			Port:           viper.GetString("api.port"),
-			DevCorsEnabled: viper.GetBool("api.dev-cors"),
-			DevCorsHost:    viper.GetString("api.dev-cors-host"),
-			EthClientURL:   viper.GetString("eth.client.http"),
-		})
-		go a.Run()
-
-		d := dashboard.New(c, dashboard.Config{
-			Port:          viper.GetString("dashboard.port"),
-			ConfigEnabled: viper.GetBool("dashboard.config-management.enabled"),
-		})
-		go d.Run()
-
 		select {
 		case <-stopChan:
 			log.Info("Got stop signal. Finishing work.")
@@ -102,10 +85,9 @@ var runCmd = &cobra.Command{
 	},
 }
 
-func runCmdPreRun(cmd *cobra.Command, args []string) {
+func scrapeCmdPreRun(cmd *cobra.Command, args []string) {
 	bindViperToDBFlags(cmd)
 	bindViperToRedisFlags(cmd)
-	bindViperToAPIFlags(cmd)
 	bindViperToFeatureFlags(cmd)
 	bindViperToEthFlags(cmd)
 	bindViperToStorableFlags(cmd)
@@ -114,19 +96,13 @@ func runCmdPreRun(cmd *cobra.Command, args []string) {
 }
 
 func init() {
-	addDBFlags(runCmd)
-	addRedisFlags(runCmd)
-	addAPIFlags(runCmd)
-	addFeatureFlags(runCmd)
-	addEthFlags(runCmd)
-	addStorableFlags(runCmd)
+	RootCmd.AddCommand(scrapeCmd)
 
-	// dashboard
-	runCmd.Flags().String("dashboard.port", "3000", "Dashboard port")
-	viper.BindPFlag("dashboard.port", runCmd.Flag("dashboard.port"))
+	addDBFlags(scrapeCmd)
+	addRedisFlags(scrapeCmd)
+	addFeatureFlags(scrapeCmd)
+	addEthFlags(scrapeCmd)
+	addStorableFlags(scrapeCmd)
 
-	runCmd.Flags().Bool("dashboard.config-management.enabled", true, "Enable/disable the config management option from dashboard")
-	viper.BindPFlag("dashboard.config-management.enabled", runCmd.Flag("dashboard.config-management.enabled"))
-
-	runCmd.Flags().String("abi-path", "./abis", "Path of directory from which to read contract ABIs")
+	scrapeCmd.Flags().String("abi-path", "./abis", "Path of directory from which to read contract ABIs")
 }

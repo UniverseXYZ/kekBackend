@@ -446,6 +446,57 @@
         "type": "uint256"
       }
     ],
+    "name": "getProposalParameters",
+    "outputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "warmUpDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "activeDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "queueDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gracePeriodDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "acceptanceThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minQuorum",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Governance.ProposalParameters",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "proposalId",
+        "type": "uint256"
+      }
+    ],
     "name": "getProposalQuorum",
     "outputs": [
       {
@@ -641,6 +692,43 @@
         "internalType": "bool",
         "name": "executed",
         "type": "bool"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "warmUpDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "activeDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "queueDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "gracePeriodDuration",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "acceptanceThreshold",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "minQuorum",
+            "type": "uint256"
+          }
+        ],
+        "internalType": "struct Governance.ProposalParameters",
+        "name": "parameters",
+        "type": "tuple"
       }
     ],
     "stateMutability": "view",

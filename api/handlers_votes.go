@@ -21,24 +21,26 @@ func (a *API) VotesHandler(c *gin.Context) {
 	offset, err := calculateOffset(limit, page)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	proposalID, err := strconv.Atoi(proposalIDString)
 	if err != nil {
 		Error(c, err)
+		return
 	}
 
 	var votesList []types.Vote
 	var rows *sql.Rows
 
 	if supportFilter == "" {
-		rows, err = a.core.DB().Query(`select * from proposal_votes($1)  order by power desc offset $2 limit $3`, proposalID, offset, limit)
+		rows, err = a.db.Query(`select * from proposal_votes($1)  order by power desc offset $2 limit $3`, proposalID, offset, limit)
 	} else {
 		if supportFilter != "true" && supportFilter != "false" {
 			BadRequest(c, errors.New("wrong value for support parameter"))
 			return
 		}
-		rows, err = a.core.DB().Query(`select * from proposal_votes($1) where support = $4  order by power desc offset $2 limit $3`, proposalID, offset, limit, supportFilter)
+		rows, err = a.db.Query(`select * from proposal_votes($1) where support = $4  order by power desc offset $2 limit $3`, proposalID, offset, limit, supportFilter)
 	}
 
 	if err != nil && err != sql.ErrNoRows {
@@ -75,7 +77,11 @@ func (a *API) VotesHandler(c *gin.Context) {
 	}
 
 	var count int
-	err = a.core.DB().QueryRow(`select count(*) from proposal_votes($1)`, proposalID).Scan(&count)
+	if supportFilter == "" {
+		err = a.db.QueryRow(`select count(*) from proposal_votes($1)`, proposalID).Scan(&count)
+	} else {
+		err = a.db.QueryRow(`select count(*) from proposal_votes($1) where support = $2`, proposalID, supportFilter).Scan(&count)
+	}
 
 	OK(c, votesList, map[string]interface{}{"count": count})
 }
