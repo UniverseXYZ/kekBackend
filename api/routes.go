@@ -1,6 +1,26 @@
 package api
 
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
 func (a *API) setRoutes() {
+	a.engine.GET("/health", func(context *gin.Context) {
+		err := a.db.Ping()
+		if err != nil {
+			context.JSON(http.StatusInternalServerError, map[string]interface{}{
+				"status": http.StatusInternalServerError,
+				"data":   "NOT OK",
+			})
+
+			return
+		}
+
+		OK(context, "OK")
+	})
+
 	governance := a.engine.Group("/api/governance")
 	governance.GET("/proposals", a.AllProposalHandler)
 	governance.GET("/proposals/:proposalID", a.ProposalDetailsHandler)
