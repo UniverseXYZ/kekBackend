@@ -21,6 +21,7 @@
 .vscode/
 
 .env
+.env.fish
 
 vendor/
 .vendor-new/

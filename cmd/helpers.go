@@ -99,7 +99,11 @@ func buildDBConnectionString() {
 			user = viper.GetString("db.user")
 		}
 
-		pass = viper.GetString("PG_PASSWORD")
+		if !viper.IsSet("db.password") {
+			pass = viper.GetString("PG_PASSWORD")
+		} else {
+			pass = viper.GetString("db.password")
+		}
 
 		p := fmt.Sprintf("host=%s port=%s sslmode=%s dbname=%s user=%s password=%s", viper.GetString("db.host"), viper.GetString("db.port"), viper.GetString("db.sslmode"), viper.GetString("db.dbname"), user, pass)
 		viper.Set("db.connection-string", p)

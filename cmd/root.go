@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"path/filepath"
 	"strings"
 
@@ -23,8 +22,6 @@ var (
 		Short: "Ethereum data and indexer",
 		Long:  "Scrape ethereum data from any web3-compatible node and index it into a postgres database",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {
-			configLoaded := false
-
 			if config != "" {
 				// get the filepath
 				abs, err := filepath.Abs(config)
@@ -48,27 +45,6 @@ var (
 			// Find and read the config file; Handle errors reading the config file
 			if err := viper.ReadInConfig(); err != nil {
 				log.Info("Could not load config file. Falling back to args. Error: ", err)
-			} else {
-				configLoaded = true
-			}
-
-			if viper.GetString("db.connection-string") == "" && configLoaded {
-				var user, pass string
-				if !viper.IsSet("db.user") {
-					user = viper.GetString("PG_USER")
-				} else {
-					user = viper.GetString("db.user")
-				}
-
-				if !viper.IsSet("db.password") {
-					pass = viper.GetString("PG_PASSWORD")
-				} else {
-					pass = viper.GetString("db.password")
-				}
-
-				p := fmt.Sprintf("host=%s port=%s sslmode=%s dbname=%s user=%s password=%s", viper.GetString("db.host"), viper.GetString("db.port"), viper.GetString("db.sslmode"), viper.GetString("db.dbname"), user, pass)
-
-				viper.Set("db.connection-string", p)
 			}
 
 			initLogging()
@@ -86,6 +62,8 @@ func init() {
 	cobra.OnInitialize(func() {
 		viper.Set("version", RootCmd.Version)
 	})
+	viper.SetEnvPrefix("BB")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	viper.AutomaticEnv()
 
 	// persistent flags

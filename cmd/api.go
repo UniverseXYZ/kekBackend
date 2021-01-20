@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/barnbridge/barnbridge-backend/api"
-
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+
+	"github.com/barnbridge/barnbridge-backend/api"
 )
 
 var apiCmd = &cobra.Command{
