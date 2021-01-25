@@ -59,7 +59,7 @@ func UpCreateFunctions(tx *sql.Tx) error {
 	begin
 		multiplier = 1 * 10 ^ 18;
 	
-		select locked_until into locked_until_ts from barn_locks where user_address = addr;
+		select locked_until into locked_until_ts from barn_locks where user_address = addr order by included_in_block desc limit 1;
 	
 		if not found then return multiplier; end if;
 	
