@@ -44,14 +44,44 @@ var queueCmd = &cobra.Command{
 		from := viper.GetInt64("from")
 		to := viper.GetInt64("to")
 		if from > 0 && to > 0 {
-			for i := from; i <= to; i++ {
-				err := addTodo(r, list, i)
-				if err != nil {
-					log.Fatal(err)
-				}
+			err := batchAdd(r, list, from, to)
+			if err != nil {
+				panic(err)
 			}
 		}
 	},
+}
+
+func batchAdd(r *redis.Client, list string, from, to int64) error {
+	start := time.Now()
+
+	var members []redis.Z
+	for i := from; i <= to; i++ {
+		members = append(members, redis.Z{
+			Score:  float64(i),
+			Member: i,
+		})
+	}
+
+	const batchSize = 1000
+
+	batches := int(to-from+1)/batchSize + 1
+
+	for i := 0; i < batches; i++ {
+		end := batchSize * (i + 1)
+		if end > len(members) {
+			end = len(members)
+		}
+		log.Tracef("queueing batch [%d, %d]", members[batchSize*i].Member, members[end-1].Member)
+		err := r.ZAdd(list, members[batchSize*i:end]...).Err()
+		if err != nil && err != redis.Nil {
+			return err
+		}
+	}
+
+	log.WithField("duration", time.Since(start)).Trace("queued all blocks")
+
+	return nil
 }
 
 func addTodo(r *redis.Client, list string, number int64) error {

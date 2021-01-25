@@ -37,7 +37,7 @@ func upCreateTableBlocks(tx *sql.Tx) error {
 	);
 	
 	create index on blocks (block_hash);
-	create index on blocks (number);
+	create unique index on blocks (number);
 	
 	`)
 	return err

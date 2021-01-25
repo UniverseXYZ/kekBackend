@@ -17,7 +17,7 @@ func upCreateTableVotersView(tx *sql.Tx) error {
 		   coalesce(( select locked_until
 			 from barn_locks
 			 where user_address = barn_users.user_address
-			 order by included_in_block desc, log_index desc ) ,0)                                          as locked_until,
+			 order by included_in_block desc, log_index desc limit 1 ) ,0)                                          as locked_until,
 		   delegated_power(user_address),
 		   ( select count(*) from governance_votes where lower(user_id) = lower(barn_users.user_address) ) +
 		   ( select count(*) from governance_cancellation_votes where lower(user_id) = lower(barn_users.user_address) ) as votes,
