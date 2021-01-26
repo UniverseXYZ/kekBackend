@@ -202,7 +202,9 @@ func (c *Core) Run() {
 			log.Debug("validating block")
 			v := validator.New()
 			v.LoadBlock(blk.Block)
-			v.LoadUncles(blk.Uncles)
+			if c.config.Features.Uncles {
+				v.LoadUncles(blk.Uncles)
+			}
 			v.LoadReceipts(blk.Receipts)
 
 			_, err = v.Run()
