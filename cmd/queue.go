@@ -63,7 +63,7 @@ func batchAdd(r *redis.Client, list string, from, to int64) error {
 		})
 	}
 
-	const batchSize = 1000
+	const batchSize = 500
 
 	batches := int(to-from+1)/batchSize + 1
 

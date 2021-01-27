@@ -231,6 +231,8 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 			Name:    string(types.EXECUTED),
 			StartTs: events[0].CreateTime,
 		})
+
+		return history, nil
 	}
 
 	if nextDeadline >= time.Now().Unix() {
