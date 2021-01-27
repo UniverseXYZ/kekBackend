@@ -90,3 +90,5 @@ storable:
     address: "0x19cFBFd65021af353aB8A7126Caf51920163f0D2"
   governance:
     address: "0x1B5B6dF2C72D7c406df1C30E640df8dBaE57d21d"
+  yield:
+    address : "0x2e93403C675Ccb9C564edf2dC6001233d0650582"

@@ -3,7 +3,6 @@ package bond
 import (
 	"database/sql"
 	"encoding/hex"
-	"math/big"
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
@@ -20,14 +19,6 @@ type BondStorable struct {
 	Raw     *types.RawData
 	bondAbi abi.ABI
 }
-type Transfer struct {
-	From             string
-	To               string
-	Value            *big.Int
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
-}
 
 func NewBondStorable(config Config, raw *types.RawData, bondAbi abi.ABI) *BondStorable {
 	return &BondStorable{
@@ -39,7 +30,7 @@ func NewBondStorable(config Config, raw *types.RawData, bondAbi abi.ABI) *BondSt
 
 func (b BondStorable) ToDB(tx *sql.Tx) error {
 	var bondTransfers []web3types.Log
-	var transfers []Transfer
+	var transfers []types.Transfer
 	for _, data := range b.Raw.Receipts {
 		for _, log := range data.Logs {
 			if utils.CleanUpHex(log.Address) != utils.CleanUpHex(b.config.BondAddress) {
@@ -57,7 +48,7 @@ func (b BondStorable) ToDB(tx *sql.Tx) error {
 	}
 
 	for _, log := range bondTransfers {
-		var t Transfer
+		var t types.Transfer
 		data, err := hex.DecodeString(utils.Trim0x(log.Data))
 		if err != nil {
 			return errors.Wrap(err, "could not decode log data")
