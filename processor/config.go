@@ -4,10 +4,12 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 )
 
 type Config struct {
-	Bond       bond.Config
-	Barn       barn.Config
-	Governance governance.Config
+	Bond         bond.Config
+	Barn         barn.Config
+	Governance   governance.Config
+	YieldFarming yieldFarming.Config
 }

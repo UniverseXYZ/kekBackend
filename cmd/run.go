@@ -10,6 +10,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 
 	"github.com/barnbridge/barnbridge-backend/api"
 
@@ -71,6 +72,9 @@ var runCmd = &cobra.Command{
 				},
 				Governance: governance.Config{
 					GovernanceAddress: viper.GetString("storable.governance.address"),
+				},
+				YieldFarming: yieldFarming.Config{
+					Address: viper.GetString("storable.yield.address"),
 				},
 			},
 		})

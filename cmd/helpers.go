@@ -140,11 +140,13 @@ func bindViperToEthFlags(cmd *cobra.Command) {
 func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.bond.address", "0x0391D2021f89DC339F60Fff84546EA23E337750f", "Address of the bond token")
 	cmd.Flags().String("storable.barn.address", "0x19cFBFd65021af353aB8A7126Caf51920163f0D2", "Address of the barn contract")
-	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Addres of the governance contract")
+	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Address of the governance contract")
+	cmd.Flags().String("storable.yield.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "Address of the yield farming contract")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.bond.address", cmd.Flag("storable.bond.address"))
 	viper.BindPFlag("storable.barn.address", cmd.Flag("storable.barn.address"))
 	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
+	viper.BindPFlag("storable.yield.address", cmd.Flag("storable.yield.address"))
 }
