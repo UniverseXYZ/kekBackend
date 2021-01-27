@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -161,7 +160,6 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		}
 
 		stateFilter = fmt.Sprintf("and (select proposal_state(proposal_id) ) = ANY($%d)", len(parameters))
-		spew.Dump(stateFilter)
 	}
 
 	var titleFilter string
