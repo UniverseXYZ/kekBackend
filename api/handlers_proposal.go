@@ -154,7 +154,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		if proposalState == "ACTIVE" {
 			parameters = append(parameters, pq.Array([]string{"WARMUP", "ACTIVE", "ACCEPTED", "QUEUED", "GRACE"}))
 		} else if proposalState == "FAILED" {
-			parameters = append(parameters, pq.Array([]string{"CANCELED", "FAILED"}))
+			parameters = append(parameters, pq.Array([]string{"CANCELED", "FAILED", "ABROGATED"}))
 		} else {
 			parameters = append(parameters, pq.Array([]string{proposalState}))
 		}
@@ -248,7 +248,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 }
 
 func checkStateExist(state string) bool {
-	proposalStates := [9]types.ProposalState{types.WARMUP, types.ACTIVE, types.CANCELED, types.FAILED, types.ACCEPTED, types.QUEUED, types.GRACE, types.EXPIRED, types.EXECUTED}
+	proposalStates := []types.ProposalState{types.WARMUP, types.ACTIVE, types.CANCELED, types.FAILED, types.ACCEPTED, types.QUEUED, types.GRACE, types.EXPIRED, types.EXECUTED, types.ABROGATED}
 	for _, s := range proposalStates {
 		if s == types.ProposalState(state) {
 			return true
@@ -263,7 +263,7 @@ func getTimeLeft(state types.ProposalState, createTime, warmUpDuration, activeDu
 	var timeLeft int64
 
 	switch state {
-	case types.CANCELED, types.FAILED, types.ACCEPTED, types.EXPIRED, types.EXECUTED:
+	case types.CANCELED, types.FAILED, types.ACCEPTED, types.EXPIRED, types.EXECUTED, types.ABROGATED:
 		return nil
 	case types.WARMUP:
 		timeLeft = createTime + warmUpDuration - now
