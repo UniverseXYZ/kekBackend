@@ -183,26 +183,26 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		return history, nil
 	}
 
-	// at this point the queue period passed and we must check if there was a cancellation proposal that succeeded
-	hasCP, err := a.cancellationProposalExists(p)
+	// at this point the queue period passed and we must check if there was a abrogation proposal that succeeded
+	hasCP, err := a.abrogationProposalExists(p)
 	if err != nil {
 		return nil, err
 	}
 
 	if hasCP {
-		forVotes, bondStaked, err := a.cancellationProposalData(p)
+		forVotes, bondStaked, err := a.abrogationProposalData(p)
 		if err != nil {
 			return nil, err
 		}
 
-		passed, err := cancellationProposalPassed(forVotes, bondStaked)
+		passed, err := abrogationProposalPassed(forVotes, bondStaked)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not check if cancellation proposal passed")
+			return nil, errors.Wrap(err, "could not check if abrogation proposal passed")
 		}
 
 		if passed {
 			history = append(history, types.HistoryEvent{
-				Name:    string(types.CANCELED),
+				Name:    string(types.ABROGATED),
 				StartTs: nextDeadline,
 			})
 
@@ -210,7 +210,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		}
 	}
 
-	// no cancellation proposal or did not pass
+	// no abrogation proposal or did not pass
 	history = append(history, types.HistoryEvent{
 		Name:    string(types.GRACE),
 		StartTs: nextDeadline,
@@ -247,32 +247,32 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	return history, nil
 }
 
-func (a *API) cancellationProposalData(p types.Proposal) (string, string, error) {
+func (a *API) abrogationProposalData(p types.Proposal) (string, string, error) {
 	var forVotes, bondStaked string
 	err := a.db.QueryRow(`
 		select 
-		       coalesce(( select power from cancellation_proposal_votes($1) where support = true ), 0) as for_votes, 
-		       bond_staked_at_ts(to_timestamp((select create_time from governance_cancellation_proposals where proposal_id = $1))) as bond_staked
+		       coalesce(( select power from abrogation_proposal_votes($1) where support = true ), 0) as for_votes, 
+		       bond_staked_at_ts(to_timestamp((select create_time from governance_abrogation_proposals where proposal_id = $1))) as bond_staked
 	`, p.Id).Scan(&forVotes, &bondStaked)
 
 	if err != nil {
-		return "", "", errors.Wrap(err, "could not scan number of votes on cancellation proposal")
+		return "", "", errors.Wrap(err, "could not scan number of votes on abrogation proposal")
 	}
 
 	return forVotes, bondStaked, nil
 }
 
-func (a *API) cancellationProposalExists(p types.Proposal) (bool, error) {
+func (a *API) abrogationProposalExists(p types.Proposal) (bool, error) {
 	var count int64
-	err := a.db.QueryRow(`select count(*) from governance_cancellation_proposals where proposal_id = $1`, p.Id).Scan(&count)
+	err := a.db.QueryRow(`select count(*) from governance_abrogation_proposals where proposal_id = $1`, p.Id).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "could not check for cancellation proposal")
+		return false, errors.Wrap(err, "could not check for abrogation proposal")
 	}
 
 	return count > 0, nil
 }
 
-func cancellationProposalPassed(forVotes string, bondStaked string) (bool, error) {
+func abrogationProposalPassed(forVotes string, bondStaked string) (bool, error) {
 	pro, err := decimal.NewFromString(forVotes)
 	if err != nil {
 		return false, errors.Wrap(err, "could not convert forVotes to decimal")

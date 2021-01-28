@@ -8,15 +8,20 @@ import (
 	"github.com/barnbridge/barnbridge-backend/api/types"
 )
 
-func (a *API) CancellationProposalDetailsHandler(c *gin.Context) {
+func (a *API) AbrogationProposalDetailsHandler(c *gin.Context) {
 	proposalID := c.Param("proposalID")
 	var (
-		id         uint64
-		creator    string
-		createTime uint64
+		id          uint64
+		creator     string
+		createTime  uint64
+		description string
 	)
 
-	err := a.db.QueryRow(`select proposal_id, creator ,create_time from governance_cancellation_proposals where proposal_id = $1`, proposalID).Scan(&id, &creator, &createTime)
+	err := a.db.QueryRow(`
+		select proposal_id, creator, create_time, description 
+		from governance_abrogation_proposals 
+		where proposal_id = $1
+	`, proposalID).Scan(&id, &creator, &createTime, &description)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -28,16 +33,17 @@ func (a *API) CancellationProposalDetailsHandler(c *gin.Context) {
 		return
 	}
 
-	cancellationProposal := types.CancellationProposal{
-		ProposalID: id,
-		Creator:    creator,
-		CreateTime: createTime,
+	abrogationProposal := types.AbrogationProposal{
+		ProposalID:  id,
+		Creator:     creator,
+		CreateTime:  createTime,
+		Description: description,
 	}
 
-	OK(c, cancellationProposal)
+	OK(c, abrogationProposal)
 }
 
-func (a *API) AllCancellationProposals(c *gin.Context) {
+func (a *API) AllAbrogationProposals(c *gin.Context) {
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
 
@@ -48,7 +54,7 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 	}
 
 	rows, err := a.db.Query(`select proposal_id, creator, create_time
-		from governance_cancellation_proposals 
+		from governance_abrogation_proposals 
 		order by proposal_id desc
 		offset $1
 		limit $2
@@ -61,7 +67,7 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 
 	defer rows.Close()
 
-	var cancellationProposalList []types.CancellationProposal
+	var abrogationProposalList []types.AbrogationProposal
 
 	for rows.Next() {
 		var (
@@ -76,25 +82,25 @@ func (a *API) AllCancellationProposals(c *gin.Context) {
 			return
 		}
 
-		cancellationProposal := types.CancellationProposal{
+		abrogationProposal := types.AbrogationProposal{
 			ProposalID: id,
 			Creator:    creator,
 			CreateTime: createTime,
 		}
 
-		cancellationProposalList = append(cancellationProposalList, cancellationProposal)
+		abrogationProposalList = append(abrogationProposalList, abrogationProposal)
 	}
 
-	if len(cancellationProposalList) == 0 {
+	if len(abrogationProposalList) == 0 {
 		NotFound(c)
 		return
 	}
 
 	var count int
-	err = a.db.QueryRow(`select count(*) from governance_cancellation_proposals`).Scan(&count)
+	err = a.db.QueryRow(`select count(*) from governance_abrogation_proposals`).Scan(&count)
 	if err != nil {
 		Error(c, err)
 	}
 
-	OK(c, cancellationProposalList, map[string]interface{}{"count": count})
+	OK(c, abrogationProposalList, map[string]interface{}{"count": count})
 }

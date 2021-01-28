@@ -35,9 +35,9 @@ func Up00006(tx *sql.Tx) error {
 			'governance_events',
 			'governance_votes',
 			'governance_votes_canceled',
-			'governance_cancellation_proposals',
-			'governance_cancellation_votes',
-			'governance_cancellation_votes_canceled'
+			'governance_abrogation_proposals',
+			'governance_abrogation_votes',
+			'governance_abrogation_votes_canceled'
 			];
 	
 		foreach tbl in array tables

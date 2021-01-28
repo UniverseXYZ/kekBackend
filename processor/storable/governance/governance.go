@@ -89,12 +89,12 @@ func (g GovStorable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
-	err = g.handleCancellationProposals(govLogs, tx)
+	err = g.handleAbrogationProposal(govLogs, tx)
 	if err != nil {
 		return err
 	}
 
-	err = g.handleCancellationProposalVotes(govLogs, tx)
+	err = g.handleAbrogationProposalVotes(govLogs, tx)
 	if err != nil {
 		return err
 	}

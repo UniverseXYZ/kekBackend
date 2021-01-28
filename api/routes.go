@@ -28,7 +28,7 @@ func (a *API) setRoutes() {
 	governance.GET("/proposals/:proposalID/events", a.handleProposalEvents)
 	governance.GET("/overview", a.BondOverview)
 	governance.GET("/voters", a.handleVoters)
-	governance.GET("/cancellation-proposals", a.AllCancellationProposals)
-	governance.GET("/cancellation-proposals/:proposalID", a.CancellationProposalDetailsHandler)
-	governance.GET("/cancellation-proposals/:proposalID/votes", a.CancellationVotesHandler)
+	governance.GET("/abrogation-proposals", a.AllAbrogationProposals)
+	governance.GET("/abrogation-proposals/:proposalID", a.AbrogationProposalDetailsHandler)
+	governance.GET("/abrogation-proposals/:proposalID/votes", a.AbrogationVotesHandler)
 }

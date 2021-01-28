@@ -51,7 +51,7 @@ func (a *API) BondOverview(c *gin.Context) {
 		   from governance_votes
 		   union
 		   select distinct user_id
-		   from governance_cancellation_votes ) x; 
+		   from governance_abrogation_votes ) x; 
 		   `).Scan(&overview.Voters)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)

@@ -10,7 +10,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/api/types"
 )
 
-func (a *API) CancellationVotesHandler(c *gin.Context) {
+func (a *API) AbrogationVotesHandler(c *gin.Context) {
 	proposalID := c.Param("proposalID")
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
@@ -22,16 +22,16 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 		return
 	}
 
-	var cancellationVotesList []types.Vote
+	var abrogationVotesList []types.Vote
 	var rows *sql.Rows
 	if supportFilter == "" {
-		rows, err = a.db.Query(`select * from cancellation_proposal_votes($1) order by power desc offset $2 limit $3`, proposalID, offset, limit)
+		rows, err = a.db.Query(`select * from abrogation_proposal_votes($1) order by power desc offset $2 limit $3`, proposalID, offset, limit)
 	} else {
 		if supportFilter != "true" && supportFilter != "false" {
 			BadRequest(c, errors.New("wrong value for support parameter"))
 			return
 		}
-		rows, err = a.db.Query(`select * from cancellation_proposal_votes($1) where support = $4 order by power desc offset $2 limit $3`, proposalID, offset, limit, supportFilter)
+		rows, err = a.db.Query(`select * from abrogation_proposal_votes($1) where support = $4 order by power desc offset $2 limit $3`, proposalID, offset, limit, supportFilter)
 	}
 
 	if err != nil && err != sql.ErrNoRows {
@@ -54,28 +54,28 @@ func (a *API) CancellationVotesHandler(c *gin.Context) {
 			return
 		}
 
-		cancellationVote := types.Vote{
+		abrogationVote := types.Vote{
 			User:           user,
 			BlockTimestamp: blockTimestamp,
 			Support:        support,
 			Power:          power,
 		}
 
-		cancellationVotesList = append(cancellationVotesList, cancellationVote)
+		abrogationVotesList = append(abrogationVotesList, abrogationVote)
 	}
 
-	if len(cancellationVotesList) == 0 {
+	if len(abrogationVotesList) == 0 {
 		NotFound(c)
 		return
 	}
 
 	var count int
 	if supportFilter == "" {
-		err = a.db.QueryRow(`select count(*) from cancellation_proposal_votes($1)`, proposalID).Scan(&count)
+		err = a.db.QueryRow(`select count(*) from abrogation_proposal_votes($1)`, proposalID).Scan(&count)
 	} else {
-		err = a.db.QueryRow(`select count(*) from cancellation_proposal_votes($1) where support = $2`, proposalID, supportFilter).Scan(&count)
+		err = a.db.QueryRow(`select count(*) from abrogation_proposal_votes($1) where support = $2`, proposalID, supportFilter).Scan(&count)
 	}
 
-	OK(c, cancellationVotesList, map[string]interface{}{"count": count})
+	OK(c, abrogationVotesList, map[string]interface{}{"count": count})
 
 }

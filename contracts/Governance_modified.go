@@ -44,7 +44,7 @@ type GovernanceReceipt struct {
 }
 
 // GovernanceABI is the input ABI used to generate the binding from.
-const GovernanceABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CancellationProposalExecuted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"CancellationProposalStarted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"power\",\"type\":\"uint256\"}],\"name\":\"CancellationProposalVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"CancellationProposalVoteCancelled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"ProposalCanceled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"ProposalCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"ProposalExecuted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"eta\",\"type\":\"uint256\"}],\"name\":\"ProposalQueued\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"power\",\"type\":\"uint256\"}],\"name\":\"Vote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"VoteCanceled\",\"type\":\"event\"},{\"inputs\":[],\"name\":\"acceptanceThreshold\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activeDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"cancelProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"cancelVote\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"cancelVoteCancellationProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"cancellationProposals\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"createTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"forVotes\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"againstVotes\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"name\":\"castVote\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"executeCancellationProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"getActions\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"string[]\",\"name\":\"signatures\",\"type\":\"string[]\"},{\"internalType\":\"bytes[]\",\"name\":\"calldatas\",\"type\":\"bytes[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"getCancellationProposalReceipt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"hasVoted\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"votes\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"internalType\":\"structGovernance.Receipt\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"getProposalParameters\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"warmUpDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"activeDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"queueDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"gracePeriodDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"acceptanceThreshold\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minQuorum\",\"type\":\"uint256\"}],\"internalType\":\"structGovernance.ProposalParameters\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"getProposalQuorum\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"getReceipt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"hasVoted\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"votes\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"internalType\":\"structGovernance.Receipt\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gracePeriodDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"barnAddr\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isActive\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lastProposalId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"latestProposalIds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minQuorum\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"proposals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"proposer\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"createTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"eta\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"forVotes\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"againstVotes\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"canceled\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"executed\",\"type\":\"bool\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"warmUpDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"activeDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"queueDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"gracePeriodDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"acceptanceThreshold\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minQuorum\",\"type\":\"uint256\"}],\"internalType\":\"structGovernance.ProposalParameters\",\"name\":\"parameters\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"string[]\",\"name\":\"signatures\",\"type\":\"string[]\"},{\"internalType\":\"bytes[]\",\"name\":\"calldatas\",\"type\":\"bytes[]\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"}],\"name\":\"propose\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"queue\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"queueDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"queuedTransactions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"threshold\",\"type\":\"uint256\"}],\"name\":\"setAcceptanceThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setActiveDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setGracePeriodDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"quorum\",\"type\":\"uint256\"}],\"name\":\"setMinQuorum\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setQueueDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setWarmUpDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"startCancellationProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"state\",\"outputs\":[{\"internalType\":\"enumGovernance.ProposalState\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"name\":\"voteCancellationProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"warmUpDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
+const GovernanceABI = "[{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"AbrogationProposalExecuted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"AbrogationProposalStarted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"power\",\"type\":\"uint256\"}],\"name\":\"AbrogationProposalVote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"AbrogationProposalVoteCancelled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"ProposalCanceled\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"ProposalCreated\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"}],\"name\":\"ProposalExecuted\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"caller\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"eta\",\"type\":\"uint256\"}],\"name\":\"ProposalQueued\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"power\",\"type\":\"uint256\"}],\"name\":\"Vote\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":true,\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"indexed\":true,\"internalType\":\"address\",\"name\":\"user\",\"type\":\"address\"}],\"name\":\"VoteCanceled\",\"type\":\"event\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"abrogateProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"abrogationProposal_cancelVote\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"name\":\"abrogationProposal_castVote\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"abrogationProposals\",\"outputs\":[{\"internalType\":\"address\",\"name\":\"creator\",\"type\":\"address\"},{\"internalType\":\"uint256\",\"name\":\"createTime\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"forVotes\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"againstVotes\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"acceptanceThreshold\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activate\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"activeDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"cancelProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"cancelVote\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"name\":\"castVote\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"execute\",\"outputs\":[],\"stateMutability\":\"payable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"getAbrogationProposalReceipt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"hasVoted\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"votes\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"internalType\":\"structGovernance.Receipt\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"getActions\",\"outputs\":[{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"string[]\",\"name\":\"signatures\",\"type\":\"string[]\"},{\"internalType\":\"bytes[]\",\"name\":\"calldatas\",\"type\":\"bytes[]\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"getProposalParameters\",\"outputs\":[{\"components\":[{\"internalType\":\"uint256\",\"name\":\"warmUpDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"activeDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"queueDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"gracePeriodDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"acceptanceThreshold\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minQuorum\",\"type\":\"uint256\"}],\"internalType\":\"structGovernance.ProposalParameters\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"getProposalQuorum\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"voter\",\"type\":\"address\"}],\"name\":\"getReceipt\",\"outputs\":[{\"components\":[{\"internalType\":\"bool\",\"name\":\"hasVoted\",\"type\":\"bool\"},{\"internalType\":\"uint256\",\"name\":\"votes\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"support\",\"type\":\"bool\"}],\"internalType\":\"structGovernance.Receipt\",\"name\":\"\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"gracePeriodDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"barnAddr\",\"type\":\"address\"}],\"name\":\"initialize\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"isActive\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"lastProposalId\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address\",\"name\":\"\",\"type\":\"address\"}],\"name\":\"latestProposalIds\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"minQuorum\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"name\":\"proposals\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"id\",\"type\":\"uint256\"},{\"internalType\":\"address\",\"name\":\"proposer\",\"type\":\"address\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"},{\"internalType\":\"uint256\",\"name\":\"createTime\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"eta\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"forVotes\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"againstVotes\",\"type\":\"uint256\"},{\"internalType\":\"bool\",\"name\":\"canceled\",\"type\":\"bool\"},{\"internalType\":\"bool\",\"name\":\"executed\",\"type\":\"bool\"},{\"components\":[{\"internalType\":\"uint256\",\"name\":\"warmUpDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"activeDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"queueDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"gracePeriodDuration\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"acceptanceThreshold\",\"type\":\"uint256\"},{\"internalType\":\"uint256\",\"name\":\"minQuorum\",\"type\":\"uint256\"}],\"internalType\":\"structGovernance.ProposalParameters\",\"name\":\"parameters\",\"type\":\"tuple\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"address[]\",\"name\":\"targets\",\"type\":\"address[]\"},{\"internalType\":\"uint256[]\",\"name\":\"values\",\"type\":\"uint256[]\"},{\"internalType\":\"string[]\",\"name\":\"signatures\",\"type\":\"string[]\"},{\"internalType\":\"bytes[]\",\"name\":\"calldatas\",\"type\":\"bytes[]\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"},{\"internalType\":\"string\",\"name\":\"title\",\"type\":\"string\"}],\"name\":\"propose\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"queue\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"queueDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"bytes32\",\"name\":\"\",\"type\":\"bytes32\"}],\"name\":\"queuedTransactions\",\"outputs\":[{\"internalType\":\"bool\",\"name\":\"\",\"type\":\"bool\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"threshold\",\"type\":\"uint256\"}],\"name\":\"setAcceptanceThreshold\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setActiveDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setGracePeriodDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"quorum\",\"type\":\"uint256\"}],\"name\":\"setMinQuorum\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setQueueDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"period\",\"type\":\"uint256\"}],\"name\":\"setWarmUpDuration\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"},{\"internalType\":\"string\",\"name\":\"description\",\"type\":\"string\"}],\"name\":\"startAbrogationProposal\",\"outputs\":[],\"stateMutability\":\"nonpayable\",\"type\":\"function\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"proposalId\",\"type\":\"uint256\"}],\"name\":\"state\",\"outputs\":[{\"internalType\":\"enumGovernance.ProposalState\",\"name\":\"\",\"type\":\"uint8\"}],\"stateMutability\":\"view\",\"type\":\"function\"},{\"inputs\":[],\"name\":\"warmUpDuration\",\"outputs\":[{\"internalType\":\"uint256\",\"name\":\"\",\"type\":\"uint256\"}],\"stateMutability\":\"view\",\"type\":\"function\"}]"
 
 // Governance is an auto generated Go binding around an Ethereum contract.
 type Governance struct {
@@ -188,6 +188,63 @@ func (_Governance *GovernanceTransactorRaw) Transact(opts *bind.TransactOpts, me
 	return _Governance.Contract.contract.Transact(opts, method, params...)
 }
 
+// AbrogationProposals is a free data retrieval call binding the contract method 0x8b787e30.
+//
+// Solidity: function abrogationProposals(uint256 ) view returns(address creator, uint256 createTime, string description, uint256 forVotes, uint256 againstVotes)
+func (_Governance *GovernanceCaller) AbrogationProposals(opts *bind.CallOpts, arg0 *big.Int) (struct {
+	Creator      common.Address
+	CreateTime   *big.Int
+	Description  string
+	ForVotes     *big.Int
+	AgainstVotes *big.Int
+}, error) {
+	var out []interface{}
+	err := _Governance.contract.Call(opts, &out, "abrogationProposals", arg0)
+
+	outstruct := new(struct {
+		Creator      common.Address
+		CreateTime   *big.Int
+		Description  string
+		ForVotes     *big.Int
+		AgainstVotes *big.Int
+	})
+
+	outstruct.Creator = out[0].(common.Address)
+	outstruct.CreateTime = out[1].(*big.Int)
+	outstruct.Description = out[2].(string)
+	outstruct.ForVotes = out[3].(*big.Int)
+	outstruct.AgainstVotes = out[4].(*big.Int)
+
+	return *outstruct, err
+
+}
+
+// AbrogationProposals is a free data retrieval call binding the contract method 0x8b787e30.
+//
+// Solidity: function abrogationProposals(uint256 ) view returns(address creator, uint256 createTime, string description, uint256 forVotes, uint256 againstVotes)
+func (_Governance *GovernanceSession) AbrogationProposals(arg0 *big.Int) (struct {
+	Creator      common.Address
+	CreateTime   *big.Int
+	Description  string
+	ForVotes     *big.Int
+	AgainstVotes *big.Int
+}, error) {
+	return _Governance.Contract.AbrogationProposals(&_Governance.CallOpts, arg0)
+}
+
+// AbrogationProposals is a free data retrieval call binding the contract method 0x8b787e30.
+//
+// Solidity: function abrogationProposals(uint256 ) view returns(address creator, uint256 createTime, string description, uint256 forVotes, uint256 againstVotes)
+func (_Governance *GovernanceCallerSession) AbrogationProposals(arg0 *big.Int) (struct {
+	Creator      common.Address
+	CreateTime   *big.Int
+	Description  string
+	ForVotes     *big.Int
+	AgainstVotes *big.Int
+}, error) {
+	return _Governance.Contract.AbrogationProposals(&_Governance.CallOpts, arg0)
+}
+
 // AcceptanceThreshold is a free data retrieval call binding the contract method 0xb0edbb9b.
 //
 // Solidity: function acceptanceThreshold() view returns(uint256)
@@ -250,56 +307,35 @@ func (_Governance *GovernanceCallerSession) ActiveDuration() (*big.Int, error) {
 	return _Governance.Contract.ActiveDuration(&_Governance.CallOpts)
 }
 
-// CancellationProposals is a free data retrieval call binding the contract method 0x3349b563.
+// GetAbrogationProposalReceipt is a free data retrieval call binding the contract method 0xe4e2d261.
 //
-// Solidity: function cancellationProposals(uint256 ) view returns(address creator, uint256 createTime, uint256 forVotes, uint256 againstVotes)
-func (_Governance *GovernanceCaller) CancellationProposals(opts *bind.CallOpts, arg0 *big.Int) (struct {
-	Creator      common.Address
-	CreateTime   *big.Int
-	ForVotes     *big.Int
-	AgainstVotes *big.Int
-}, error) {
+// Solidity: function getAbrogationProposalReceipt(uint256 proposalId, address voter) view returns((bool,uint256,bool))
+func (_Governance *GovernanceCaller) GetAbrogationProposalReceipt(opts *bind.CallOpts, proposalId *big.Int, voter common.Address) (GovernanceReceipt, error) {
 	var out []interface{}
-	err := _Governance.contract.Call(opts, &out, "cancellationProposals", arg0)
+	err := _Governance.contract.Call(opts, &out, "getAbrogationProposalReceipt", proposalId, voter)
 
-	outstruct := new(struct {
-		Creator      common.Address
-		CreateTime   *big.Int
-		ForVotes     *big.Int
-		AgainstVotes *big.Int
-	})
+	if err != nil {
+		return *new(GovernanceReceipt), err
+	}
 
-	outstruct.Creator = out[0].(common.Address)
-	outstruct.CreateTime = out[1].(*big.Int)
-	outstruct.ForVotes = out[2].(*big.Int)
-	outstruct.AgainstVotes = out[3].(*big.Int)
+	out0 := *abi.ConvertType(out[0], new(GovernanceReceipt)).(*GovernanceReceipt)
 
-	return *outstruct, err
+	return out0, err
 
 }
 
-// CancellationProposals is a free data retrieval call binding the contract method 0x3349b563.
+// GetAbrogationProposalReceipt is a free data retrieval call binding the contract method 0xe4e2d261.
 //
-// Solidity: function cancellationProposals(uint256 ) view returns(address creator, uint256 createTime, uint256 forVotes, uint256 againstVotes)
-func (_Governance *GovernanceSession) CancellationProposals(arg0 *big.Int) (struct {
-	Creator      common.Address
-	CreateTime   *big.Int
-	ForVotes     *big.Int
-	AgainstVotes *big.Int
-}, error) {
-	return _Governance.Contract.CancellationProposals(&_Governance.CallOpts, arg0)
+// Solidity: function getAbrogationProposalReceipt(uint256 proposalId, address voter) view returns((bool,uint256,bool))
+func (_Governance *GovernanceSession) GetAbrogationProposalReceipt(proposalId *big.Int, voter common.Address) (GovernanceReceipt, error) {
+	return _Governance.Contract.GetAbrogationProposalReceipt(&_Governance.CallOpts, proposalId, voter)
 }
 
-// CancellationProposals is a free data retrieval call binding the contract method 0x3349b563.
+// GetAbrogationProposalReceipt is a free data retrieval call binding the contract method 0xe4e2d261.
 //
-// Solidity: function cancellationProposals(uint256 ) view returns(address creator, uint256 createTime, uint256 forVotes, uint256 againstVotes)
-func (_Governance *GovernanceCallerSession) CancellationProposals(arg0 *big.Int) (struct {
-	Creator      common.Address
-	CreateTime   *big.Int
-	ForVotes     *big.Int
-	AgainstVotes *big.Int
-}, error) {
-	return _Governance.Contract.CancellationProposals(&_Governance.CallOpts, arg0)
+// Solidity: function getAbrogationProposalReceipt(uint256 proposalId, address voter) view returns((bool,uint256,bool))
+func (_Governance *GovernanceCallerSession) GetAbrogationProposalReceipt(proposalId *big.Int, voter common.Address) (GovernanceReceipt, error) {
+	return _Governance.Contract.GetAbrogationProposalReceipt(&_Governance.CallOpts, proposalId, voter)
 }
 
 // GetActions is a free data retrieval call binding the contract method 0x328dd982.
@@ -352,37 +388,6 @@ func (_Governance *GovernanceCallerSession) GetActions(proposalId *big.Int) (str
 	Calldatas  [][]byte
 }, error) {
 	return _Governance.Contract.GetActions(&_Governance.CallOpts, proposalId)
-}
-
-// GetCancellationProposalReceipt is a free data retrieval call binding the contract method 0x454aee55.
-//
-// Solidity: function getCancellationProposalReceipt(uint256 proposalId, address voter) view returns((bool,uint256,bool))
-func (_Governance *GovernanceCaller) GetCancellationProposalReceipt(opts *bind.CallOpts, proposalId *big.Int, voter common.Address) (GovernanceReceipt, error) {
-	var out []interface{}
-	err := _Governance.contract.Call(opts, &out, "getCancellationProposalReceipt", proposalId, voter)
-
-	if err != nil {
-		return *new(GovernanceReceipt), err
-	}
-
-	out0 := *abi.ConvertType(out[0], new(GovernanceReceipt)).(*GovernanceReceipt)
-
-	return out0, err
-
-}
-
-// GetCancellationProposalReceipt is a free data retrieval call binding the contract method 0x454aee55.
-//
-// Solidity: function getCancellationProposalReceipt(uint256 proposalId, address voter) view returns((bool,uint256,bool))
-func (_Governance *GovernanceSession) GetCancellationProposalReceipt(proposalId *big.Int, voter common.Address) (GovernanceReceipt, error) {
-	return _Governance.Contract.GetCancellationProposalReceipt(&_Governance.CallOpts, proposalId, voter)
-}
-
-// GetCancellationProposalReceipt is a free data retrieval call binding the contract method 0x454aee55.
-//
-// Solidity: function getCancellationProposalReceipt(uint256 proposalId, address voter) view returns((bool,uint256,bool))
-func (_Governance *GovernanceCallerSession) GetCancellationProposalReceipt(proposalId *big.Int, voter common.Address) (GovernanceReceipt, error) {
-	return _Governance.Contract.GetCancellationProposalReceipt(&_Governance.CallOpts, proposalId, voter)
 }
 
 // GetProposalParameters is a free data retrieval call binding the contract method 0x45892155.
@@ -844,6 +849,69 @@ func (_Governance *GovernanceCallerSession) WarmUpDuration() (*big.Int, error) {
 	return _Governance.Contract.WarmUpDuration(&_Governance.CallOpts)
 }
 
+// AbrogateProposal is a paid mutator transaction binding the contract method 0x24b43787.
+//
+// Solidity: function abrogateProposal(uint256 proposalId) returns()
+func (_Governance *GovernanceTransactor) AbrogateProposal(opts *bind.TransactOpts, proposalId *big.Int) (*types.Transaction, error) {
+	return _Governance.contract.Transact(opts, "abrogateProposal", proposalId)
+}
+
+// AbrogateProposal is a paid mutator transaction binding the contract method 0x24b43787.
+//
+// Solidity: function abrogateProposal(uint256 proposalId) returns()
+func (_Governance *GovernanceSession) AbrogateProposal(proposalId *big.Int) (*types.Transaction, error) {
+	return _Governance.Contract.AbrogateProposal(&_Governance.TransactOpts, proposalId)
+}
+
+// AbrogateProposal is a paid mutator transaction binding the contract method 0x24b43787.
+//
+// Solidity: function abrogateProposal(uint256 proposalId) returns()
+func (_Governance *GovernanceTransactorSession) AbrogateProposal(proposalId *big.Int) (*types.Transaction, error) {
+	return _Governance.Contract.AbrogateProposal(&_Governance.TransactOpts, proposalId)
+}
+
+// AbrogationProposalCancelVote is a paid mutator transaction binding the contract method 0x1e9d1e64.
+//
+// Solidity: function abrogationProposal_cancelVote(uint256 proposalId) returns()
+func (_Governance *GovernanceTransactor) AbrogationProposalCancelVote(opts *bind.TransactOpts, proposalId *big.Int) (*types.Transaction, error) {
+	return _Governance.contract.Transact(opts, "abrogationProposal_cancelVote", proposalId)
+}
+
+// AbrogationProposalCancelVote is a paid mutator transaction binding the contract method 0x1e9d1e64.
+//
+// Solidity: function abrogationProposal_cancelVote(uint256 proposalId) returns()
+func (_Governance *GovernanceSession) AbrogationProposalCancelVote(proposalId *big.Int) (*types.Transaction, error) {
+	return _Governance.Contract.AbrogationProposalCancelVote(&_Governance.TransactOpts, proposalId)
+}
+
+// AbrogationProposalCancelVote is a paid mutator transaction binding the contract method 0x1e9d1e64.
+//
+// Solidity: function abrogationProposal_cancelVote(uint256 proposalId) returns()
+func (_Governance *GovernanceTransactorSession) AbrogationProposalCancelVote(proposalId *big.Int) (*types.Transaction, error) {
+	return _Governance.Contract.AbrogationProposalCancelVote(&_Governance.TransactOpts, proposalId)
+}
+
+// AbrogationProposalCastVote is a paid mutator transaction binding the contract method 0x9e70a234.
+//
+// Solidity: function abrogationProposal_castVote(uint256 proposalId, bool support) returns()
+func (_Governance *GovernanceTransactor) AbrogationProposalCastVote(opts *bind.TransactOpts, proposalId *big.Int, support bool) (*types.Transaction, error) {
+	return _Governance.contract.Transact(opts, "abrogationProposal_castVote", proposalId, support)
+}
+
+// AbrogationProposalCastVote is a paid mutator transaction binding the contract method 0x9e70a234.
+//
+// Solidity: function abrogationProposal_castVote(uint256 proposalId, bool support) returns()
+func (_Governance *GovernanceSession) AbrogationProposalCastVote(proposalId *big.Int, support bool) (*types.Transaction, error) {
+	return _Governance.Contract.AbrogationProposalCastVote(&_Governance.TransactOpts, proposalId, support)
+}
+
+// AbrogationProposalCastVote is a paid mutator transaction binding the contract method 0x9e70a234.
+//
+// Solidity: function abrogationProposal_castVote(uint256 proposalId, bool support) returns()
+func (_Governance *GovernanceTransactorSession) AbrogationProposalCastVote(proposalId *big.Int, support bool) (*types.Transaction, error) {
+	return _Governance.Contract.AbrogationProposalCastVote(&_Governance.TransactOpts, proposalId, support)
+}
+
 // Activate is a paid mutator transaction binding the contract method 0x0f15f4c0.
 //
 // Solidity: function activate() returns()
@@ -907,27 +975,6 @@ func (_Governance *GovernanceTransactorSession) CancelVote(proposalId *big.Int) 
 	return _Governance.Contract.CancelVote(&_Governance.TransactOpts, proposalId)
 }
 
-// CancelVoteCancellationProposal is a paid mutator transaction binding the contract method 0x93bffa04.
-//
-// Solidity: function cancelVoteCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceTransactor) CancelVoteCancellationProposal(opts *bind.TransactOpts, proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.contract.Transact(opts, "cancelVoteCancellationProposal", proposalId)
-}
-
-// CancelVoteCancellationProposal is a paid mutator transaction binding the contract method 0x93bffa04.
-//
-// Solidity: function cancelVoteCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceSession) CancelVoteCancellationProposal(proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.Contract.CancelVoteCancellationProposal(&_Governance.TransactOpts, proposalId)
-}
-
-// CancelVoteCancellationProposal is a paid mutator transaction binding the contract method 0x93bffa04.
-//
-// Solidity: function cancelVoteCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceTransactorSession) CancelVoteCancellationProposal(proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.Contract.CancelVoteCancellationProposal(&_Governance.TransactOpts, proposalId)
-}
-
 // CastVote is a paid mutator transaction binding the contract method 0x15373e3d.
 //
 // Solidity: function castVote(uint256 proposalId, bool support) returns()
@@ -968,27 +1015,6 @@ func (_Governance *GovernanceSession) Execute(proposalId *big.Int) (*types.Trans
 // Solidity: function execute(uint256 proposalId) payable returns()
 func (_Governance *GovernanceTransactorSession) Execute(proposalId *big.Int) (*types.Transaction, error) {
 	return _Governance.Contract.Execute(&_Governance.TransactOpts, proposalId)
-}
-
-// ExecuteCancellationProposal is a paid mutator transaction binding the contract method 0xbf8d68cf.
-//
-// Solidity: function executeCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceTransactor) ExecuteCancellationProposal(opts *bind.TransactOpts, proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.contract.Transact(opts, "executeCancellationProposal", proposalId)
-}
-
-// ExecuteCancellationProposal is a paid mutator transaction binding the contract method 0xbf8d68cf.
-//
-// Solidity: function executeCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceSession) ExecuteCancellationProposal(proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.Contract.ExecuteCancellationProposal(&_Governance.TransactOpts, proposalId)
-}
-
-// ExecuteCancellationProposal is a paid mutator transaction binding the contract method 0xbf8d68cf.
-//
-// Solidity: function executeCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceTransactorSession) ExecuteCancellationProposal(proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.Contract.ExecuteCancellationProposal(&_Governance.TransactOpts, proposalId)
 }
 
 // Initialize is a paid mutator transaction binding the contract method 0xc4d66de8.
@@ -1180,51 +1206,30 @@ func (_Governance *GovernanceTransactorSession) SetWarmUpDuration(period *big.In
 	return _Governance.Contract.SetWarmUpDuration(&_Governance.TransactOpts, period)
 }
 
-// StartCancellationProposal is a paid mutator transaction binding the contract method 0xa31c3443.
+// StartAbrogationProposal is a paid mutator transaction binding the contract method 0x39e778ee.
 //
-// Solidity: function startCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceTransactor) StartCancellationProposal(opts *bind.TransactOpts, proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.contract.Transact(opts, "startCancellationProposal", proposalId)
+// Solidity: function startAbrogationProposal(uint256 proposalId, string description) returns()
+func (_Governance *GovernanceTransactor) StartAbrogationProposal(opts *bind.TransactOpts, proposalId *big.Int, description string) (*types.Transaction, error) {
+	return _Governance.contract.Transact(opts, "startAbrogationProposal", proposalId, description)
 }
 
-// StartCancellationProposal is a paid mutator transaction binding the contract method 0xa31c3443.
+// StartAbrogationProposal is a paid mutator transaction binding the contract method 0x39e778ee.
 //
-// Solidity: function startCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceSession) StartCancellationProposal(proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.Contract.StartCancellationProposal(&_Governance.TransactOpts, proposalId)
+// Solidity: function startAbrogationProposal(uint256 proposalId, string description) returns()
+func (_Governance *GovernanceSession) StartAbrogationProposal(proposalId *big.Int, description string) (*types.Transaction, error) {
+	return _Governance.Contract.StartAbrogationProposal(&_Governance.TransactOpts, proposalId, description)
 }
 
-// StartCancellationProposal is a paid mutator transaction binding the contract method 0xa31c3443.
+// StartAbrogationProposal is a paid mutator transaction binding the contract method 0x39e778ee.
 //
-// Solidity: function startCancellationProposal(uint256 proposalId) returns()
-func (_Governance *GovernanceTransactorSession) StartCancellationProposal(proposalId *big.Int) (*types.Transaction, error) {
-	return _Governance.Contract.StartCancellationProposal(&_Governance.TransactOpts, proposalId)
+// Solidity: function startAbrogationProposal(uint256 proposalId, string description) returns()
+func (_Governance *GovernanceTransactorSession) StartAbrogationProposal(proposalId *big.Int, description string) (*types.Transaction, error) {
+	return _Governance.Contract.StartAbrogationProposal(&_Governance.TransactOpts, proposalId, description)
 }
 
-// VoteCancellationProposal is a paid mutator transaction binding the contract method 0x15789ef0.
-//
-// Solidity: function voteCancellationProposal(uint256 proposalId, bool support) returns()
-func (_Governance *GovernanceTransactor) VoteCancellationProposal(opts *bind.TransactOpts, proposalId *big.Int, support bool) (*types.Transaction, error) {
-	return _Governance.contract.Transact(opts, "voteCancellationProposal", proposalId, support)
-}
-
-// VoteCancellationProposal is a paid mutator transaction binding the contract method 0x15789ef0.
-//
-// Solidity: function voteCancellationProposal(uint256 proposalId, bool support) returns()
-func (_Governance *GovernanceSession) VoteCancellationProposal(proposalId *big.Int, support bool) (*types.Transaction, error) {
-	return _Governance.Contract.VoteCancellationProposal(&_Governance.TransactOpts, proposalId, support)
-}
-
-// VoteCancellationProposal is a paid mutator transaction binding the contract method 0x15789ef0.
-//
-// Solidity: function voteCancellationProposal(uint256 proposalId, bool support) returns()
-func (_Governance *GovernanceTransactorSession) VoteCancellationProposal(proposalId *big.Int, support bool) (*types.Transaction, error) {
-	return _Governance.Contract.VoteCancellationProposal(&_Governance.TransactOpts, proposalId, support)
-}
-
-// GovernanceCancellationProposalExecutedIterator is returned from FilterCancellationProposalExecuted and is used to iterate over the raw logs and unpacked data for CancellationProposalExecuted events raised by the Governance contract.
-type GovernanceCancellationProposalExecutedIterator struct {
-	Event *GovernanceCancellationProposalExecuted // Event containing the contract specifics and raw log
+// GovernanceAbrogationProposalExecutedIterator is returned from FilterAbrogationProposalExecuted and is used to iterate over the raw logs and unpacked data for AbrogationProposalExecuted events raised by the Governance contract.
+type GovernanceAbrogationProposalExecutedIterator struct {
+	Event *GovernanceAbrogationProposalExecuted // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1238,7 +1243,7 @@ type GovernanceCancellationProposalExecutedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *GovernanceCancellationProposalExecutedIterator) Next() bool {
+func (it *GovernanceAbrogationProposalExecutedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1247,7 +1252,7 @@ func (it *GovernanceCancellationProposalExecutedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(GovernanceCancellationProposalExecuted)
+			it.Event = new(GovernanceAbrogationProposalExecuted)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1262,7 +1267,7 @@ func (it *GovernanceCancellationProposalExecutedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(GovernanceCancellationProposalExecuted)
+		it.Event = new(GovernanceAbrogationProposalExecuted)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1278,52 +1283,52 @@ func (it *GovernanceCancellationProposalExecutedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *GovernanceCancellationProposalExecutedIterator) Error() error {
+func (it *GovernanceAbrogationProposalExecutedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *GovernanceCancellationProposalExecutedIterator) Close() error {
+func (it *GovernanceAbrogationProposalExecutedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// GovernanceCancellationProposalExecuted represents a CancellationProposalExecuted event raised by the Governance contract.
-type GovernanceCancellationProposalExecuted struct {
+// GovernanceAbrogationProposalExecuted represents a AbrogationProposalExecuted event raised by the Governance contract.
+type GovernanceAbrogationProposalExecuted struct {
 	ProposalId *big.Int
 	Caller     common.Address
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// FilterCancellationProposalExecuted is a free log retrieval operation binding the contract event 0xca418eb2bd9f9b2a92b58a918ef9a883d5ae1d4d631e4b37c25958184002240b.
+// FilterAbrogationProposalExecuted is a free log retrieval operation binding the contract event 0x6d7acd63bebeaf524f1761a88687951f776fc7c182205f820424c7fb572c7235.
 //
-// Solidity: event CancellationProposalExecuted(uint256 indexed proposalId, address caller)
-func (_Governance *GovernanceFilterer) FilterCancellationProposalExecuted(opts *bind.FilterOpts, proposalId []*big.Int) (*GovernanceCancellationProposalExecutedIterator, error) {
+// Solidity: event AbrogationProposalExecuted(uint256 indexed proposalId, address caller)
+func (_Governance *GovernanceFilterer) FilterAbrogationProposalExecuted(opts *bind.FilterOpts, proposalId []*big.Int) (*GovernanceAbrogationProposalExecutedIterator, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
 		proposalIdRule = append(proposalIdRule, proposalIdItem)
 	}
 
-	logs, sub, err := _Governance.contract.FilterLogs(opts, "CancellationProposalExecuted", proposalIdRule)
+	logs, sub, err := _Governance.contract.FilterLogs(opts, "AbrogationProposalExecuted", proposalIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &GovernanceCancellationProposalExecutedIterator{contract: _Governance.contract, event: "CancellationProposalExecuted", logs: logs, sub: sub}, nil
+	return &GovernanceAbrogationProposalExecutedIterator{contract: _Governance.contract, event: "AbrogationProposalExecuted", logs: logs, sub: sub}, nil
 }
 
-// WatchCancellationProposalExecuted is a free log subscription operation binding the contract event 0xca418eb2bd9f9b2a92b58a918ef9a883d5ae1d4d631e4b37c25958184002240b.
+// WatchAbrogationProposalExecuted is a free log subscription operation binding the contract event 0x6d7acd63bebeaf524f1761a88687951f776fc7c182205f820424c7fb572c7235.
 //
-// Solidity: event CancellationProposalExecuted(uint256 indexed proposalId, address caller)
-func (_Governance *GovernanceFilterer) WatchCancellationProposalExecuted(opts *bind.WatchOpts, sink chan<- *GovernanceCancellationProposalExecuted, proposalId []*big.Int) (event.Subscription, error) {
+// Solidity: event AbrogationProposalExecuted(uint256 indexed proposalId, address caller)
+func (_Governance *GovernanceFilterer) WatchAbrogationProposalExecuted(opts *bind.WatchOpts, sink chan<- *GovernanceAbrogationProposalExecuted, proposalId []*big.Int) (event.Subscription, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
 		proposalIdRule = append(proposalIdRule, proposalIdItem)
 	}
 
-	logs, sub, err := _Governance.contract.WatchLogs(opts, "CancellationProposalExecuted", proposalIdRule)
+	logs, sub, err := _Governance.contract.WatchLogs(opts, "AbrogationProposalExecuted", proposalIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1333,8 +1338,8 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalExecuted(opts *b
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(GovernanceCancellationProposalExecuted)
-				if err := _Governance.contract.UnpackLog(event, "CancellationProposalExecuted", log); err != nil {
+				event := new(GovernanceAbrogationProposalExecuted)
+				if err := _Governance.contract.UnpackLog(event, "AbrogationProposalExecuted", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1355,20 +1360,20 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalExecuted(opts *b
 	}), nil
 }
 
-// ParseCancellationProposalExecuted is a log parse operation binding the contract event 0xca418eb2bd9f9b2a92b58a918ef9a883d5ae1d4d631e4b37c25958184002240b.
+// ParseAbrogationProposalExecuted is a log parse operation binding the contract event 0x6d7acd63bebeaf524f1761a88687951f776fc7c182205f820424c7fb572c7235.
 //
-// Solidity: event CancellationProposalExecuted(uint256 indexed proposalId, address caller)
-func (_Governance *GovernanceFilterer) ParseCancellationProposalExecuted(log types.Log) (*GovernanceCancellationProposalExecuted, error) {
-	event := new(GovernanceCancellationProposalExecuted)
-	if err := _Governance.contract.UnpackLog(event, "CancellationProposalExecuted", log); err != nil {
+// Solidity: event AbrogationProposalExecuted(uint256 indexed proposalId, address caller)
+func (_Governance *GovernanceFilterer) ParseAbrogationProposalExecuted(log types.Log) (*GovernanceAbrogationProposalExecuted, error) {
+	event := new(GovernanceAbrogationProposalExecuted)
+	if err := _Governance.contract.UnpackLog(event, "AbrogationProposalExecuted", log); err != nil {
 		return nil, err
 	}
 	return event, nil
 }
 
-// GovernanceCancellationProposalStartedIterator is returned from FilterCancellationProposalStarted and is used to iterate over the raw logs and unpacked data for CancellationProposalStarted events raised by the Governance contract.
-type GovernanceCancellationProposalStartedIterator struct {
-	Event *GovernanceCancellationProposalStarted // Event containing the contract specifics and raw log
+// GovernanceAbrogationProposalStartedIterator is returned from FilterAbrogationProposalStarted and is used to iterate over the raw logs and unpacked data for AbrogationProposalStarted events raised by the Governance contract.
+type GovernanceAbrogationProposalStartedIterator struct {
+	Event *GovernanceAbrogationProposalStarted // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1382,7 +1387,7 @@ type GovernanceCancellationProposalStartedIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *GovernanceCancellationProposalStartedIterator) Next() bool {
+func (it *GovernanceAbrogationProposalStartedIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1391,7 +1396,7 @@ func (it *GovernanceCancellationProposalStartedIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(GovernanceCancellationProposalStarted)
+			it.Event = new(GovernanceAbrogationProposalStarted)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1406,7 +1411,7 @@ func (it *GovernanceCancellationProposalStartedIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(GovernanceCancellationProposalStarted)
+		it.Event = new(GovernanceAbrogationProposalStarted)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1422,52 +1427,52 @@ func (it *GovernanceCancellationProposalStartedIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *GovernanceCancellationProposalStartedIterator) Error() error {
+func (it *GovernanceAbrogationProposalStartedIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *GovernanceCancellationProposalStartedIterator) Close() error {
+func (it *GovernanceAbrogationProposalStartedIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// GovernanceCancellationProposalStarted represents a CancellationProposalStarted event raised by the Governance contract.
-type GovernanceCancellationProposalStarted struct {
+// GovernanceAbrogationProposalStarted represents a AbrogationProposalStarted event raised by the Governance contract.
+type GovernanceAbrogationProposalStarted struct {
 	ProposalId *big.Int
 	Caller     common.Address
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// FilterCancellationProposalStarted is a free log retrieval operation binding the contract event 0x07837148ec3d262ad7fa623ff37443cce602b84177388872d2965ce79f4b9df9.
+// FilterAbrogationProposalStarted is a free log retrieval operation binding the contract event 0x27eba018e1c52b84f732fe4d806fd9750c60752f1d37e7f70bcb4cbec65b1c6a.
 //
-// Solidity: event CancellationProposalStarted(uint256 indexed proposalId, address caller)
-func (_Governance *GovernanceFilterer) FilterCancellationProposalStarted(opts *bind.FilterOpts, proposalId []*big.Int) (*GovernanceCancellationProposalStartedIterator, error) {
+// Solidity: event AbrogationProposalStarted(uint256 indexed proposalId, address caller)
+func (_Governance *GovernanceFilterer) FilterAbrogationProposalStarted(opts *bind.FilterOpts, proposalId []*big.Int) (*GovernanceAbrogationProposalStartedIterator, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
 		proposalIdRule = append(proposalIdRule, proposalIdItem)
 	}
 
-	logs, sub, err := _Governance.contract.FilterLogs(opts, "CancellationProposalStarted", proposalIdRule)
+	logs, sub, err := _Governance.contract.FilterLogs(opts, "AbrogationProposalStarted", proposalIdRule)
 	if err != nil {
 		return nil, err
 	}
-	return &GovernanceCancellationProposalStartedIterator{contract: _Governance.contract, event: "CancellationProposalStarted", logs: logs, sub: sub}, nil
+	return &GovernanceAbrogationProposalStartedIterator{contract: _Governance.contract, event: "AbrogationProposalStarted", logs: logs, sub: sub}, nil
 }
 
-// WatchCancellationProposalStarted is a free log subscription operation binding the contract event 0x07837148ec3d262ad7fa623ff37443cce602b84177388872d2965ce79f4b9df9.
+// WatchAbrogationProposalStarted is a free log subscription operation binding the contract event 0x27eba018e1c52b84f732fe4d806fd9750c60752f1d37e7f70bcb4cbec65b1c6a.
 //
-// Solidity: event CancellationProposalStarted(uint256 indexed proposalId, address caller)
-func (_Governance *GovernanceFilterer) WatchCancellationProposalStarted(opts *bind.WatchOpts, sink chan<- *GovernanceCancellationProposalStarted, proposalId []*big.Int) (event.Subscription, error) {
+// Solidity: event AbrogationProposalStarted(uint256 indexed proposalId, address caller)
+func (_Governance *GovernanceFilterer) WatchAbrogationProposalStarted(opts *bind.WatchOpts, sink chan<- *GovernanceAbrogationProposalStarted, proposalId []*big.Int) (event.Subscription, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
 		proposalIdRule = append(proposalIdRule, proposalIdItem)
 	}
 
-	logs, sub, err := _Governance.contract.WatchLogs(opts, "CancellationProposalStarted", proposalIdRule)
+	logs, sub, err := _Governance.contract.WatchLogs(opts, "AbrogationProposalStarted", proposalIdRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1477,8 +1482,8 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalStarted(opts *bi
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(GovernanceCancellationProposalStarted)
-				if err := _Governance.contract.UnpackLog(event, "CancellationProposalStarted", log); err != nil {
+				event := new(GovernanceAbrogationProposalStarted)
+				if err := _Governance.contract.UnpackLog(event, "AbrogationProposalStarted", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1499,20 +1504,20 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalStarted(opts *bi
 	}), nil
 }
 
-// ParseCancellationProposalStarted is a log parse operation binding the contract event 0x07837148ec3d262ad7fa623ff37443cce602b84177388872d2965ce79f4b9df9.
+// ParseAbrogationProposalStarted is a log parse operation binding the contract event 0x27eba018e1c52b84f732fe4d806fd9750c60752f1d37e7f70bcb4cbec65b1c6a.
 //
-// Solidity: event CancellationProposalStarted(uint256 indexed proposalId, address caller)
-func (_Governance *GovernanceFilterer) ParseCancellationProposalStarted(log types.Log) (*GovernanceCancellationProposalStarted, error) {
-	event := new(GovernanceCancellationProposalStarted)
-	if err := _Governance.contract.UnpackLog(event, "CancellationProposalStarted", log); err != nil {
+// Solidity: event AbrogationProposalStarted(uint256 indexed proposalId, address caller)
+func (_Governance *GovernanceFilterer) ParseAbrogationProposalStarted(log types.Log) (*GovernanceAbrogationProposalStarted, error) {
+	event := new(GovernanceAbrogationProposalStarted)
+	if err := _Governance.contract.UnpackLog(event, "AbrogationProposalStarted", log); err != nil {
 		return nil, err
 	}
 	return event, nil
 }
 
-// GovernanceCancellationProposalVoteIterator is returned from FilterCancellationProposalVote and is used to iterate over the raw logs and unpacked data for CancellationProposalVote events raised by the Governance contract.
-type GovernanceCancellationProposalVoteIterator struct {
-	Event *GovernanceCancellationProposalVote // Event containing the contract specifics and raw log
+// GovernanceAbrogationProposalVoteIterator is returned from FilterAbrogationProposalVote and is used to iterate over the raw logs and unpacked data for AbrogationProposalVote events raised by the Governance contract.
+type GovernanceAbrogationProposalVoteIterator struct {
+	Event *GovernanceAbrogationProposalVote // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1526,7 +1531,7 @@ type GovernanceCancellationProposalVoteIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *GovernanceCancellationProposalVoteIterator) Next() bool {
+func (it *GovernanceAbrogationProposalVoteIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1535,7 +1540,7 @@ func (it *GovernanceCancellationProposalVoteIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(GovernanceCancellationProposalVote)
+			it.Event = new(GovernanceAbrogationProposalVote)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1550,7 +1555,7 @@ func (it *GovernanceCancellationProposalVoteIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(GovernanceCancellationProposalVote)
+		it.Event = new(GovernanceAbrogationProposalVote)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1566,19 +1571,19 @@ func (it *GovernanceCancellationProposalVoteIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *GovernanceCancellationProposalVoteIterator) Error() error {
+func (it *GovernanceAbrogationProposalVoteIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *GovernanceCancellationProposalVoteIterator) Close() error {
+func (it *GovernanceAbrogationProposalVoteIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// GovernanceCancellationProposalVote represents a CancellationProposalVote event raised by the Governance contract.
-type GovernanceCancellationProposalVote struct {
+// GovernanceAbrogationProposalVote represents a AbrogationProposalVote event raised by the Governance contract.
+type GovernanceAbrogationProposalVote struct {
 	ProposalId *big.Int
 	User       common.Address
 	Support    bool
@@ -1586,10 +1591,10 @@ type GovernanceCancellationProposalVote struct {
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// FilterCancellationProposalVote is a free log retrieval operation binding the contract event 0xfff6296a70cd3a166136f34901255c3cd9cbf6dcfe8e5909126a4172b826c809.
+// FilterAbrogationProposalVote is a free log retrieval operation binding the contract event 0x80f2ad7e3e83d197670402663f224adb2f649967b9629c67dcfafa40c94d30f9.
 //
-// Solidity: event CancellationProposalVote(uint256 indexed proposalId, address indexed user, bool support, uint256 power)
-func (_Governance *GovernanceFilterer) FilterCancellationProposalVote(opts *bind.FilterOpts, proposalId []*big.Int, user []common.Address) (*GovernanceCancellationProposalVoteIterator, error) {
+// Solidity: event AbrogationProposalVote(uint256 indexed proposalId, address indexed user, bool support, uint256 power)
+func (_Governance *GovernanceFilterer) FilterAbrogationProposalVote(opts *bind.FilterOpts, proposalId []*big.Int, user []common.Address) (*GovernanceAbrogationProposalVoteIterator, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
@@ -1600,17 +1605,17 @@ func (_Governance *GovernanceFilterer) FilterCancellationProposalVote(opts *bind
 		userRule = append(userRule, userItem)
 	}
 
-	logs, sub, err := _Governance.contract.FilterLogs(opts, "CancellationProposalVote", proposalIdRule, userRule)
+	logs, sub, err := _Governance.contract.FilterLogs(opts, "AbrogationProposalVote", proposalIdRule, userRule)
 	if err != nil {
 		return nil, err
 	}
-	return &GovernanceCancellationProposalVoteIterator{contract: _Governance.contract, event: "CancellationProposalVote", logs: logs, sub: sub}, nil
+	return &GovernanceAbrogationProposalVoteIterator{contract: _Governance.contract, event: "AbrogationProposalVote", logs: logs, sub: sub}, nil
 }
 
-// WatchCancellationProposalVote is a free log subscription operation binding the contract event 0xfff6296a70cd3a166136f34901255c3cd9cbf6dcfe8e5909126a4172b826c809.
+// WatchAbrogationProposalVote is a free log subscription operation binding the contract event 0x80f2ad7e3e83d197670402663f224adb2f649967b9629c67dcfafa40c94d30f9.
 //
-// Solidity: event CancellationProposalVote(uint256 indexed proposalId, address indexed user, bool support, uint256 power)
-func (_Governance *GovernanceFilterer) WatchCancellationProposalVote(opts *bind.WatchOpts, sink chan<- *GovernanceCancellationProposalVote, proposalId []*big.Int, user []common.Address) (event.Subscription, error) {
+// Solidity: event AbrogationProposalVote(uint256 indexed proposalId, address indexed user, bool support, uint256 power)
+func (_Governance *GovernanceFilterer) WatchAbrogationProposalVote(opts *bind.WatchOpts, sink chan<- *GovernanceAbrogationProposalVote, proposalId []*big.Int, user []common.Address) (event.Subscription, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
@@ -1621,7 +1626,7 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalVote(opts *bind.
 		userRule = append(userRule, userItem)
 	}
 
-	logs, sub, err := _Governance.contract.WatchLogs(opts, "CancellationProposalVote", proposalIdRule, userRule)
+	logs, sub, err := _Governance.contract.WatchLogs(opts, "AbrogationProposalVote", proposalIdRule, userRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1631,8 +1636,8 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalVote(opts *bind.
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(GovernanceCancellationProposalVote)
-				if err := _Governance.contract.UnpackLog(event, "CancellationProposalVote", log); err != nil {
+				event := new(GovernanceAbrogationProposalVote)
+				if err := _Governance.contract.UnpackLog(event, "AbrogationProposalVote", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1653,20 +1658,20 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalVote(opts *bind.
 	}), nil
 }
 
-// ParseCancellationProposalVote is a log parse operation binding the contract event 0xfff6296a70cd3a166136f34901255c3cd9cbf6dcfe8e5909126a4172b826c809.
+// ParseAbrogationProposalVote is a log parse operation binding the contract event 0x80f2ad7e3e83d197670402663f224adb2f649967b9629c67dcfafa40c94d30f9.
 //
-// Solidity: event CancellationProposalVote(uint256 indexed proposalId, address indexed user, bool support, uint256 power)
-func (_Governance *GovernanceFilterer) ParseCancellationProposalVote(log types.Log) (*GovernanceCancellationProposalVote, error) {
-	event := new(GovernanceCancellationProposalVote)
-	if err := _Governance.contract.UnpackLog(event, "CancellationProposalVote", log); err != nil {
+// Solidity: event AbrogationProposalVote(uint256 indexed proposalId, address indexed user, bool support, uint256 power)
+func (_Governance *GovernanceFilterer) ParseAbrogationProposalVote(log types.Log) (*GovernanceAbrogationProposalVote, error) {
+	event := new(GovernanceAbrogationProposalVote)
+	if err := _Governance.contract.UnpackLog(event, "AbrogationProposalVote", log); err != nil {
 		return nil, err
 	}
 	return event, nil
 }
 
-// GovernanceCancellationProposalVoteCancelledIterator is returned from FilterCancellationProposalVoteCancelled and is used to iterate over the raw logs and unpacked data for CancellationProposalVoteCancelled events raised by the Governance contract.
-type GovernanceCancellationProposalVoteCancelledIterator struct {
-	Event *GovernanceCancellationProposalVoteCancelled // Event containing the contract specifics and raw log
+// GovernanceAbrogationProposalVoteCancelledIterator is returned from FilterAbrogationProposalVoteCancelled and is used to iterate over the raw logs and unpacked data for AbrogationProposalVoteCancelled events raised by the Governance contract.
+type GovernanceAbrogationProposalVoteCancelledIterator struct {
+	Event *GovernanceAbrogationProposalVoteCancelled // Event containing the contract specifics and raw log
 
 	contract *bind.BoundContract // Generic contract to use for unpacking event data
 	event    string              // Event name to use for unpacking event data
@@ -1680,7 +1685,7 @@ type GovernanceCancellationProposalVoteCancelledIterator struct {
 // Next advances the iterator to the subsequent event, returning whether there
 // are any more events found. In case of a retrieval or parsing error, false is
 // returned and Error() can be queried for the exact failure.
-func (it *GovernanceCancellationProposalVoteCancelledIterator) Next() bool {
+func (it *GovernanceAbrogationProposalVoteCancelledIterator) Next() bool {
 	// If the iterator failed, stop iterating
 	if it.fail != nil {
 		return false
@@ -1689,7 +1694,7 @@ func (it *GovernanceCancellationProposalVoteCancelledIterator) Next() bool {
 	if it.done {
 		select {
 		case log := <-it.logs:
-			it.Event = new(GovernanceCancellationProposalVoteCancelled)
+			it.Event = new(GovernanceAbrogationProposalVoteCancelled)
 			if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 				it.fail = err
 				return false
@@ -1704,7 +1709,7 @@ func (it *GovernanceCancellationProposalVoteCancelledIterator) Next() bool {
 	// Iterator still in progress, wait for either a data or an error event
 	select {
 	case log := <-it.logs:
-		it.Event = new(GovernanceCancellationProposalVoteCancelled)
+		it.Event = new(GovernanceAbrogationProposalVoteCancelled)
 		if err := it.contract.UnpackLog(it.Event, it.event, log); err != nil {
 			it.fail = err
 			return false
@@ -1720,28 +1725,28 @@ func (it *GovernanceCancellationProposalVoteCancelledIterator) Next() bool {
 }
 
 // Error returns any retrieval or parsing error occurred during filtering.
-func (it *GovernanceCancellationProposalVoteCancelledIterator) Error() error {
+func (it *GovernanceAbrogationProposalVoteCancelledIterator) Error() error {
 	return it.fail
 }
 
 // Close terminates the iteration process, releasing any pending underlying
 // resources.
-func (it *GovernanceCancellationProposalVoteCancelledIterator) Close() error {
+func (it *GovernanceAbrogationProposalVoteCancelledIterator) Close() error {
 	it.sub.Unsubscribe()
 	return nil
 }
 
-// GovernanceCancellationProposalVoteCancelled represents a CancellationProposalVoteCancelled event raised by the Governance contract.
-type GovernanceCancellationProposalVoteCancelled struct {
+// GovernanceAbrogationProposalVoteCancelled represents a AbrogationProposalVoteCancelled event raised by the Governance contract.
+type GovernanceAbrogationProposalVoteCancelled struct {
 	ProposalId *big.Int
 	User       common.Address
 	Raw        types.Log // Blockchain specific contextual infos
 }
 
-// FilterCancellationProposalVoteCancelled is a free log retrieval operation binding the contract event 0x5e8aa098e39964b153d61768be281eb6183261d780f23758fca70e9711cb7610.
+// FilterAbrogationProposalVoteCancelled is a free log retrieval operation binding the contract event 0x5e8ee24f838173ed2ae7989835696f6e11945ac8fbc5259aef01cc4d7f0d4920.
 //
-// Solidity: event CancellationProposalVoteCancelled(uint256 indexed proposalId, address indexed user)
-func (_Governance *GovernanceFilterer) FilterCancellationProposalVoteCancelled(opts *bind.FilterOpts, proposalId []*big.Int, user []common.Address) (*GovernanceCancellationProposalVoteCancelledIterator, error) {
+// Solidity: event AbrogationProposalVoteCancelled(uint256 indexed proposalId, address indexed user)
+func (_Governance *GovernanceFilterer) FilterAbrogationProposalVoteCancelled(opts *bind.FilterOpts, proposalId []*big.Int, user []common.Address) (*GovernanceAbrogationProposalVoteCancelledIterator, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
@@ -1752,17 +1757,17 @@ func (_Governance *GovernanceFilterer) FilterCancellationProposalVoteCancelled(o
 		userRule = append(userRule, userItem)
 	}
 
-	logs, sub, err := _Governance.contract.FilterLogs(opts, "CancellationProposalVoteCancelled", proposalIdRule, userRule)
+	logs, sub, err := _Governance.contract.FilterLogs(opts, "AbrogationProposalVoteCancelled", proposalIdRule, userRule)
 	if err != nil {
 		return nil, err
 	}
-	return &GovernanceCancellationProposalVoteCancelledIterator{contract: _Governance.contract, event: "CancellationProposalVoteCancelled", logs: logs, sub: sub}, nil
+	return &GovernanceAbrogationProposalVoteCancelledIterator{contract: _Governance.contract, event: "AbrogationProposalVoteCancelled", logs: logs, sub: sub}, nil
 }
 
-// WatchCancellationProposalVoteCancelled is a free log subscription operation binding the contract event 0x5e8aa098e39964b153d61768be281eb6183261d780f23758fca70e9711cb7610.
+// WatchAbrogationProposalVoteCancelled is a free log subscription operation binding the contract event 0x5e8ee24f838173ed2ae7989835696f6e11945ac8fbc5259aef01cc4d7f0d4920.
 //
-// Solidity: event CancellationProposalVoteCancelled(uint256 indexed proposalId, address indexed user)
-func (_Governance *GovernanceFilterer) WatchCancellationProposalVoteCancelled(opts *bind.WatchOpts, sink chan<- *GovernanceCancellationProposalVoteCancelled, proposalId []*big.Int, user []common.Address) (event.Subscription, error) {
+// Solidity: event AbrogationProposalVoteCancelled(uint256 indexed proposalId, address indexed user)
+func (_Governance *GovernanceFilterer) WatchAbrogationProposalVoteCancelled(opts *bind.WatchOpts, sink chan<- *GovernanceAbrogationProposalVoteCancelled, proposalId []*big.Int, user []common.Address) (event.Subscription, error) {
 
 	var proposalIdRule []interface{}
 	for _, proposalIdItem := range proposalId {
@@ -1773,7 +1778,7 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalVoteCancelled(op
 		userRule = append(userRule, userItem)
 	}
 
-	logs, sub, err := _Governance.contract.WatchLogs(opts, "CancellationProposalVoteCancelled", proposalIdRule, userRule)
+	logs, sub, err := _Governance.contract.WatchLogs(opts, "AbrogationProposalVoteCancelled", proposalIdRule, userRule)
 	if err != nil {
 		return nil, err
 	}
@@ -1783,8 +1788,8 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalVoteCancelled(op
 			select {
 			case log := <-logs:
 				// New log arrived, parse the event and forward to the user
-				event := new(GovernanceCancellationProposalVoteCancelled)
-				if err := _Governance.contract.UnpackLog(event, "CancellationProposalVoteCancelled", log); err != nil {
+				event := new(GovernanceAbrogationProposalVoteCancelled)
+				if err := _Governance.contract.UnpackLog(event, "AbrogationProposalVoteCancelled", log); err != nil {
 					return err
 				}
 				event.Raw = log
@@ -1805,12 +1810,12 @@ func (_Governance *GovernanceFilterer) WatchCancellationProposalVoteCancelled(op
 	}), nil
 }
 
-// ParseCancellationProposalVoteCancelled is a log parse operation binding the contract event 0x5e8aa098e39964b153d61768be281eb6183261d780f23758fca70e9711cb7610.
+// ParseAbrogationProposalVoteCancelled is a log parse operation binding the contract event 0x5e8ee24f838173ed2ae7989835696f6e11945ac8fbc5259aef01cc4d7f0d4920.
 //
-// Solidity: event CancellationProposalVoteCancelled(uint256 indexed proposalId, address indexed user)
-func (_Governance *GovernanceFilterer) ParseCancellationProposalVoteCancelled(log types.Log) (*GovernanceCancellationProposalVoteCancelled, error) {
-	event := new(GovernanceCancellationProposalVoteCancelled)
-	if err := _Governance.contract.UnpackLog(event, "CancellationProposalVoteCancelled", log); err != nil {
+// Solidity: event AbrogationProposalVoteCancelled(uint256 indexed proposalId, address indexed user)
+func (_Governance *GovernanceFilterer) ParseAbrogationProposalVoteCancelled(log types.Log) (*GovernanceAbrogationProposalVoteCancelled, error) {
+	event := new(GovernanceAbrogationProposalVoteCancelled)
+	if err := _Governance.contract.UnpackLog(event, "AbrogationProposalVoteCancelled", log); err != nil {
 		return nil, err
 	}
 	return event, nil
