@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
 	"github.com/barnbridge/barnbridge-backend/api/types"
@@ -148,11 +149,17 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	`
 
 	var parameters = []interface{}{offset, limit}
-
 	var stateFilter string
 	if proposalState != "ALL" {
-		parameters = append(parameters, proposalState)
-		stateFilter = fmt.Sprintf("and ( select proposal_state(proposal_id) ) = $%d", len(parameters))
+		if proposalState == "ACTIVE" {
+			parameters = append(parameters, pq.Array([]string{"WARMUP", "ACTIVE", "ACCEPTED", "QUEUED", "GRACE"}))
+		} else if proposalState == "FAILED" {
+			parameters = append(parameters, pq.Array([]string{"CANCELED", "FAILED"}))
+		} else {
+			parameters = append(parameters, pq.Array([]string{proposalState}))
+		}
+
+		stateFilter = fmt.Sprintf("and (select proposal_state(proposal_id) ) = ANY($%d)", len(parameters))
 	}
 
 	var titleFilter string
