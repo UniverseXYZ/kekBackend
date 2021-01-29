@@ -68,6 +68,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	history = append(history, types.HistoryEvent{
 		Name:    string(types.CREATED),
 		StartTs: p.CreateTime,
+		TxHash:  events[0].TxHash,
 	})
 
 	sort.Slice(events, func(i, j int) bool {
@@ -89,6 +90,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.CANCELED),
 			StartTs: events[0].CreateTime,
+			TxHash:  events[0].TxHash,
 		})
 
 		return history, nil
@@ -111,6 +113,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.CANCELED),
 			StartTs: events[0].CreateTime,
+			TxHash:  events[0].TxHash,
 		})
 
 		return history, nil
@@ -147,20 +150,11 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		return history, nil
 	}
 
-	// while in the ACCEPTED state, the proposal can still be canceled by creator
-	if events[0].EventType == string(types.CANCELED) {
-		history = append(history, types.HistoryEvent{
-			Name:    string(types.CANCELED),
-			StartTs: events[0].CreateTime,
-		})
-
-		return history, nil
-	}
-
 	if events[0].EventType == string(types.QUEUED) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.QUEUED),
 			StartTs: p.CreateTime + p.WarmUpDuration + p.ActiveDuration + 1,
+			TxHash:  events[0].TxHash,
 		})
 	} else {
 		// the next event must be QUEUED, but just in case ...
@@ -170,15 +164,6 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	events = events[1:]
 
 	nextDeadline = p.CreateTime + p.WarmUpDuration + p.ActiveDuration + p.QueueDuration
-	if len(events) > 0 && events[0].CreateTime < nextDeadline && events[0].EventType == string(types.CANCELED) {
-		history = append(history, types.HistoryEvent{
-			Name:    string(types.CANCELED),
-			StartTs: events[0].CreateTime,
-		})
-
-		return history, nil
-	}
-
 	if nextDeadline >= time.Now().Unix() {
 		return history, nil
 	}
@@ -217,19 +202,11 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	})
 
 	nextDeadline = nextDeadline + p.GracePeriodDuration
-	if len(events) > 0 && events[0].CreateTime <= nextDeadline && events[0].EventType == string(types.CANCELED) {
-		history = append(history, types.HistoryEvent{
-			Name:    string(types.CANCELED),
-			StartTs: events[0].CreateTime,
-		})
-
-		return history, nil
-	}
-
 	if len(events) > 0 && events[0].CreateTime <= nextDeadline && events[0].EventType == string(types.EXECUTED) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.EXECUTED),
 			StartTs: events[0].CreateTime,
+			TxHash:  events[0].TxHash,
 		})
 
 		return history, nil

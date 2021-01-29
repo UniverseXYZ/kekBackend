@@ -30,7 +30,8 @@ func (a *API) getProposalEvents(id uint64) ([]types.Event, error) {
 		       caller,
 		       event_type,
 		       event_data,
-		       block_timestamp 
+		       block_timestamp,
+		       tx_hash
 		from governance_events 
 		where proposal_id = $1`, id)
 	if err != nil && err != sql.ErrNoRows {
@@ -41,7 +42,7 @@ func (a *API) getProposalEvents(id uint64) ([]types.Event, error) {
 
 	for rows.Next() {
 		var event types.Event
-		err := rows.Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime)
+		err := rows.Scan(&event.ProposalID, &event.Caller, &event.EventType, &event.Eta, &event.CreateTime, &event.TxHash)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not scan proposal event")
 		}
