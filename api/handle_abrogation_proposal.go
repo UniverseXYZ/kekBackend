@@ -11,17 +11,21 @@ import (
 func (a *API) AbrogationProposalDetailsHandler(c *gin.Context) {
 	proposalID := c.Param("proposalID")
 	var (
-		id          uint64
-		creator     string
-		createTime  uint64
-		description string
+		id           uint64
+		creator      string
+		createTime   uint64
+		description  string
+		forVotes     string
+		againstVotes string
 	)
 
 	err := a.db.QueryRow(`
-		select proposal_id, creator, create_time, description 
+		select proposal_id, creator, create_time, description ,
+		       coalesce(( select sum(power) from abrogation_proposal_votes(proposal_id) where support = true ), 0) as for_votes,
+			   coalesce(( select sum(power) from abrogation_proposal_votes(proposal_id) where support = false ), 0) as against_votes
 		from governance_abrogation_proposals 
 		where proposal_id = $1
-	`, proposalID).Scan(&id, &creator, &createTime, &description)
+	`, proposalID).Scan(&id, &creator, &createTime, &description, &forVotes, &againstVotes)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -34,10 +38,12 @@ func (a *API) AbrogationProposalDetailsHandler(c *gin.Context) {
 	}
 
 	abrogationProposal := types.AbrogationProposal{
-		ProposalID:  id,
-		Creator:     creator,
-		CreateTime:  createTime,
-		Description: description,
+		ProposalID:   id,
+		Creator:      creator,
+		CreateTime:   createTime,
+		Description:  description,
+		ForVotes:     forVotes,
+		AgainstVotes: againstVotes,
 	}
 
 	OK(c, abrogationProposal)
