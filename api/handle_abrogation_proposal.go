@@ -46,7 +46,15 @@ func (a *API) AbrogationProposalDetailsHandler(c *gin.Context) {
 		AgainstVotes: againstVotes,
 	}
 
-	OK(c, abrogationProposal)
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, abrogationProposal, map[string]interface{}{
+		"block": block,
+	})
 }
 
 func (a *API) AllAbrogationProposals(c *gin.Context) {
@@ -108,5 +116,11 @@ func (a *API) AllAbrogationProposals(c *gin.Context) {
 		Error(c, err)
 	}
 
-	OK(c, abrogationProposalList, map[string]interface{}{"count": count})
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, abrogationProposalList, map[string]interface{}{"count": count, "block": block})
 }

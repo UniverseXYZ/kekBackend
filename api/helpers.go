@@ -52,3 +52,16 @@ func (a *API) getProposalEvents(id uint64) ([]types.Event, error) {
 
 	return eventsList, nil
 }
+
+func (a *API) getHighestBlock() (*int64, error) {
+	var number int64
+
+	err := a.db.QueryRow(`select number from blocks order by number desc limit 1;`).Scan(&number)
+	if err == sql.ErrNoRows {
+		return nil, nil
+	} else if err != nil {
+		return nil, errors.Wrap(err, "could not get highest block")
+	}
+
+	return &number, nil
+}

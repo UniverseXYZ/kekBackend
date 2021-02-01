@@ -76,6 +76,12 @@ func (a *API) AbrogationVotesHandler(c *gin.Context) {
 		err = a.db.QueryRow(`select count(*) from abrogation_proposal_votes($1) where support = $2`, proposalID, supportFilter).Scan(&count)
 	}
 
-	OK(c, abrogationVotesList, map[string]interface{}{"count": count})
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, abrogationVotesList, map[string]interface{}{"count": count, "block": block})
 
 }
