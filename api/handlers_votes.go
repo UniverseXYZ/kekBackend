@@ -71,10 +71,6 @@ func (a *API) VotesHandler(c *gin.Context) {
 		}
 		votesList = append(votesList, vote)
 	}
-	if len(votesList) == 0 {
-		NotFound(c)
-		return
-	}
 
 	var count int
 	if supportFilter == "" {

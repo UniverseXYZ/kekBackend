@@ -224,11 +224,6 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		proposalList = append(proposalList, proposal)
 	}
 
-	if len(proposalList) == 0 {
-		NotFound(c)
-		return
-	}
-
 	var count int
 	var parameters2 []interface{}
 

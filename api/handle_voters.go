@@ -45,11 +45,6 @@ func (a *API) handleVoters(c *gin.Context) {
 		votersList = append(votersList, voter)
 	}
 
-	if len(votersList) == 0 {
-		NotFound(c)
-		return
-	}
-
 	var count int
 	err = a.db.QueryRow(`select count(*) from voters`).Scan(&count)
 

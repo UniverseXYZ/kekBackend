@@ -64,11 +64,6 @@ func (a *API) AbrogationVotesHandler(c *gin.Context) {
 		abrogationVotesList = append(abrogationVotesList, abrogationVote)
 	}
 
-	if len(abrogationVotesList) == 0 {
-		NotFound(c)
-		return
-	}
-
 	var count int
 	if supportFilter == "" {
 		err = a.db.QueryRow(`select count(*) from abrogation_proposal_votes($1)`, proposalID).Scan(&count)
@@ -83,5 +78,4 @@ func (a *API) AbrogationVotesHandler(c *gin.Context) {
 	}
 
 	OK(c, abrogationVotesList, map[string]interface{}{"count": count, "block": block})
-
 }

@@ -105,11 +105,6 @@ func (a *API) AllAbrogationProposals(c *gin.Context) {
 		abrogationProposalList = append(abrogationProposalList, abrogationProposal)
 	}
 
-	if len(abrogationProposalList) == 0 {
-		NotFound(c)
-		return
-	}
-
 	var count int
 	err = a.db.QueryRow(`select count(*) from governance_abrogation_proposals`).Scan(&count)
 	if err != nil {
