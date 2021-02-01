@@ -11,11 +11,11 @@ import (
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *sql.Tx) error {
-	var cancellationProposalVotes []Vote
-	var cancellationProposalCancelledVotes []VoteCanceled
+func (g *GovStorable) handleAbrogationProposalVotes(logs []web3types.Log, tx *sql.Tx) error {
+	var abrogationProposalVotes []Vote
+	var abrogationProposalCancelledVotes []VoteCanceled
 	for _, log := range logs {
-		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalVote") {
+		if utils.LogIsEvent(log, g.govAbi, "AbrogationProposalVote") {
 			var vote Vote
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
@@ -29,7 +29,7 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 				return errors.Wrap(err, "could not decode log data")
 			}
 
-			err = g.govAbi.UnpackIntoInterface(&vote, "CancellationProposalVote", data)
+			err = g.govAbi.UnpackIntoInterface(&vote, "AbrogationProposalVote", data)
 			if err != nil {
 				return errors.Wrap(err, "could not unpack log data")
 			}
@@ -43,10 +43,10 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 			vote.User = user
 			vote.BaseLog = *baseLog
 			vote.Timestamp = g.Preprocessed.BlockTimestamp
-			cancellationProposalVotes = append(cancellationProposalVotes, vote)
+			abrogationProposalVotes = append(abrogationProposalVotes, vote)
 		}
 
-		if utils.LogIsEvent(log, g.govAbi, "CancellationProposalVoteCancelled") {
+		if utils.LogIsEvent(log, g.govAbi, "AbrogationProposalVoteCancelled") {
 			var vote VoteCanceled
 			proposalID, err := utils.HexStrToBigInt(log.Topics[1])
 			if err != nil {
@@ -64,17 +64,17 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 			vote.BaseLog = *baseLog
 			vote.Timestamp = g.Preprocessed.BlockTimestamp
 
-			cancellationProposalCancelledVotes = append(cancellationProposalCancelledVotes, vote)
+			abrogationProposalCancelledVotes = append(abrogationProposalCancelledVotes, vote)
 		}
 
 	}
 
-	err := g.insertCancellationProposalVotesToDB(cancellationProposalVotes, tx)
+	err := g.insertAbrogationProposalVotesToDB(abrogationProposalVotes, tx)
 	if err != nil {
 		return err
 	}
 
-	err = g.insertCancellationProposalVotesCanceledToDB(cancellationProposalCancelledVotes, tx)
+	err = g.insertAbrogationProposalVotesCanceledToDB(abrogationProposalCancelledVotes, tx)
 	if err != nil {
 		return err
 	}
@@ -82,13 +82,13 @@ func (g *GovStorable) handleCancellationProposalVotes(logs []web3types.Log, tx *
 	return nil
 }
 
-func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.Tx) error {
+func (g *GovStorable) insertAbrogationProposalVotesToDB(votes []Vote, tx *sql.Tx) error {
 	if len(votes) == 0 {
-		log.WithField("handler", "cancellation proposal vote").Debug("no events found")
+		log.WithField("handler", "abrogation proposal vote").Debug("no events found")
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_abrogation_votes", "proposal_id", "user_id", "support", "power", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
@@ -113,13 +113,13 @@ func (g *GovStorable) insertCancellationProposalVotesToDB(votes []Vote, tx *sql.
 	return nil
 }
 
-func (g GovStorable) insertCancellationProposalVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
+func (g GovStorable) insertAbrogationProposalVotesCanceledToDB(votes []VoteCanceled, tx *sql.Tx) error {
 	if len(votes) == 0 {
-		log.WithField("handler", "cancellation proposal cancel vote").Debug("no events found")
+		log.WithField("handler", "abrogation proposal cancel vote").Debug("no events found")
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("governance_cancellation_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("governance_abrogation_votes_canceled", "proposal_id", "user_id", "block_timestamp", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}

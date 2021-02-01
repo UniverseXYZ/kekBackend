@@ -68,6 +68,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	history = append(history, types.HistoryEvent{
 		Name:    string(types.CREATED),
 		StartTs: p.CreateTime,
+		TxHash:  events[0].TxHash,
 	})
 
 	sort.Slice(events, func(i, j int) bool {
@@ -89,6 +90,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.CANCELED),
 			StartTs: events[0].CreateTime,
+			TxHash:  events[0].TxHash,
 		})
 
 		return history, nil
@@ -111,6 +113,7 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.CANCELED),
 			StartTs: events[0].CreateTime,
+			TxHash:  events[0].TxHash,
 		})
 
 		return history, nil
@@ -147,20 +150,11 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		return history, nil
 	}
 
-	// while in the ACCEPTED state, the proposal can still be canceled by creator
-	if events[0].EventType == string(types.CANCELED) {
-		history = append(history, types.HistoryEvent{
-			Name:    string(types.CANCELED),
-			StartTs: events[0].CreateTime,
-		})
-
-		return history, nil
-	}
-
 	if events[0].EventType == string(types.QUEUED) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.QUEUED),
 			StartTs: p.CreateTime + p.WarmUpDuration + p.ActiveDuration + 1,
+			TxHash:  events[0].TxHash,
 		})
 	} else {
 		// the next event must be QUEUED, but just in case ...
@@ -170,39 +164,30 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	events = events[1:]
 
 	nextDeadline = p.CreateTime + p.WarmUpDuration + p.ActiveDuration + p.QueueDuration
-	if len(events) > 0 && events[0].CreateTime < nextDeadline && events[0].EventType == string(types.CANCELED) {
-		history = append(history, types.HistoryEvent{
-			Name:    string(types.CANCELED),
-			StartTs: events[0].CreateTime,
-		})
-
-		return history, nil
-	}
-
 	if nextDeadline >= time.Now().Unix() {
 		return history, nil
 	}
 
-	// at this point the queue period passed and we must check if there was a cancellation proposal that succeeded
-	hasCP, err := a.cancellationProposalExists(p)
+	// at this point the queue period passed and we must check if there was a abrogation proposal that succeeded
+	hasCP, err := a.abrogationProposalExists(p)
 	if err != nil {
 		return nil, err
 	}
 
 	if hasCP {
-		forVotes, bondStaked, err := a.cancellationProposalData(p)
+		forVotes, bondStaked, err := a.abrogationProposalData(p)
 		if err != nil {
 			return nil, err
 		}
 
-		passed, err := cancellationProposalPassed(forVotes, bondStaked)
+		passed, err := abrogationProposalPassed(forVotes, bondStaked)
 		if err != nil {
-			return nil, errors.Wrap(err, "could not check if cancellation proposal passed")
+			return nil, errors.Wrap(err, "could not check if abrogation proposal passed")
 		}
 
 		if passed {
 			history = append(history, types.HistoryEvent{
-				Name:    string(types.CANCELED),
+				Name:    string(types.ABROGATED),
 				StartTs: nextDeadline,
 			})
 
@@ -210,26 +195,18 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 		}
 	}
 
-	// no cancellation proposal or did not pass
+	// no abrogation proposal or did not pass
 	history = append(history, types.HistoryEvent{
 		Name:    string(types.GRACE),
 		StartTs: nextDeadline,
 	})
 
 	nextDeadline = nextDeadline + p.GracePeriodDuration
-	if len(events) > 0 && events[0].CreateTime <= nextDeadline && events[0].EventType == string(types.CANCELED) {
-		history = append(history, types.HistoryEvent{
-			Name:    string(types.CANCELED),
-			StartTs: events[0].CreateTime,
-		})
-
-		return history, nil
-	}
-
 	if len(events) > 0 && events[0].CreateTime <= nextDeadline && events[0].EventType == string(types.EXECUTED) {
 		history = append(history, types.HistoryEvent{
 			Name:    string(types.EXECUTED),
 			StartTs: events[0].CreateTime,
+			TxHash:  events[0].TxHash,
 		})
 
 		return history, nil
@@ -247,32 +224,32 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	return history, nil
 }
 
-func (a *API) cancellationProposalData(p types.Proposal) (string, string, error) {
+func (a *API) abrogationProposalData(p types.Proposal) (string, string, error) {
 	var forVotes, bondStaked string
 	err := a.db.QueryRow(`
 		select 
-		       coalesce(( select power from cancellation_proposal_votes($1) where support = true ), 0) as for_votes, 
-		       bond_staked_at_ts(to_timestamp((select create_time from governance_cancellation_proposals where proposal_id = $1))) as bond_staked
+		       coalesce(( select power from abrogation_proposal_votes($1) where support = true ), 0) as for_votes, 
+		       bond_staked_at_ts(to_timestamp((select create_time from governance_abrogation_proposals where proposal_id = $1))) as bond_staked
 	`, p.Id).Scan(&forVotes, &bondStaked)
 
 	if err != nil {
-		return "", "", errors.Wrap(err, "could not scan number of votes on cancellation proposal")
+		return "", "", errors.Wrap(err, "could not scan number of votes on abrogation proposal")
 	}
 
 	return forVotes, bondStaked, nil
 }
 
-func (a *API) cancellationProposalExists(p types.Proposal) (bool, error) {
+func (a *API) abrogationProposalExists(p types.Proposal) (bool, error) {
 	var count int64
-	err := a.db.QueryRow(`select count(*) from governance_cancellation_proposals where proposal_id = $1`, p.Id).Scan(&count)
+	err := a.db.QueryRow(`select count(*) from governance_abrogation_proposals where proposal_id = $1`, p.Id).Scan(&count)
 	if err != nil {
-		return false, errors.Wrap(err, "could not check for cancellation proposal")
+		return false, errors.Wrap(err, "could not check for abrogation proposal")
 	}
 
 	return count > 0, nil
 }
 
-func cancellationProposalPassed(forVotes string, bondStaked string) (bool, error) {
+func abrogationProposalPassed(forVotes string, bondStaked string) (bool, error) {
 	pro, err := decimal.NewFromString(forVotes)
 	if err != nil {
 		return false, errors.Wrap(err, "could not convert forVotes to decimal")

@@ -48,7 +48,7 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 			forVotes                   numeric(78);
 			againstVotes               numeric(78);
 			eta                        bigint;
-			cancellationProposalQuorum numeric(78);
+			abrogationProposalQuorum numeric(78);
 		begin
 			if ( select count(*) from governance_events where proposal_id = id and event_type = 'CANCELED' ) > 0 then
 				return 'CANCELED';
@@ -83,7 +83,7 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 			if (forVotes + againstVotes < minQuorum / 100 * bondStaked) then return 'FAILED'; end if;
 		
 			-- check if votes met the acceptance threshold
-			if (forVotes <= ((forVotes + againstVotes) * acceptanceThreshold / 100)) then return 'FAILED'; end if;
+			if (forVotes < ((forVotes + againstVotes) * acceptanceThreshold / 100)) then return 'FAILED'; end if;
 		
 			if ( select count(*) from governance_events where proposal_id = id and event_type = 'QUEUED' ) = 0 then
 				return 'ACCEPTED';
@@ -93,14 +93,14 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 		
 			if ( select extract(epoch from now()) ) < eta then return 'QUEUED'; end if;
 		
-			-- check if there's a cancellation proposal that passed
-			if ( select count(*) from governance_cancellation_proposals where proposal_id = id ) > 0 then
-				select into cancellationProposalQuorum bond_staked_at_ts(to_timestamp(( select create_time - 1
-																		   from governance_cancellation_proposals
+			-- check if there's a abrogation proposal that passed
+			if ( select count(*) from governance_abrogation_proposals where proposal_id = id ) > 0 then
+				select into abrogationProposalQuorum bond_staked_at_ts(to_timestamp(( select create_time - 1
+																		   from governance_abrogation_proposals
 																		   where proposal_id = id ))) / 2;
 		
-				if coalesce(( select power from cancellation_proposal_votes(id) ), 0) >= cancellationProposalQuorum then
-					return 'CANCELED';
+				if coalesce(( select power from abrogation_proposal_votes(id) ), 0) >= abrogationProposalQuorum then
+					return 'ABROGATED';
 				end if;
 			end if;
 		

@@ -68,10 +68,11 @@ type VoteCanceled struct {
 	Timestamp  int64
 }
 
-type CancellationProposal struct {
+type AbrogationProposal struct {
 	BaseLog
 
-	ProposalID *big.Int
-	CreateTime int64
-	Caller     common.Address
+	ProposalID  *big.Int
+	CreateTime  int64
+	Caller      common.Address
+	Description string
 }

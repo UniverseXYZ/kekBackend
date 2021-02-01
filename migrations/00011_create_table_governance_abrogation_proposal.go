@@ -7,17 +7,18 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableGovernanceCancellationProposals, downCreateTableGovernanceCancellationProposals)
+	goose.AddMigration(upCreateTableGovernanceAbrogationProposals, downCreateTableGovernanceAbrogationProposals)
 }
 
-func upCreateTableGovernanceCancellationProposals(tx *sql.Tx) error {
+func upCreateTableGovernanceAbrogationProposals(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 
-	create table governance_cancellation_proposals
+	create table governance_abrogation_proposals
 	(
 		proposal_id					bigint not null ,
 		creator						text not null,
 		create_time					bigint not null,
+		description					text not null,
 		
 		tx_hash                    text    not null,
 		tx_index                   integer not null,
@@ -32,7 +33,7 @@ func upCreateTableGovernanceCancellationProposals(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableGovernanceCancellationProposals(tx *sql.Tx) error {
-	_, err := tx.Exec("drop table governance_cancellation_proposals")
+func downCreateTableGovernanceAbrogationProposals(tx *sql.Tx) error {
+	_, err := tx.Exec("drop table if exists governance_abrogation_proposals")
 	return err
 }

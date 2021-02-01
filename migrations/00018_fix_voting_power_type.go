@@ -13,7 +13,7 @@ func init() {
 func upFixVotingPowerType(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	alter table governance_votes alter column power type numeric(78);
-	alter table governance_cancellation_votes alter column power type numeric(78);
+	alter table governance_abrogation_votes alter column power type numeric(78);
 	`)
 
 	return err
@@ -22,7 +22,7 @@ func upFixVotingPowerType(tx *sql.Tx) error {
 func downFixVotingPowerType(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	alter table governance_votes alter column power type bigint;
-	alter table governance_cancellation_votes alter column power type bigint;
+	alter table governance_abrogation_votes alter column power type bigint;
 	`)
 
 	return err
