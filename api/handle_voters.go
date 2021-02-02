@@ -45,13 +45,14 @@ func (a *API) handleVoters(c *gin.Context) {
 		votersList = append(votersList, voter)
 	}
 
-	if len(votersList) == 0 {
-		NotFound(c)
-		return
-	}
-
 	var count int
 	err = a.db.QueryRow(`select count(*) from voters`).Scan(&count)
 
-	OK(c, votersList, map[string]interface{}{"count": count})
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, votersList, map[string]interface{}{"count": count, "block": block})
 }

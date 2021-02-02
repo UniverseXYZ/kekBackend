@@ -107,7 +107,15 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 
 	proposal.History = history
 
-	OK(c, proposal)
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, proposal, map[string]interface{}{
+		"block": block,
+	})
 }
 
 func (a *API) AllProposalHandler(c *gin.Context) {
@@ -216,11 +224,6 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		proposalList = append(proposalList, proposal)
 	}
 
-	if len(proposalList) == 0 {
-		NotFound(c)
-		return
-	}
-
 	var count int
 	var parameters2 []interface{}
 
@@ -244,7 +247,13 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		return
 	}
 
-	OK(c, proposalList, map[string]interface{}{"count": count})
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, proposalList, map[string]interface{}{"count": count, "block": block})
 }
 
 func checkStateExist(state string) bool {

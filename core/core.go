@@ -188,6 +188,8 @@ func (c *Core) Run() {
 			start := time.Now()
 			blk, err := c.scraper.Exec(b)
 			if err != nil {
+				log.Error(err)
+
 				c.stopMu.Unlock()
 				err1 := c.taskmanager.Todo(b)
 				if err1 != nil {

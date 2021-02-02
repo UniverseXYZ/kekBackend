@@ -64,5 +64,13 @@ func (a *API) BondOverview(c *gin.Context) {
 		return
 	}
 
-	OK(c, overview)
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, overview, map[string]interface{}{
+		"block": block,
+	})
 }

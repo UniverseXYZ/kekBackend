@@ -31,9 +31,13 @@ func (a *API) handleProposalEvents(c *gin.Context) {
 		eventsList = append(eventsList, event)
 	}
 
-	if len(eventsList) == 0 {
-		NotFound(c)
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
 		return
 	}
-	OK(c, eventsList)
+
+	OK(c, eventsList, map[string]interface{}{
+		"block": block,
+	})
 }
