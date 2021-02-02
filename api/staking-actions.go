@@ -3,9 +3,9 @@ package api
 import (
 	"database/sql"
 	"fmt"
+	"strconv"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
@@ -14,8 +14,23 @@ import (
 
 func (a *API) handleStakingActions(c *gin.Context) {
 	actionType := strings.ToUpper(c.DefaultQuery("type", "all"))
+	user := strings.ToLower(c.DefaultQuery("user", ""))
+	token := strings.ToLower(c.DefaultQuery("token", ""))
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
+	tsString := c.DefaultQuery("timestamp", "0")
+	direction := strings.ToLower(c.DefaultQuery("direction", "desc"))
+
+	var timestamp int64
+
+	if tsString != "0" {
+		var err error
+		timestamp, err = strconv.ParseInt(tsString, 10, 64)
+		if err != nil {
+			BadRequest(c, errors.New("unknown timestamp"))
+			return
+		}
+	}
 
 	if actionType != "ALL" && (actionType != "DEPOSIT" && actionType != "WITHDRAW") {
 		BadRequest(c, errors.New("unknown state"))
@@ -40,8 +55,8 @@ func (a *API) handleStakingActions(c *gin.Context) {
 				included_in_block
 	from yield_farming_actions
 	where 1=1 
-	%s %s %s 
-	order by block_timestamp desc
+	%s %s %s %s
+	order by block_timestamp %s
 	offset $1
 	limit $2`
 
@@ -53,8 +68,29 @@ func (a *API) handleStakingActions(c *gin.Context) {
 		actionFilter = fmt.Sprintf("and action_type = $%d", len(parameters))
 	}
 
-	query = fmt.Sprintf(query, actionFilter)
-	spew.Dump(query)
+	var userFilter string
+	if user != "" {
+		parameters = append(parameters, user)
+		userFilter = fmt.Sprintf("and user_address = $%d", len(parameters))
+	}
+
+	var tokenFilter string
+	if token != "" {
+		parameters = append(parameters, token)
+		tokenFilter = fmt.Sprintf("and token_address = $%d", len(parameters))
+	}
+
+	var timestampFilter string
+
+	if timestamp != 0 {
+		if direction == "desc" {
+			timestampFilter = fmt.Sprintf("and block_timestamp < %d", timestamp)
+		} else {
+			timestampFilter = fmt.Sprintf("and block_timestamp > %d", timestamp)
+		}
+	}
+
+	query = fmt.Sprintf(query, actionFilter, userFilter, tokenFilter, timestampFilter, direction)
 	rows, err := a.db.Query(query, parameters...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
