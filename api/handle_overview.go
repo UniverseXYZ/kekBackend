@@ -7,12 +7,13 @@ import (
 )
 
 type Overview struct {
-	AvgLockTimeSeconds  int64  `json:"avgLockTimeSeconds"`
-	Holders             int64  `json:"holders"`
-	TotalDelegatedPower string `json:"totalDelegatedPower"`
-	TotalVBond          string `json:"totalVbond"`
-	Voters              int64  `json:"voters"`
-	BarnUsers           int64  `json:"barnUsers"`
+	AvgLockTimeSeconds     int64  `json:"avgLockTimeSeconds"`
+	Holders                int64  `json:"holders"`
+	TotalDelegatedPower    string `json:"totalDelegatedPower"`
+	TotalVBond             string `json:"totalVbond"`
+	Voters                 int64  `json:"voters"`
+	BarnUsers              int64  `json:"barnUsers"`
+	HoldersStakingExcluded int64  `json:"holdersStakingExcluded"`
 }
 
 func (a *API) BondOverview(c *gin.Context) {
@@ -31,6 +32,12 @@ func (a *API) BondOverview(c *gin.Context) {
 	}
 
 	err = a.db.QueryRow(`select count(*) from bond_users_with_balance where balance > 0;`).Scan(&overview.Holders)
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+
+	err = a.db.QueryRow(`select count(*) from bond_users_with_balance_no_staking where balance > 0;`).Scan(&overview.HoldersStakingExcluded)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
