@@ -31,4 +31,7 @@ func (a *API) setRoutes() {
 	governance.GET("/abrogation-proposals", a.AllAbrogationProposals)
 	governance.GET("/abrogation-proposals/:proposalID", a.AbrogationProposalDetailsHandler)
 	governance.GET("/abrogation-proposals/:proposalID/votes", a.AbrogationVotesHandler)
+
+	yieldfarming := a.engine.Group("/api/yieldfarming")
+	yieldfarming.GET("/staking-actions/list", a.handleStakingActions)
 }
