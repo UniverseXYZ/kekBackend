@@ -16,8 +16,8 @@ type StakingAction struct {
 	BlockNumber      int64  `json:"blockNumber"`
 }
 type Pool struct {
-	tokens                []string
-	epochDelayFromStaking int64
+	Tokens                []string
+	EpochDelayFromStaking int64
 }
 
 type Chart map[string]Aggregate
