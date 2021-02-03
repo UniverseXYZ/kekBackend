@@ -15,7 +15,7 @@ import (
 )
 
 func (a *API) handleStakingActionsList(c *gin.Context) {
-	actionType := strings.ToUpper(c.DefaultQuery("type", "all"))
+	actionType := strings.ToUpper(c.DefaultQuery("action", "all"))
 	user := strings.ToLower(c.DefaultQuery("user", ""))
 	token := strings.ToLower(c.DefaultQuery("token", ""))
 	limit := c.DefaultQuery("limit", "10")
@@ -110,7 +110,7 @@ func (a *API) handleStakinsActionsChart(c *gin.Context) {
 	pool := strings.ToLower(c.DefaultQuery("pool", "stable"))
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
-	actionType := strings.ToUpper(c.DefaultQuery("type", "ALL"))
+	actionType := strings.ToUpper(c.DefaultQuery("action", "ALL"))
 
 	if actionType != "ALL" && (actionType != "DEPOSIT" && actionType != "WITHDRAW") {
 		BadRequest(c, errors.New("unknown state"))
@@ -290,7 +290,7 @@ func calcSum(actions []types.StakingAction) types.Aggregate {
 
 func scaleDecimals(value int64, token string) decimal.Decimal {
 	dec := types.Decimals[strings.ToLower(token)]
-	valueDec := decimal.New(value, 64)
+	valueDec := decimal.New(value, 32)
 
 	return valueDec.DivRound(decimal.New(1, dec), dec)
 }
