@@ -228,7 +228,7 @@ func (a *API) abrogationProposalData(p types.Proposal) (string, string, error) {
 	var forVotes, bondStaked string
 	err := a.db.QueryRow(`
 		select 
-		       coalesce(( select power from abrogation_proposal_votes($1) where support = true ), 0) as for_votes, 
+		       coalesce(( select sum(power) from abrogation_proposal_votes($1) where support = true ), 0) as for_votes, 
 		       bond_staked_at_ts(to_timestamp((select create_time from governance_abrogation_proposals where proposal_id = $1))) as bond_staked
 	`, p.Id).Scan(&forVotes, &bondStaked)
 
