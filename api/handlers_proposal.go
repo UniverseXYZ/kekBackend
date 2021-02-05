@@ -162,7 +162,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 		if proposalState == "ACTIVE" {
 			parameters = append(parameters, pq.Array([]string{"WARMUP", "ACTIVE", "ACCEPTED", "QUEUED", "GRACE"}))
 		} else if proposalState == "FAILED" {
-			parameters = append(parameters, pq.Array([]string{"CANCELED", "FAILED", "ABROGATED"}))
+			parameters = append(parameters, pq.Array([]string{"CANCELED", "FAILED", "ABROGATED", "EXPIRED"}))
 		} else {
 			parameters = append(parameters, pq.Array([]string{proposalState}))
 		}
