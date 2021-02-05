@@ -10,6 +10,7 @@ import (
 
 	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 	"github.com/barnbridge/barnbridge-backend/taskmanager"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type Checker struct {
@@ -64,6 +65,7 @@ func (c *Checker) lifecycle() error {
 	var highestBlock int64
 	err = c.db.QueryRow(`select max(number) from blocks;`).Scan(&highestBlock)
 	if err != nil {
+		_ = utils.SendSlackNotification(":bangbang: could not fetch highest block from database" + err.Error())
 		return errors.Wrap(err, "could not fetch highest block from database")
 	}
 
@@ -94,6 +96,7 @@ func (c *Checker) lifecycle() error {
 	if len(all) == 0 {
 		_, err = c.db.Exec("insert into integrity_checkpoints (number) values($1)", highestBlock)
 		if err != nil {
+			_ = utils.SendSlackNotification(":bangbang: could not store new integrity checkpoint " + err.Error())
 			return errors.Wrap(err, "could not store new integrity checkpoint")
 		}
 
@@ -119,12 +122,14 @@ func (c *Checker) lifecycle() error {
 	for _, block := range blocks {
 		err = c.tm.Todo(block)
 		if err != nil {
+			_ = utils.SendSlackNotification(":bangbang: could not queue block for rescrape " + err.Error())
 			return errors.Wrap(err, "could not queue block for rescrape")
 		}
 	}
 
 	_, err = c.db.Exec("insert into integrity_checkpoints (number) values($1)", blocks[0]-1)
 	if err != nil {
+		_ = utils.SendSlackNotification(":bangbang: could not store new integrity checkpoint " + err.Error())
 		return errors.Wrap(err, "could not store new integrity checkpoint")
 	}
 
@@ -142,12 +147,14 @@ func (c *Checker) getLastCheckpoint() (int64, error) {
 			return -1, nil
 		}
 		if err1 != nil {
+			_ = utils.SendSlackNotification(":bangbang: could not get min block number from db " + err.Error())
 			return 0, errors.Wrap(err, "could not get min block number from db")
 		}
 
 		return b, nil
 	}
 	if err != nil {
+		_ = utils.SendSlackNotification(":bangbang: could not get latest integrity checkpoint from db " + err.Error())
 		return 0, errors.Wrap(err, "could not get latest integrity checkpoint from db")
 	}
 
@@ -163,6 +170,7 @@ func (c *Checker) checkMissingBlocks(start, end int64) ([]int64, error) {
 		order by number;
 	`, start, end)
 	if err != nil {
+		_ = utils.SendSlackNotification(":bangbang: could not query database for missing blocks " + err.Error())
 		return nil, errors.Wrap(err, "could not query database for missing blocks")
 	}
 
@@ -172,6 +180,7 @@ func (c *Checker) checkMissingBlocks(start, end int64) ([]int64, error) {
 
 		err = rows.Scan(&b)
 		if err != nil {
+			_ = utils.SendSlackNotification(":bangbang: could not scan missing block from db " + err.Error())
 			return nil, errors.Wrap(err, "could not scan missing block from db")
 		}
 
@@ -197,6 +206,8 @@ func (c *Checker) checkBrokenHashChain(start, end int64) ([]int64, error) {
 		order by number;
 	`, start-100, end)
 	if err != nil {
+		_ = utils.SendSlackNotification(":bangbang: could not query database for broken hash chain " + err.Error())
+
 		return nil, errors.Wrap(err, "could not query database for broken hash chain")
 	}
 
@@ -206,6 +217,7 @@ func (c *Checker) checkBrokenHashChain(start, end int64) ([]int64, error) {
 
 		err = rows.Scan(&b)
 		if err != nil {
+			_ = utils.SendSlackNotification(":bangbang: could not scan inconsistent block from db " + err.Error())
 			return nil, errors.Wrap(err, "could not scan inconsistent block from db")
 		}
 
