@@ -229,8 +229,15 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 
 	var stateFilter2 string
 	if proposalState != "ALL" {
-		parameters2 = append(parameters2, proposalState)
-		stateFilter2 = fmt.Sprintf("and ( select proposal_state(proposal_id) ) = $%d", len(parameters2))
+		if proposalState == "ACTIVE" {
+			parameters2 = append(parameters2, pq.Array([]string{"WARMUP", "ACTIVE", "ACCEPTED", "QUEUED", "GRACE"}))
+		} else if proposalState == "FAILED" {
+			parameters2 = append(parameters2, pq.Array([]string{"CANCELED", "FAILED", "ABROGATED", "EXPIRED"}))
+		} else {
+			parameters2 = append(parameters2, pq.Array([]string{proposalState}))
+		}
+
+		stateFilter2 = fmt.Sprintf("and (select proposal_state(proposal_id) ) = ANY($%d)", len(parameters2))
 	}
 
 	var titleFilter2 string
