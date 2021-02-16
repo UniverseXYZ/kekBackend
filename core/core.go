@@ -20,8 +20,9 @@ import (
 	"github.com/barnbridge/barnbridge-backend/scraper"
 	"github.com/barnbridge/barnbridge-backend/taskmanager"
 
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 	"github.com/sirupsen/logrus"
+
+	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 )
 
 var log = logrus.WithField("module", "core")
