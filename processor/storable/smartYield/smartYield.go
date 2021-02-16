@@ -21,11 +21,12 @@ type Storable struct {
 	abis   map[string]abi.ABI
 
 	processed struct {
-		tokenActions   TokenTrades
-		seniorActions  SeniorTrades
-		juniorActions  JuniorTrades
-		blockNumber    int64
-		blockTimestamp int64
+		tokenActions    TokenTrades
+		seniorActions   SeniorTrades
+		juniorActions   JuniorTrades
+		jTokenTransfers []types.Transfer
+		blockNumber     int64
+		blockTimestamp  int64
 	}
 }
 
@@ -153,6 +154,16 @@ func (s Storable) decodeSmartYieldLog(logs []web3types.Log) error {
 
 			if a != nil {
 				s.processed.juniorActions.juniorBondRedeems = append(s.processed.juniorActions.juniorBondRedeems, *a)
+			}
+			continue
+		}
+		if utils.LogIsEvent(log, s.abis["smartyield"], TRANSFER_EVENT) {
+			a, err := s.decodeTransferEvent(log, TRANSFER_EVENT)
+			if err != nil {
+				return err
+			}
+			if a != nil {
+				s.processed.jTokenTransfers = append(s.processed.jTokenTransfers, *a)
 			}
 			continue
 		}

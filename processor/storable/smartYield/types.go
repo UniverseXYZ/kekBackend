@@ -2,71 +2,61 @@ package smartYield
 
 import (
 	"math/big"
+
+	"github.com/barnbridge/barnbridge-backend/types"
 )
 
 type TokenBuyTrade struct {
+	*types.Event
+
 	BuyerAddress string
 	UnderlyingIn *big.Int
 	TokensOut    *big.Int
 	Fee          *big.Int
-
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
 }
 
 type TokenSellTrade struct {
+	*types.Event
+
 	SellerAddress string
 	TokensIn      *big.Int
 	UnderlyingOut *big.Int
 	Forfeits      *big.Int
-
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
 }
 
 type SeniorBondBuyTrade struct {
+	*types.Event
+
 	BuyerAddress string
 	SeniorBondID *big.Int
 	UnderlyingIn *big.Int
 	Gain         *big.Int
 	ForDays      *big.Int
-
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
 }
 
 type SeniorBondRedeemTrade struct {
+	*types.Event
+
 	OwnerAddress string
 	SeniorBondID *big.Int
 	Fee          *big.Int
-
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
 }
 
 type JuniorBondBuyTrade struct {
+	*types.Event
+
 	BuyerAddress string
 	JuniorBondID *big.Int
 	TokensIn     *big.Int
 	MaturesAt    *big.Int
-
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
 }
 
 type JuniorBondRedeemTrade struct {
+	*types.Event
+
 	OwnerAddress  string
 	JuniorBondID  *big.Int
 	UnderlyingOut *big.Int
-
-	TransactionHash  string
-	TransactionIndex int64
-	LogIndex         int64
 }
 
 type TokenTrades struct {
@@ -82,4 +72,13 @@ type SeniorTrades struct {
 type JuniorTrades struct {
 	juniorBondRedeems []JuniorBondRedeemTrade
 	juniorBondBuys    []JuniorBondBuyTrade
+}
+
+type STransfer struct {
+	*types.Event
+
+	TokenAddress string
+	Sender       string
+	Receiver     string
+	TokenID      *big.Int
 }

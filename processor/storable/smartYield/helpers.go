@@ -8,6 +8,7 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
@@ -25,15 +26,9 @@ func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string) (*TokenB
 	}
 
 	t.BuyerAddress = utils.Topic2Address(log.Topics[1])
-	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
+	t.Event, err = new(types.Event).Build(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
-	}
-
-	t.TransactionHash = log.TransactionHash
-	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, err
 	}
 
 	return &t, nil
@@ -53,15 +48,9 @@ func (s *Storable) decodeTokenSellEvent(log web3types.Log, event string) (*Token
 	}
 
 	t.SellerAddress = utils.Topic2Address(log.Topics[1])
-	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
+	t.Event, err = new(types.Event).Build(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
-	}
-
-	t.TransactionHash = log.TransactionHash
-	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, err
 	}
 
 	return &t, nil
@@ -89,15 +78,9 @@ func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string) (*S
 	}
 
 	t.SeniorBondID = n
-	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
+	t.Event, err = new(types.Event).Build(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
-	}
-
-	t.TransactionHash = log.TransactionHash
-	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, err
 	}
 
 	return &t, nil
@@ -125,15 +108,9 @@ func (s *Storable) decodeSeniorBondRedeemEvent(log web3types.Log, event string) 
 	}
 
 	t.SeniorBondID = n
-	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
+	t.Event, err = new(types.Event).Build(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
-	}
-
-	t.TransactionHash = log.TransactionHash
-	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, err
 	}
 
 	return &t, nil
@@ -161,15 +138,9 @@ func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string) (*J
 	}
 
 	t.JuniorBondID = n
-	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
+	t.Event, err = new(types.Event).Build(log)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
-	}
-
-	t.TransactionHash = log.TransactionHash
-	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, err
 	}
 
 	return &t, nil
@@ -197,6 +168,28 @@ func (s *Storable) decodeJuniorBondRedeemEvent(log web3types.Log, event string) 
 	}
 
 	t.JuniorBondID = n
+	t.Event, err = new(types.Event).Build(log)
+	if err != nil {
+		return nil, err
+	}
+
+	return &t, nil
+}
+
+func (s *Storable) decodeTransferEvent(log web3types.Log, event string) (*types.Transfer, error) {
+	var t types.Transfer
+	data, err := hex.DecodeString(utils.Trim0x(log.Data))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not decode log data")
+	}
+
+	err = s.abis["smartyield"].UnpackIntoInterface(&t, event, data)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not unpack log data")
+	}
+
+	t.From = utils.Topic2Address(log.Topics[1])
+	t.To = utils.Topic2Address(log.Topics[2])
 	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
