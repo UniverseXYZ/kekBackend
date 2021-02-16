@@ -249,3 +249,32 @@ func (s *Storable) storeJTokenTransfers(tx *sql.Tx) error {
 
 	return nil
 }
+
+func (s *Storable) storeSmartBondTransfers(tx *sql.Tx) error {
+	if len(s.processed.smartBondTransfers) == 0 {
+		return nil
+	}
+	stmt, err := tx.Prepare(pq.CopyIn("smart_bond_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "included_in_block", "block_timestamp"))
+	if err != nil {
+		return err
+	}
+
+	for _, t := range s.processed.smartBondTransfers {
+		_, err = stmt.Exec(t.TransactionHash, t.TransactionIndex, t.LogIndex, t.TokenAddress, t.Sender, t.Receiver, t.TokenID.String(), s.processed.blockNumber, s.processed.blockTimestamp)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

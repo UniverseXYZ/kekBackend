@@ -1,5 +1,7 @@
 package smartYield
 
 type Config struct {
-	Address string
+	SmartYieldAddress string
+	JuniorBondAddress string
+	SeniorBondAddress string
 }

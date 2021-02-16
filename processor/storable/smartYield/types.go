@@ -74,7 +74,7 @@ type JuniorTrades struct {
 	juniorBondBuys    []JuniorBondBuyTrade
 }
 
-type STransfer struct {
+type SmartBondTransfer struct {
 	*types.Event
 
 	TokenAddress string

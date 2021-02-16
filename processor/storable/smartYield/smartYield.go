@@ -21,12 +21,13 @@ type Storable struct {
 	abis   map[string]abi.ABI
 
 	processed struct {
-		tokenActions    TokenTrades
-		seniorActions   SeniorTrades
-		juniorActions   JuniorTrades
-		jTokenTransfers []types.Transfer
-		blockNumber     int64
-		blockTimestamp  int64
+		tokenActions       TokenTrades
+		seniorActions      SeniorTrades
+		juniorActions      JuniorTrades
+		jTokenTransfers    []types.Transfer
+		smartBondTransfers []SmartBondTransfer
+		blockNumber        int64
+		blockTimestamp     int64
 	}
 }
 
@@ -39,19 +40,39 @@ func NewStorable(config Config, raw *types.RawData, abis map[string]abi.ABI) *St
 }
 
 func (s *Storable) ToDB(tx *sql.Tx) error {
-
 	var smartYieldLogs []web3types.Log
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
-			if utils.CleanUpHex(log.Address) != utils.CleanUpHex(s.config.Address) {
-				continue
+			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.SmartYieldAddress) {
+				smartYieldLogs = append(smartYieldLogs, log)
 			}
 
 			if len(log.Topics) == 0 {
 				continue
 			}
-			smartYieldLogs = append(smartYieldLogs, log)
+
+			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.JuniorBondAddress) && utils.LogIsEvent(log, s.abis["juniorbond"], TRANSFER_EVENT) {
+				a, err := s.decodeSmartBondTransferEvent(log)
+				if err != nil {
+					return err
+				}
+				if a != nil {
+					s.processed.smartBondTransfers = append(s.processed.smartBondTransfers, *a)
+				}
+				continue
+			}
+
+			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.SeniorBondAddress) && utils.LogIsEvent(log, s.abis["seniorbond"], TRANSFER_EVENT) {
+				a, err := s.decodeSmartBondTransferEvent(log)
+				if err != nil {
+					return err
+				}
+				if a != nil {
+					s.processed.smartBondTransfers = append(s.processed.smartBondTransfers, *a)
+				}
+				continue
+			}
 
 		}
 	}
@@ -158,7 +179,7 @@ func (s Storable) decodeSmartYieldLog(logs []web3types.Log) error {
 			continue
 		}
 		if utils.LogIsEvent(log, s.abis["smartyield"], TRANSFER_EVENT) {
-			a, err := s.decodeTransferEvent(log, TRANSFER_EVENT)
+			a, err := s.decodeSmartYieldTransferEvent(log, TRANSFER_EVENT)
 			if err != nil {
 				return err
 			}

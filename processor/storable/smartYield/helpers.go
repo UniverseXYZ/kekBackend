@@ -176,7 +176,7 @@ func (s *Storable) decodeJuniorBondRedeemEvent(log web3types.Log, event string) 
 	return &t, nil
 }
 
-func (s *Storable) decodeTransferEvent(log web3types.Log, event string) (*types.Transfer, error) {
+func (s *Storable) decodeSmartYieldTransferEvent(log web3types.Log, event string) (*types.Transfer, error) {
 	var t types.Transfer
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
@@ -202,4 +202,25 @@ func (s *Storable) decodeTransferEvent(log web3types.Log, event string) (*types.
 	}
 
 	return &t, nil
+}
+
+func (s Storable) decodeSmartBondTransferEvent(log web3types.Log) (*SmartBondTransfer, error) {
+
+	n := new(big.Int)
+	n, ok := n.SetString(log.Topics[3], 10)
+	if !ok {
+		return nil, errors.New("could not convert tokenID ")
+	}
+	event, err := new(types.Event).Build(log)
+	if err != nil {
+		return nil, err
+	}
+
+	return &SmartBondTransfer{
+		TokenAddress: utils.CleanUpHex(log.Address),
+		Sender:       utils.Topic2Address(log.Topics[1]),
+		Receiver:     utils.Topic2Address(log.Topics[2]),
+		TokenID:      n,
+		Event:        event,
+	}, nil
 }
