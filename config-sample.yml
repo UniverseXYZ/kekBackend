@@ -70,6 +70,11 @@ feature:
     # Enable/disable the automatic migrations
     enabled: true
 
+  #slack notify service
+  slack:
+      enabled: true
+      webhook: ""
+
 # Control what to be logged using format "module=level,module=level"; `*` means all other modules
 logging: "*=info"
 

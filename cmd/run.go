@@ -11,6 +11,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
+	"github.com/barnbridge/barnbridge-backend/types"
 
 	"github.com/barnbridge/barnbridge-backend/api"
 
@@ -61,6 +62,10 @@ var runCmd = &cobra.Command{
 				},
 				Automigrate: viper.GetBool("feature.automigrate.enabled"),
 				Uncles:      viper.GetBool("feature.uncles.enabled"),
+				SlackNotify: types.SlackNotif{
+					Enabled: viper.GetBool("feature.slack.enabled"),
+					Webhook: viper.GetString("feature.slack.webhook"),
+				},
 			},
 			AbiPath: viper.GetString("abi-path"),
 			Processor: processor.Config{

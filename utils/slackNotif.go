@@ -6,17 +6,21 @@ import (
 	"errors"
 	"net/http"
 	"time"
-)
 
-const webHookUrl = "https://hooks.slack.com/services/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"
+	"github.com/barnbridge/barnbridge-backend/types"
+)
 
 type SlackRequestBody struct {
 	Text string `json:"text"`
 }
 
-func SendSlackNotification(msg string) error {
+func SendSlackNotification(msg string, slackNotif types.SlackNotif) error {
+	if !slackNotif.Enabled {
+		return nil
+	}
+
 	slackBody, _ := json.Marshal(SlackRequestBody{Text: msg})
-	req, err := http.NewRequest(http.MethodPost, webHookUrl, bytes.NewBuffer(slackBody))
+	req, err := http.NewRequest(http.MethodPost, slackNotif.Webhook, bytes.NewBuffer(slackBody))
 	if err != nil {
 		return err
 	}
