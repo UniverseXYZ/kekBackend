@@ -220,3 +220,32 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 
 	return nil
 }
+
+func (s *Storable) storeJTokenTransfers(tx *sql.Tx) error {
+	if len(s.processed.jTokenTransfers) == 0 {
+		return nil
+	}
+	stmt, err := tx.Prepare(pq.CopyIn("jtoken_transfers", "tx_hash", "tx_index", "log_index", "sender", "receiver", "value", "included_in_block", "block_timestamp"))
+	if err != nil {
+		return err
+	}
+
+	for _, t := range s.processed.jTokenTransfers {
+		_, err = stmt.Exec(t.TransactionHash, t.TransactionIndex, t.LogIndex, t.From, t.To, t.Value.String(), s.processed.blockNumber, s.processed.blockTimestamp)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
