@@ -1,226 +1,121 @@
 package smartYield
 
 import (
-	"encoding/hex"
-	"math/big"
-	"strconv"
-
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string) (*TokenBuyTrade, error) {
-	var t TokenBuyTrade
+func (s Storable) decodeSmartYieldLog(logs []web3types.Log) error {
+	for _, log := range logs {
+		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_TOKENS_EVENT) {
+			a, err := s.decodeTokenBuyEvent(log, BUY_TOKENS_EVENT)
+			if err != nil {
+				return err
+			}
 
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
+			if a != nil {
+				s.processed.tokenActions.tokenBuyTrades = append(s.processed.tokenActions.tokenBuyTrades, *a)
+			}
+			continue
+		}
+
+		if utils.LogIsEvent(log, s.abis["smartyield"], SELL_TOKENS_EVENT) {
+			a, err := s.decodeTokenSellEvent(log, SELL_TOKENS_EVENT)
+			if err != nil {
+				return err
+			}
+
+			if a != nil {
+				s.processed.tokenActions.tokenSellTrades = append(s.processed.tokenActions.tokenSellTrades, *a)
+			}
+			continue
+		}
+
+		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_SENIOR_BOND_EVENT) {
+			a, err := s.decodeSeniorBondBuyEvent(log, BUY_SENIOR_BOND_EVENT)
+			if err != nil {
+				return err
+			}
+
+			if a != nil {
+				s.processed.seniorActions.seniorBondBuys = append(s.processed.seniorActions.seniorBondBuys, *a)
+			}
+			continue
+		}
+
+		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_SENIOR_BOND_EVENT) {
+			a, err := s.decodeSeniorBondRedeemEvent(log, REDEEM_SENIOR_BOND_EVENT)
+			if err != nil {
+				return err
+			}
+
+			if a != nil {
+				s.processed.seniorActions.seniorBondRedeems = append(s.processed.seniorActions.seniorBondRedeems, *a)
+			}
+			continue
+		}
+
+		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_JUNIOR_BOND_EVENT) {
+			a, err := s.decodeJuniorBondBuyEvent(log, BUY_JUNIOR_BOND_EVENT)
+			if err != nil {
+				return err
+			}
+
+			if a != nil {
+				s.processed.juniorActions.juniorBondBuys = append(s.processed.juniorActions.juniorBondBuys, *a)
+			}
+			continue
+		}
+
+		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_JUNIOR_BOND_EVENT) {
+			a, err := s.decodeJuniorBondRedeemEvent(log, REDEEM_JUNIOR_BOND_EVENT)
+			if err != nil {
+				return err
+			}
+
+			if a != nil {
+				s.processed.juniorActions.juniorBondRedeems = append(s.processed.juniorActions.juniorBondRedeems, *a)
+			}
+			continue
+		}
+		if utils.LogIsEvent(log, s.abis["smartyield"], TRANSFER_EVENT) {
+			a, err := s.decodeJTokenTransferEvent(log, TRANSFER_EVENT)
+			if err != nil {
+				return err
+			}
+			if a != nil {
+				s.processed.jTokenTransfers = append(s.processed.jTokenTransfers, *a)
+			}
+			continue
+		}
 	}
 
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.BuyerAddress = utils.Topic2Address(log.Topics[1])
-	t.Event, err = new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &t, nil
+	return nil
 }
 
-func (s *Storable) decodeTokenSellEvent(log web3types.Log, event string) (*TokenSellTrade, error) {
-	var t TokenSellTrade
+func (s *Storable) decodeCompoundProviderEvents(logs []web3types.Log) error {
+	for _, log := range logs {
+		if utils.LogIsEvent(log, s.abis["compoundprovider"], HARVEST_EVENT) {
+			a, err := s.decodeHarvestEvent(log)
+			if err != nil {
+				return err
+			}
+			if a != nil {
+				s.processed.compoundProvider.harvests = append(s.processed.compoundProvider.harvests, *a)
+			}
+		}
 
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
+		if utils.LogIsEvent(log, s.abis["compoundprovider"], TRANSFER_FEES_EVENT) {
+			a, err := s.decodeTransferFeesEvent(log)
+			if err != nil {
+				return err
+			}
+			if a != nil {
+				s.processed.compoundProvider.transfersFees = append(s.processed.compoundProvider.transfersFees, *a)
+			}
+		}
 	}
 
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.SellerAddress = utils.Topic2Address(log.Topics[1])
-	t.Event, err = new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &t, nil
-}
-
-func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string) (*SeniorBondBuyTrade, error) {
-	var t SeniorBondBuyTrade
-
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
-	}
-
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.BuyerAddress = utils.Topic2Address(log.Topics[1])
-
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[2], 10)
-	if !ok {
-		return nil, errors.New("could not convert seniorBondId ")
-	}
-
-	t.SeniorBondID = n
-	t.Event, err = new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &t, nil
-}
-
-func (s *Storable) decodeSeniorBondRedeemEvent(log web3types.Log, event string) (*SeniorBondRedeemTrade, error) {
-	var t SeniorBondRedeemTrade
-
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
-	}
-
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.OwnerAddress = utils.Topic2Address(log.Topics[1])
-
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[2], 10)
-	if !ok {
-		return nil, errors.New("could not convert seniorBondId ")
-	}
-
-	t.SeniorBondID = n
-	t.Event, err = new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &t, nil
-}
-
-func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string) (*JuniorBondBuyTrade, error) {
-	var t JuniorBondBuyTrade
-
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
-	}
-
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.BuyerAddress = utils.Topic2Address(log.Topics[1])
-
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[2], 10)
-	if !ok {
-		return nil, errors.New("could not convert JuniorBondID ")
-	}
-
-	t.JuniorBondID = n
-	t.Event, err = new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &t, nil
-}
-
-func (s *Storable) decodeJuniorBondRedeemEvent(log web3types.Log, event string) (*JuniorBondRedeemTrade, error) {
-	var t JuniorBondRedeemTrade
-
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
-	}
-
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.OwnerAddress = utils.Topic2Address(log.Topics[1])
-
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[2], 10)
-	if !ok {
-		return nil, errors.New("could not convert JuniorBondID ")
-	}
-
-	t.JuniorBondID = n
-	t.Event, err = new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &t, nil
-}
-
-func (s *Storable) decodeSmartYieldTransferEvent(log web3types.Log, event string) (*types.Transfer, error) {
-	var t types.Transfer
-	data, err := hex.DecodeString(utils.Trim0x(log.Data))
-	if err != nil {
-		return nil, errors.Wrap(err, "could not decode log data")
-	}
-
-	err = s.abis["smartyield"].UnpackIntoInterface(&t, event, data)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not unpack log data")
-	}
-
-	t.From = utils.Topic2Address(log.Topics[1])
-	t.To = utils.Topic2Address(log.Topics[2])
-	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
-	}
-
-	t.TransactionHash = log.TransactionHash
-	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
-	}
-
-	return &t, nil
-}
-
-func (s Storable) decodeSmartBondTransferEvent(log web3types.Log) (*SmartBondTransfer, error) {
-
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[3], 10)
-	if !ok {
-		return nil, errors.New("could not convert tokenID ")
-	}
-	event, err := new(types.Event).Build(log)
-	if err != nil {
-		return nil, err
-	}
-
-	return &SmartBondTransfer{
-		TokenAddress: utils.CleanUpHex(log.Address),
-		Sender:       utils.Topic2Address(log.Topics[1]),
-		Receiver:     utils.Topic2Address(log.Topics[2]),
-		TokenID:      n,
-		Event:        event,
-	}, nil
+	return nil
 }

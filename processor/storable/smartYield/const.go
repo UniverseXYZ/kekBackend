@@ -8,4 +8,6 @@ const (
 	BUY_JUNIOR_BOND_EVENT    = "BuyJuniorBond"
 	REDEEM_JUNIOR_BOND_EVENT = "RedeemJuniorBond"
 	TRANSFER_EVENT           = "Transfer"
+	HARVEST_EVENT            = "Harvest"
+	TRANSFER_FEES_EVENT      = "TransferFees"
 )

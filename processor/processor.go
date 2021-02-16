@@ -102,6 +102,10 @@ func (fb *Processor) registerStorables() error {
 			return errors.New("could not find seniorbond abi")
 		}
 
+		if _, exist := fb.abis["compoundprovider"]; !exist {
+			return errors.New("could not find compound provider abi")
+		}
+
 		fb.storables = append(fb.storables, smartYield.NewStorable(fb.config.SmartYield, fb.Raw, fb.abis))
 	}
 

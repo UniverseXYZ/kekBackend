@@ -26,6 +26,7 @@ type Storable struct {
 		juniorActions      JuniorTrades
 		jTokenTransfers    []types.Transfer
 		smartBondTransfers []SmartBondTransfer
+		compoundProvider   CompoundProvider
 		blockNumber        int64
 		blockTimestamp     int64
 	}
@@ -41,6 +42,7 @@ func NewStorable(config Config, raw *types.RawData, abis map[string]abi.ABI) *St
 
 func (s *Storable) ToDB(tx *sql.Tx) error {
 	var smartYieldLogs []web3types.Log
+	var compoundProviderLogs []web3types.Log
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
@@ -74,6 +76,11 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 				continue
 			}
 
+			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.CompoundProviderAddress) {
+				compoundProviderLogs = append(compoundProviderLogs, log)
+				continue
+			}
+
 		}
 	}
 
@@ -83,6 +90,11 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	err := s.decodeSmartYieldLog(smartYieldLogs)
+	if err != nil {
+		return err
+	}
+
+	err = s.decodeCompoundProviderEvents(compoundProviderLogs)
 	if err != nil {
 		return err
 	}
@@ -100,94 +112,6 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	err = s.storeProcessed(tx)
 	if err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func (s Storable) decodeSmartYieldLog(logs []web3types.Log) error {
-	for _, log := range logs {
-		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_TOKENS_EVENT) {
-			a, err := s.decodeTokenBuyEvent(log, BUY_TOKENS_EVENT)
-			if err != nil {
-				return err
-			}
-
-			if a != nil {
-				s.processed.tokenActions.tokenBuyTrades = append(s.processed.tokenActions.tokenBuyTrades, *a)
-			}
-			continue
-		}
-
-		if utils.LogIsEvent(log, s.abis["smartyield"], SELL_TOKENS_EVENT) {
-			a, err := s.decodeTokenSellEvent(log, SELL_TOKENS_EVENT)
-			if err != nil {
-				return err
-			}
-
-			if a != nil {
-				s.processed.tokenActions.tokenSellTrades = append(s.processed.tokenActions.tokenSellTrades, *a)
-			}
-			continue
-		}
-
-		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_SENIOR_BOND_EVENT) {
-			a, err := s.decodeSeniorBondBuyEvent(log, BUY_SENIOR_BOND_EVENT)
-			if err != nil {
-				return err
-			}
-
-			if a != nil {
-				s.processed.seniorActions.seniorBondBuys = append(s.processed.seniorActions.seniorBondBuys, *a)
-			}
-			continue
-		}
-
-		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_SENIOR_BOND_EVENT) {
-			a, err := s.decodeSeniorBondRedeemEvent(log, REDEEM_SENIOR_BOND_EVENT)
-			if err != nil {
-				return err
-			}
-
-			if a != nil {
-				s.processed.seniorActions.seniorBondRedeems = append(s.processed.seniorActions.seniorBondRedeems, *a)
-			}
-			continue
-		}
-
-		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_JUNIOR_BOND_EVENT) {
-			a, err := s.decodeJuniorBondBuyEvent(log, BUY_JUNIOR_BOND_EVENT)
-			if err != nil {
-				return err
-			}
-
-			if a != nil {
-				s.processed.juniorActions.juniorBondBuys = append(s.processed.juniorActions.juniorBondBuys, *a)
-			}
-			continue
-		}
-
-		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_JUNIOR_BOND_EVENT) {
-			a, err := s.decodeJuniorBondRedeemEvent(log, REDEEM_JUNIOR_BOND_EVENT)
-			if err != nil {
-				return err
-			}
-
-			if a != nil {
-				s.processed.juniorActions.juniorBondRedeems = append(s.processed.juniorActions.juniorBondRedeems, *a)
-			}
-			continue
-		}
-		if utils.LogIsEvent(log, s.abis["smartyield"], TRANSFER_EVENT) {
-			a, err := s.decodeSmartYieldTransferEvent(log, TRANSFER_EVENT)
-			if err != nil {
-				return err
-			}
-			if a != nil {
-				s.processed.jTokenTransfers = append(s.processed.jTokenTransfers, *a)
-			}
-			continue
-		}
 	}
 
 	return nil

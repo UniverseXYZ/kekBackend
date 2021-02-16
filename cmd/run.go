@@ -78,7 +78,7 @@ var runCmd = &cobra.Command{
 					Address: viper.GetString("storable.yieldFarming.address"),
 				},
 				SmartYield: smartYield.Config{
-					Address: viper.GetString("storable.smartYield.address"),
+					SmartYieldAddress: viper.GetString("storable.smartYield.address"),
 				},
 			},
 		})
