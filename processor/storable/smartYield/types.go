@@ -9,6 +9,10 @@ type TokenBuyTrade struct {
 	UnderlyingIn *big.Int
 	TokensOut    *big.Int
 	Fee          *big.Int
+
+	TransactionHash  string
+	TransactionIndex int64
+	LogIndex         int64
 }
 
 type TokenSellTrade struct {
@@ -16,6 +20,10 @@ type TokenSellTrade struct {
 	TokensIn      *big.Int
 	UnderlyingOut *big.Int
 	Forfeits      *big.Int
+
+	TransactionHash  string
+	TransactionIndex int64
+	LogIndex         int64
 }
 
 type SeniorBondBuyTrade struct {
@@ -24,12 +32,20 @@ type SeniorBondBuyTrade struct {
 	UnderlyingIn *big.Int
 	Gain         *big.Int
 	ForDays      *big.Int
+
+	TransactionHash  string
+	TransactionIndex int64
+	LogIndex         int64
 }
 
 type SeniorBondRedeemTrade struct {
 	OwnerAddress string
 	SeniorBondID *big.Int
 	Fee          *big.Int
+
+	TransactionHash  string
+	TransactionIndex int64
+	LogIndex         int64
 }
 
 type JuniorBondBuyTrade struct {
@@ -37,12 +53,20 @@ type JuniorBondBuyTrade struct {
 	JuniorBondID *big.Int
 	TokensIn     *big.Int
 	MaturesAt    *big.Int
+
+	TransactionHash  string
+	TransactionIndex int64
+	LogIndex         int64
 }
 
 type JuniorBondRedeemTrade struct {
 	OwnerAddress  string
 	JuniorBondID  *big.Int
 	UnderlyingOut *big.Int
+
+	TransactionHash  string
+	TransactionIndex int64
+	LogIndex         int64
 }
 
 type TokenTrades struct {

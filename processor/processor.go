@@ -13,6 +13,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 	"github.com/barnbridge/barnbridge-backend/types"
 )
@@ -86,6 +87,22 @@ func (fb *Processor) registerStorables() error {
 			errors.New("could not find abi for yield farming contract")
 		}
 		fb.storables = append(fb.storables, yieldFarming.NewStorable(fb.config.YieldFarming, fb.Raw, fb.abis["yieldfarming"]))
+	}
+
+	{
+		if _, exist := fb.abis["smartyield"]; !exist {
+			return errors.New("could not find smartYield abi")
+		}
+
+		if _, exist := fb.abis["juniorbond"]; !exist {
+			return errors.New("could not find juniorbond  abi")
+		}
+
+		if _, exist := fb.abis["seniorbond"]; !exist {
+			return errors.New("could not find seniorbond abi")
+		}
+
+		fb.storables = append(fb.storables, smartYield.NewStorable(fb.config.SmartYield, fb.Raw, fb.abis))
 	}
 
 	return nil
