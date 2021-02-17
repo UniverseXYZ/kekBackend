@@ -21,14 +21,14 @@ type Storable struct {
 	abis   map[string]abi.ABI
 
 	processed struct {
-		tokenActions       TokenTrades
-		seniorActions      SeniorTrades
-		juniorActions      JuniorTrades
-		jTokenTransfers    []types.Transfer
-		smartBondTransfers []SmartBondTransfer
-		compoundProvider   CompoundProvider
-		blockNumber        int64
-		blockTimestamp     int64
+		tokenActions     TokenTrades
+		seniorActions    SeniorTrades
+		juniorActions    JuniorTrades
+		jTokenTransfers  []types.Transfer
+		sTokenTransfers  []STokenTransfer
+		compoundProvider CompoundProvider
+		blockNumber      int64
+		blockTimestamp   int64
 	}
 }
 
@@ -55,23 +55,23 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.JuniorBondAddress) && utils.LogIsEvent(log, s.abis["juniorbond"], TRANSFER_EVENT) {
-				a, err := s.decodeSmartBondTransferEvent(log)
+				a, err := s.decodeSTokenTransferEvent(log)
 				if err != nil {
 					return err
 				}
 				if a != nil {
-					s.processed.smartBondTransfers = append(s.processed.smartBondTransfers, *a)
+					s.processed.sTokenTransfers = append(s.processed.sTokenTransfers, *a)
 				}
 				continue
 			}
 
 			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.SeniorBondAddress) && utils.LogIsEvent(log, s.abis["seniorbond"], TRANSFER_EVENT) {
-				a, err := s.decodeSmartBondTransferEvent(log)
+				a, err := s.decodeSTokenTransferEvent(log)
 				if err != nil {
 					return err
 				}
 				if a != nil {
-					s.processed.smartBondTransfers = append(s.processed.smartBondTransfers, *a)
+					s.processed.sTokenTransfers = append(s.processed.sTokenTransfers, *a)
 				}
 				continue
 			}

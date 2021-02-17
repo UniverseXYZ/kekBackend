@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type SmartBondTransfer struct {
+type STokenTransfer struct {
 	*types.Event
 
 	TokenAddress string
@@ -20,7 +20,7 @@ type SmartBondTransfer struct {
 	TokenID      *big.Int
 }
 
-func (s *Storable) decodeSmartBondTransferEvent(log web3types.Log) (*SmartBondTransfer, error) {
+func (s *Storable) decodeSTokenTransferEvent(log web3types.Log) (*STokenTransfer, error) {
 
 	n := new(big.Int)
 	n, ok := n.SetString(log.Topics[3], 10)
@@ -32,7 +32,7 @@ func (s *Storable) decodeSmartBondTransferEvent(log web3types.Log) (*SmartBondTr
 		return nil, err
 	}
 
-	return &SmartBondTransfer{
+	return &STokenTransfer{
 		TokenAddress: utils.CleanUpHex(log.Address),
 		Sender:       utils.Topic2Address(log.Topics[1]),
 		Receiver:     utils.Topic2Address(log.Topics[2]),
@@ -41,16 +41,16 @@ func (s *Storable) decodeSmartBondTransferEvent(log web3types.Log) (*SmartBondTr
 	}, nil
 }
 
-func (s *Storable) storeSmartBondTransfers(tx *sql.Tx) error {
-	if len(s.processed.smartBondTransfers) == 0 {
+func (s *Storable) storeSTokenTransfers(tx *sql.Tx) error {
+	if len(s.processed.sTokenTransfers) == 0 {
 		return nil
 	}
-	stmt, err := tx.Prepare(pq.CopyIn("smart_bond_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "included_in_block", "block_timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("stoken_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return err
 	}
 
-	for _, t := range s.processed.smartBondTransfers {
+	for _, t := range s.processed.sTokenTransfers {
 		_, err = stmt.Exec(t.TransactionHash, t.TransactionIndex, t.LogIndex, t.TokenAddress, t.Sender, t.Receiver, t.TokenID.String(), s.processed.blockNumber, s.processed.blockTimestamp)
 		if err != nil {
 			return err

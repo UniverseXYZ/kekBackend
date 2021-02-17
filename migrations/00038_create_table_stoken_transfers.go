@@ -12,7 +12,7 @@ func init() {
 
 func upCreateTableSmartBondsTransfers(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-	create table smart_bond_transfers
+	create table stoken_transfers
 	(
 		tx_hash                    text    not null,
 		tx_index 				   integer not null,
@@ -31,6 +31,6 @@ func upCreateTableSmartBondsTransfers(tx *sql.Tx) error {
 }
 
 func downCreateTableSmartBondsTransfers(tx *sql.Tx) error {
-	_, err := tx.Exec("drop table if exists smart_bond_transfers")
+	_, err := tx.Exec("drop table if exists stoken_transfers")
 	return err
 }
