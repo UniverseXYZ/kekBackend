@@ -11,7 +11,7 @@ import (
 	"github.com/pkg/errors"
 )
 
-type STokenTransfer struct {
+type ERC721Transfer struct {
 	*types.Event
 
 	TokenAddress string
@@ -20,37 +20,36 @@ type STokenTransfer struct {
 	TokenID      *big.Int
 }
 
-func (s *Storable) decodeSTokenTransferEvent(log web3types.Log) (*STokenTransfer, error) {
-
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[3], 10)
+func (s *Storable) decodeERC721TransferEvent(log web3types.Log) (*ERC721Transfer, error) {
+	tokenID, ok := new(big.Int).SetString(utils.Trim0x(log.Topics[3]), 16)
 	if !ok {
-		return nil, errors.New("could not convert tokenID ")
+		return nil, errors.New("could not convert tokenID to big.Int")
 	}
+
 	event, err := new(types.Event).Build(log)
 	if err != nil {
 		return nil, err
 	}
 
-	return &STokenTransfer{
+	return &ERC721Transfer{
 		TokenAddress: utils.CleanUpHex(log.Address),
 		Sender:       utils.Topic2Address(log.Topics[1]),
 		Receiver:     utils.Topic2Address(log.Topics[2]),
-		TokenID:      n,
+		TokenID:      tokenID,
 		Event:        event,
 	}, nil
 }
 
-func (s *Storable) storeSTokenTransfers(tx *sql.Tx) error {
-	if len(s.processed.sTokenTransfers) == 0 {
+func (s *Storable) storeERC721Transfers(tx *sql.Tx) error {
+	if len(s.processed.ERC721Transfers) == 0 {
 		return nil
 	}
-	stmt, err := tx.Prepare(pq.CopyIn("stoken_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "included_in_block", "block_timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("erc721_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return err
 	}
 
-	for _, t := range s.processed.sTokenTransfers {
+	for _, t := range s.processed.ERC721Transfers {
 		_, err = stmt.Exec(t.TransactionHash, t.TransactionIndex, t.LogIndex, t.TokenAddress, t.Sender, t.Receiver, t.TokenID.String(), s.processed.blockNumber, s.processed.blockTimestamp)
 		if err != nil {
 			return err

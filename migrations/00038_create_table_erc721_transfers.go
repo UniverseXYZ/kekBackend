@@ -7,17 +7,17 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableSmartYieldJtokenTransfers, downCreateTableSmartYieldJtokenTransfers)
+	goose.AddMigration(upCreateTableERC721Transfers, downCreateTableERC721Transfers)
 }
 
-func upCreateTableSmartYieldJtokenTransfers(tx *sql.Tx) error {
+func upCreateTableERC721Transfers(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-		create table jtoken_transfers
+		create table erc721_transfers
 		(
-			sy_address        text    not null,
+			token_address     text    not null,
 			sender            text    not null,
 			receiver          text    not null,
-			value             numeric(78),
+			token_id          bigint  not null,
 		
 			tx_hash           text    not null,
 			tx_index          integer not null,
@@ -32,7 +32,7 @@ func upCreateTableSmartYieldJtokenTransfers(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableSmartYieldJtokenTransfers(tx *sql.Tx) error {
-	_, err := tx.Exec("drop table if exists jtoken_transfers")
+func downCreateTableERC721Transfers(tx *sql.Tx) error {
+	_, err := tx.Exec("drop table if exists erc721_transfers")
 	return err
 }

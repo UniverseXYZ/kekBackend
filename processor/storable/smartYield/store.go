@@ -37,5 +37,25 @@ func (s *Storable) storeProcessed(tx *sql.Tx) error {
 		return errors.Wrap(err, "could not store senior redeem trades")
 	}
 
+	err = s.storeJTokenTransfers(tx)
+	if err != nil {
+		return errors.Wrap(err, "could not store jtoken (erc20) transfers")
+	}
+
+	err = s.storeERC721Transfers(tx)
+	if err != nil {
+		return errors.Wrap(err, "could not store erc721 transfers")
+	}
+
+	err = s.storeHarvest(tx)
+	if err != nil {
+		return errors.Wrap(err, "could not store harvest events")
+	}
+
+	err = s.storeTransferFees(tx)
+	if err != nil {
+		return errors.Wrap(err, "could not store TransferFees event")
+	}
+
 	return nil
 }

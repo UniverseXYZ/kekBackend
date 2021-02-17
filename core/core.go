@@ -16,6 +16,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/metrics"
 	"github.com/barnbridge/barnbridge-backend/processor"
 	"github.com/barnbridge/barnbridge-backend/scraper"
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/taskmanager"
 )
 
@@ -124,6 +125,11 @@ func New(config Config) *Core {
 	c.ethConn = conn
 
 	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag)
+
+	err = state.Init(c.db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &c
 }

@@ -14,21 +14,24 @@ func upCreateTableHarvest(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create table compound_provider_harvest
 		(
-			caller_address 				text not null ,
-			underlying_got				bigint,
-			reward_expected 				bigint,
-			underlying_deposited 		bigint,
-			fees 						bigint,
-			reward 						bigint,
-			
-			tx_hash           	text    not null,
-			tx_index 			integer not null,
-			log_index           integer not null,
-			block_timestamp		bigint not null,
-			included_in_block	bigint  not null,
-			created_at			timestamp default now()
-			
+			provider_address     text    not null,
+			caller_address       text    not null,
+			underlying_got       bigint,
+			reward_expected      bigint,
+			underlying_deposited bigint,
+			fees                 bigint,
+			reward               bigint,
+		
+			tx_hash              text    not null,
+			tx_index             integer not null,
+			log_index            integer not null,
+		
+			block_timestamp      bigint  not null,
+			included_in_block    bigint  not null,
+		
+			created_at           timestamp default now()
 		);
+
 	`)
 
 	return err

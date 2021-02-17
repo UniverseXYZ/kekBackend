@@ -16,6 +16,7 @@ import (
 type TokenBuyTrade struct {
 	*types.Event
 
+	SYAddress    string
 	BuyerAddress string
 	UnderlyingIn *big.Int
 	TokensOut    *big.Int
@@ -25,6 +26,7 @@ type TokenBuyTrade struct {
 type TokenSellTrade struct {
 	*types.Event
 
+	SYAddress     string
 	SellerAddress string
 	TokensIn      *big.Int
 	UnderlyingOut *big.Int
@@ -33,13 +35,14 @@ type TokenSellTrade struct {
 
 func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string) (*TokenBuyTrade, error) {
 	var t TokenBuyTrade
+	t.SYAddress = utils.NormalizeAddress(log.Address)
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
+	err = s.abis["smartyield"].UnpackIntoInterface(&t, event, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -55,13 +58,14 @@ func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string) (*TokenB
 
 func (s *Storable) decodeTokenSellEvent(log web3types.Log, event string) (*TokenSellTrade, error) {
 	var t TokenSellTrade
+	t.SYAddress = utils.NormalizeAddress(log.Address)
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
+	err = s.abis["smartyield"].UnpackIntoInterface(&t, event, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -80,13 +84,13 @@ func (s *Storable) storeTokenBuyTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_token_buy", "buyer_address", "underlying_in", "tokens_out", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_token_buy", "sy_address", "buyer_address", "underlying_in", "tokens_out", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.tokenActions.tokenBuyTrades {
-		_, err = stmt.Exec(a.BuyerAddress, a.UnderlyingIn.String(), a.TokensOut.String(), a.Fee.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.BuyerAddress, a.UnderlyingIn.String(), a.TokensOut.String(), a.Fee.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
@@ -110,13 +114,13 @@ func (s *Storable) storeTokenSellTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_token_sell", "seller_address", "tokens_in", "underlying_out", "forfeits", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_token_sell", "sy_address", "seller_address", "tokens_in", "underlying_out", "forfeits", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.tokenActions.tokenSellTrades {
-		_, err = stmt.Exec(a.SellerAddress, a.TokensIn.String(), a.UnderlyingOut.String(), a.Forfeits.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.SellerAddress, a.TokensIn.String(), a.UnderlyingOut.String(), a.Forfeits.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}

@@ -14,19 +14,21 @@ func upCreateTableSmartYieldSeniorBuy(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create table smart_yield_senior_buy
 		(
-			buyer_address 		text not null ,
-			senior_bond_id 		bigint not null,
-			underlying_in 		bigint,
-			gain 				bigint,
-			for_days 			bigint,
-			
-			tx_hash           	text    not null,
-			tx_index 			integer not null,
-			log_index           integer not null,
-			block_timestamp		bigint not null,
-			included_in_block	bigint  not null,
-			created_at			timestamp default now()
-			
+			sy_address        text    not null,
+			buyer_address     text    not null,
+			senior_bond_id    bigint  not null,
+			underlying_in     bigint,
+			gain              bigint,
+			for_days          bigint,
+		
+			tx_hash           text    not null,
+			tx_index          integer not null,
+			log_index         integer not null,
+		
+			block_timestamp   bigint  not null,
+			included_in_block bigint  not null,
+		
+			created_at        timestamp default now()
 		);
 	`)
 

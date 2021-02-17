@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -25,7 +26,7 @@ type Storable struct {
 		seniorActions    SeniorTrades
 		juniorActions    JuniorTrades
 		jTokenTransfers  []types.Transfer
-		sTokenTransfers  []STokenTransfer
+		ERC721Transfers  []ERC721Transfer
 		compoundProvider CompoundProvider
 		blockNumber      int64
 		blockTimestamp   int64
@@ -46,47 +47,36 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
-			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.SmartYieldAddress) {
+			if state.PoolBySmartYieldAddress(log.Address) != nil {
 				smartYieldLogs = append(smartYieldLogs, log)
-			}
-
-			if len(log.Topics) == 0 {
 				continue
 			}
 
-			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.JuniorBondAddress) && utils.LogIsEvent(log, s.abis["juniorbond"], TRANSFER_EVENT) {
-				a, err := s.decodeSTokenTransferEvent(log)
+			if state.PoolByJuniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["juniorbond"], TRANSFER_EVENT) {
+				a, err := s.decodeERC721TransferEvent(log)
 				if err != nil {
 					return err
-				}
-				if a != nil {
-					s.processed.sTokenTransfers = append(s.processed.sTokenTransfers, *a)
+				} else if a != nil {
+					s.processed.ERC721Transfers = append(s.processed.ERC721Transfers, *a)
 				}
 				continue
 			}
 
-			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.SeniorBondAddress) && utils.LogIsEvent(log, s.abis["seniorbond"], TRANSFER_EVENT) {
-				a, err := s.decodeSTokenTransferEvent(log)
+			if state.PoolBySeniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["seniorbond"], TRANSFER_EVENT) {
+				a, err := s.decodeERC721TransferEvent(log)
 				if err != nil {
 					return err
-				}
-				if a != nil {
-					s.processed.sTokenTransfers = append(s.processed.sTokenTransfers, *a)
+				} else if a != nil {
+					s.processed.ERC721Transfers = append(s.processed.ERC721Transfers, *a)
 				}
 				continue
 			}
 
-			if utils.CleanUpHex(log.Address) == utils.CleanUpHex(s.config.CompoundProviderAddress) {
+			if state.PoolByProviderAddress(log.Address) != nil {
 				compoundProviderLogs = append(compoundProviderLogs, log)
 				continue
 			}
-
 		}
-	}
-
-	if len(smartYieldLogs) == 0 {
-		log.WithField("handler", "smart yield trades").Debug("no actions found")
-		return nil
 	}
 
 	err := s.decodeSmartYieldLog(smartYieldLogs)

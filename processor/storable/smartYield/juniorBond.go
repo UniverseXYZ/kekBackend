@@ -16,6 +16,7 @@ import (
 type JuniorBondBuyTrade struct {
 	*types.Event
 
+	SYAddress    string
 	BuyerAddress string
 	JuniorBondID *big.Int
 	TokensIn     *big.Int
@@ -25,6 +26,7 @@ type JuniorBondBuyTrade struct {
 type JuniorBondRedeemTrade struct {
 	*types.Event
 
+	SYAddress     string
 	OwnerAddress  string
 	JuniorBondID  *big.Int
 	UnderlyingOut *big.Int
@@ -32,21 +34,21 @@ type JuniorBondRedeemTrade struct {
 
 func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string) (*JuniorBondBuyTrade, error) {
 	var t JuniorBondBuyTrade
+	t.SYAddress = utils.NormalizeAddress(log.Address)
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
+	err = s.abis["smartyield"].UnpackIntoInterface(&t, event, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
 
 	t.BuyerAddress = utils.Topic2Address(log.Topics[1])
 
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[2], 10)
+	n, ok := new(big.Int).SetString(utils.Trim0x(log.Topics[2]), 16)
 	if !ok {
 		return nil, errors.New("could not convert JuniorBondID ")
 	}
@@ -62,21 +64,21 @@ func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string) (*J
 
 func (s *Storable) decodeJuniorBondRedeemEvent(log web3types.Log, event string) (*JuniorBondRedeemTrade, error) {
 	var t JuniorBondRedeemTrade
+	t.SYAddress = utils.NormalizeAddress(log.Address)
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = s.abis["smartyield"].UnpackIntoInterface(t, event, data)
+	err = s.abis["smartyield"].UnpackIntoInterface(&t, event, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
 
 	t.OwnerAddress = utils.Topic2Address(log.Topics[1])
 
-	n := new(big.Int)
-	n, ok := n.SetString(log.Topics[2], 10)
+	n, ok := new(big.Int).SetString(utils.Trim0x(log.Topics[2]), 16)
 	if !ok {
 		return nil, errors.New("could not convert JuniorBondID ")
 	}
@@ -95,13 +97,13 @@ func (s *Storable) storeJuniorBuyTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_junior_buy", "buyer_address", "junior_bond_id", "tokens_in", "matures_at", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_junior_buy", "sy_address", "buyer_address", "junior_bond_id", "tokens_in", "matures_at", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.juniorActions.juniorBondBuys {
-		_, err = stmt.Exec(a.BuyerAddress, a.JuniorBondID.String(), a.TokensIn.String(), a.MaturesAt.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.BuyerAddress, a.JuniorBondID.String(), a.TokensIn.String(), a.MaturesAt.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
@@ -125,13 +127,13 @@ func (s *Storable) storeJuniorRedeemTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_junior_redeem", "owner_address", "junior_bond_id", "underlying_out", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_junior_redeem", "sy_address", "owner_address", "junior_bond_id", "underlying_out", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.juniorActions.juniorBondRedeems {
-		_, err = stmt.Exec(a.OwnerAddress, a.JuniorBondID.String(), a.UnderlyingOut.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.OwnerAddress, a.JuniorBondID.String(), a.UnderlyingOut.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}

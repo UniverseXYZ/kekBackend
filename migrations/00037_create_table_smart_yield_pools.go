@@ -21,13 +21,16 @@ func upCreateTableSmartYieldPools(tx *sql.Tx) error {
 			provider_address    text    not null,
 			sy_address          text    not null,
 			oracle_address      text    not null,
-			
+		
 			junior_bond_address text    not null,
 			senior_bond_address text    not null,
 		
+			ctoken_address      text    not null,
 			underlying_address  text    not null,
 			underlying_symbol   text    not null,
-			underlying_decimals integer not null
+			underlying_decimals integer not null,
+		
+			created_at          timestamp default now()
 		)
 	`)
 	return err

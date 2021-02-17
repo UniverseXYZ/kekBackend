@@ -15,6 +15,8 @@ import (
 
 type Harvest struct {
 	*types.Event
+
+	ProviderAddress     string
 	Caller              string
 	UnderlyingGot       *big.Int
 	RewardExpected      *big.Int
@@ -25,13 +27,17 @@ type Harvest struct {
 
 type TransferFees struct {
 	*types.Event
-	Caller    string
-	FeesOwner string
-	Fees      *big.Int
+
+	ProviderAddress string
+	Caller          string
+	FeesOwner       string
+	Fees            *big.Int
 }
 
 func (s *Storable) decodeHarvestEvent(log web3types.Log) (*Harvest, error) {
 	var h Harvest
+	h.ProviderAddress = utils.NormalizeAddress(log.Address)
+
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
@@ -52,6 +58,7 @@ func (s *Storable) decodeHarvestEvent(log web3types.Log) (*Harvest, error) {
 
 func (s *Storable) decodeTransferFeesEvent(log web3types.Log) (*TransferFees, error) {
 	var t TransferFees
+	t.ProviderAddress = utils.NormalizeAddress(log.Address)
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
@@ -62,6 +69,7 @@ func (s *Storable) decodeTransferFeesEvent(log web3types.Log) (*TransferFees, er
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
+
 	t.Caller = utils.Topic2Address(log.Topics[1])
 	t.FeesOwner = utils.Topic2Address(log.Topics[2])
 	t.Event, err = new(types.Event).Build(log)
@@ -77,13 +85,13 @@ func (s *Storable) storeHarvest(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("compound_provider_harvest", "caller_address", "underlying_got", "reward_expected", "underlying_deposited", "fees", "reward", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("compound_provider_harvest", "provider_address", "caller_address", "underlying_got", "reward_expected", "underlying_deposited", "fees", "reward", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.compoundProvider.harvests {
-		_, err = stmt.Exec(a.Caller, a.UnderlyingGot.String(), a.RewardExpected.String(), a.UnderlyingDeposited.String(), a.Fees.String(), a.Reward.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.ProviderAddress, a.Caller, a.UnderlyingGot.String(), a.RewardExpected.String(), a.UnderlyingDeposited.String(), a.Fees.String(), a.Reward.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
@@ -107,13 +115,13 @@ func (s *Storable) storeTransferFees(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("compound_provider_transfer_fees", "caller_address", "fees_owner", "fees", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("compound_provider_transfer_fees", "provider_address", "caller_address", "fees_owner", "fees", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.compoundProvider.transfersFees {
-		_, err = stmt.Exec(a.Caller, a.FeesOwner, a.Fees.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.ProviderAddress, a.Caller, a.FeesOwner, a.Fees.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
