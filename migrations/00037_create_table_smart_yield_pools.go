@@ -37,6 +37,6 @@ func upCreateTableSmartYieldPools(tx *sql.Tx) error {
 }
 
 func downCreateTableSmartYieldPools(tx *sql.Tx) error {
-	// This code is executed when the migration is rolled back.
-	return nil
+	_, err := tx.Exec("drop table if exists smart_yield_pools")
+	return err
 }
