@@ -25,6 +25,7 @@ require (
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.6.1
 	github.com/ugorji/go v1.1.7 // indirect
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 )
 
 go 1.13

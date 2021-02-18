@@ -128,7 +128,7 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_senior_buy", "sy_address", "owner_address", "senior_bond_id", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_senior_redeem", "sy_address", "owner_address", "senior_bond_id", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}

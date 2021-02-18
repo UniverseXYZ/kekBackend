@@ -5,6 +5,10 @@ import (
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
+func Pools() []types.SYPool {
+	return instance.pools
+}
+
 func PoolBySmartYieldAddress(address string) *types.SYPool {
 	for _, p := range instance.pools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.SmartYieldAddress) {

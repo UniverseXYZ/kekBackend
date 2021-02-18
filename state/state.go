@@ -28,7 +28,7 @@ func Init(db *sql.DB) error {
 }
 
 func loadAllSYPools() error {
-	rows, err := instance.db.Query(`select protocol_id, controller_address, model_address, provider_address, sy_address, oracle_address, junior_bond_address, senior_bond_address, ctoken_address, underlying_address, underlying_symbol, underlying_decimals from smart_yield_pools;`)
+	rows, err := instance.db.Query(`select protocol_id, controller_address, model_address, provider_address, sy_address, oracle_address, junior_bond_address, senior_bond_address, receipt_token_address, underlying_address, underlying_symbol, underlying_decimals from smart_yield_pools;`)
 	if err != nil {
 		return errors.Wrap(err, "could not query database for SmartYield pools")
 	}
@@ -36,7 +36,7 @@ func loadAllSYPools() error {
 	var pools []types.SYPool
 	for rows.Next() {
 		var p types.SYPool
-		err := rows.Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.CTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals)
+		err := rows.Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.ReceiptTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals)
 		if err != nil {
 			return errors.Wrap(err, "could not scan pools from database")
 		}

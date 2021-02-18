@@ -142,7 +142,7 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.barn.address", "0x19cFBFd65021af353aB8A7126Caf51920163f0D2", "BuyerAddress of the barn contract")
 	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "BuyerAddress of the governance contract")
 	cmd.Flags().String("storable.yieldFarming.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "BuyerAddress of the yield farming contract")
-	cmd.Flags().String("storable.smartYield.address", "", "BuyerAddress of the Smart Yield contract")
+	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b", "Address of compound comptroller")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
@@ -150,5 +150,5 @@ func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.barn.address", cmd.Flag("storable.barn.address"))
 	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
 	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
-	viper.BindPFlag("storable.smartYield.address", cmd.Flag("storable.smartYield.address"))
+	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
 }
