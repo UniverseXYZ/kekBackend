@@ -23,7 +23,7 @@ func (a *API) handlePools(c *gin.Context) {
 					oracle_address,
 					junior_bond_address,
 					senior_bond_address,
-					ctoken_address,
+					receipt_token_address,
 					underlying_address,
 					underlying_symbol
 					,underlying_decimals

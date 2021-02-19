@@ -57,6 +57,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 				if err != nil {
 					return err
 				} else if a != nil {
+					a.TokenType = "junior"
 					s.processed.ERC721Transfers = append(s.processed.ERC721Transfers, *a)
 				}
 				continue
@@ -67,6 +68,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 				if err != nil {
 					return err
 				} else if a != nil {
+					a.TokenType = "senior"
 					s.processed.ERC721Transfers = append(s.processed.ERC721Transfers, *a)
 				}
 				continue

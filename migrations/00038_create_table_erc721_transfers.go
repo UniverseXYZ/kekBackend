@@ -15,6 +15,7 @@ func upCreateTableERC721Transfers(tx *sql.Tx) error {
 		create table erc721_transfers
 		(
 			token_address     text    not null,
+			token_type 		  text    not null,
 			sender            text    not null,
 			receiver          text    not null,
 			token_id          bigint  not null,

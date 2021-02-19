@@ -15,6 +15,7 @@ type ERC721Transfer struct {
 	*types.Event
 
 	TokenAddress string
+	TokenType    string
 	Sender       string
 	Receiver     string
 	TokenID      *big.Int
@@ -44,13 +45,13 @@ func (s *Storable) storeERC721Transfers(tx *sql.Tx) error {
 	if len(s.processed.ERC721Transfers) == 0 {
 		return nil
 	}
-	stmt, err := tx.Prepare(pq.CopyIn("erc721_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "included_in_block", "block_timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("erc721_transfers", "tx_hash", "tx_index", "log_index", "token_address", "sender", "receiver", "token_id", "token_type", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return err
 	}
 
 	for _, t := range s.processed.ERC721Transfers {
-		_, err = stmt.Exec(t.TransactionHash, t.TransactionIndex, t.LogIndex, t.TokenAddress, t.Sender, t.Receiver, t.TokenID.String(), s.processed.blockNumber, s.processed.blockTimestamp)
+		_, err = stmt.Exec(t.TransactionHash, t.TransactionIndex, t.LogIndex, t.TokenAddress, t.Sender, t.Receiver, t.TokenID.String(), t.TokenType, s.processed.blockNumber, s.processed.blockTimestamp)
 		if err != nil {
 			return err
 		}
