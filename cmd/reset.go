@@ -23,12 +23,14 @@ var resetCmd = &cobra.Command{
 		bindViperToRedisFlags(cmd)
 	},
 	Run: func(cmd *cobra.Command, args []string) {
-		reader := bufio.NewReader(os.Stdin)
-		fmt.Print("This will reset the database. Are you sure? [y/N]: ")
-		text, _ := reader.ReadString('\n')
-		if strings.TrimSuffix(strings.ToLower(text), "\n") != "y" {
-			fmt.Println("Nobody was harmed.")
-			return
+		if !viper.GetBool("force") {
+			reader := bufio.NewReader(os.Stdin)
+			fmt.Print("This will reset the database. Are you sure? [y/N]: ")
+			text, _ := reader.ReadString('\n')
+			if strings.TrimSuffix(strings.ToLower(text), "\n") != "y" {
+				fmt.Println("Nobody was harmed.")
+				return
+			}
 		}
 
 		fmt.Print("Deleting todo queue from redis ... ")
@@ -88,4 +90,7 @@ var resetCmd = &cobra.Command{
 func init() {
 	addDBFlags(resetCmd)
 	addRedisFlags(resetCmd)
+
+	resetCmd.Flags().Bool("force", false, "Run this command without entering interactive mode")
+	viper.BindPFlag("force", resetCmd.Flag("force"))
 }

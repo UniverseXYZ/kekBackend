@@ -5,24 +5,19 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alethio/web3-go/validator"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
-
-	"github.com/barnbridge/barnbridge-backend/integrity"
-	"github.com/barnbridge/barnbridge-backend/processor"
-
-	"github.com/barnbridge/barnbridge-backend/metrics"
-
 	"github.com/pressly/goose"
-
-	"github.com/alethio/web3-go/validator"
-
-	"github.com/barnbridge/barnbridge-backend/scraper"
-	"github.com/barnbridge/barnbridge-backend/taskmanager"
-
 	"github.com/sirupsen/logrus"
 
 	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
+	"github.com/barnbridge/barnbridge-backend/integrity"
+	"github.com/barnbridge/barnbridge-backend/metrics"
+	"github.com/barnbridge/barnbridge-backend/processor"
+	"github.com/barnbridge/barnbridge-backend/scraper"
+	"github.com/barnbridge/barnbridge-backend/state"
+	"github.com/barnbridge/barnbridge-backend/taskmanager"
 )
 
 var log = logrus.WithField("module", "core")
@@ -130,6 +125,11 @@ func New(config Config) *Core {
 	c.ethConn = conn
 
 	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag)
+
+	err = state.Init(c.db)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	return &c
 }

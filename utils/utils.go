@@ -55,7 +55,6 @@ func Trim0x(str string) string {
 	return strings.TrimPrefix(str, "0x")
 }
 
-//
 func Topic2Address(topic string) string {
 	topic = Trim0x(topic)
 	return "0x" + topic[24:]
@@ -67,4 +66,8 @@ func LogIsEvent(log web3types.Log, abi abi.ABI, event string) bool {
 	}
 
 	return CleanUpHex(log.Topics[0]) == CleanUpHex(abi.Events[event].ID.String())
+}
+
+func NormalizeAddress(addr string) string {
+	return "0x" + Trim0x(strings.ToLower(addr))
 }

@@ -5,6 +5,7 @@ import (
 )
 
 type Transfer struct {
+	TokenAddress     string
 	From             string
 	To               string
 	Value            *big.Int

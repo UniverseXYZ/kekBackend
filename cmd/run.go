@@ -10,6 +10,8 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 
 	"github.com/barnbridge/barnbridge-backend/api"
@@ -74,7 +76,12 @@ var runCmd = &cobra.Command{
 					GovernanceAddress: viper.GetString("storable.governance.address"),
 				},
 				YieldFarming: yieldFarming.Config{
-					Address: viper.GetString("storable.yield.address"),
+					Address: viper.GetString("storable.yieldFarming.address"),
+				},
+				SmartYield: smartYield.Config{},
+				SmartYieldState: smartYieldState.Config{
+					NodeURL:            viper.GetString("eth.client.http"),
+					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
 				},
 			},
 		})
