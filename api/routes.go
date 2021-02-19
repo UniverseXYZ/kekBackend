@@ -37,5 +37,7 @@ func (a *API) setRoutes() {
 	smartYield.GET("/tx", a.handleSYTxs)
 	smartYield.GET("/tx/jbond", a.handleJBondEvents)
 	smartYield.GET("/tx/sbond", a.handleSBondEvents)
+	smartYield.GET("/tx/sytoken", a.handleSYTokenEvents)
+	smartYield.GET("tx/jtoken", a.handleJTokenTransfer)
 
 }

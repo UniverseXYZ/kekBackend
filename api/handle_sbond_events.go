@@ -27,7 +27,7 @@ func (a *API) handleSBondEvents(c *gin.Context) {
 		return
 	}
 
-	OK(c, map[string]interface{}{"Buys": trades.Buys, "Redeems": trades.Buys, "Transfers": trades.Transfers})
+	OK(c, map[string]interface{}{"Buys": trades.Buys, "Redeems": trades.Redeems, "Transfers": trades.Transfers})
 }
 
 func (a *API) getAllSBondEvents(userAddress string, offset string, limit string) (*types.SeniorBondTrades, error) {

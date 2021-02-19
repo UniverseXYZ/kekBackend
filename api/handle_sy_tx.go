@@ -17,17 +17,33 @@ func (a *API) handleSYTxs(c *gin.Context) {
 		return
 	}
 
-	jTrades, err := a.getAllJBondEvents(userAddress, offset, limit)
+	juniorTrades, err := a.getAllJBondEvents(userAddress, offset, limit)
 	if err != nil {
 		Error(c, err)
 		return
 	}
 
-	sTrades, err := a.getAllSBondEvents(userAddress, offset, limit)
+	seniorTrades, err := a.getAllSBondEvents(userAddress, offset, limit)
 	if err != nil {
 		Error(c, err)
 		return
 	}
 
-	OK(c, map[string]map[string]interface{}{"JuniorBond": {"Buys": jTrades.Buys, "Redeems": jTrades.Buys, "Transfers": jTrades.Transfers}, "SeniorBond": {"Buys": sTrades.Buys, "Redeems": sTrades.Buys, "Transfers": sTrades.Transfers}})
+	syTokenTrades, err := a.getAllSYTokenEvents(userAddress, offset, limit)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	jTokenTransfers, err := a.getAllJTokenTransfer(userAddress, offset, limit)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, map[string]map[string]interface{}{
+		"JuniorBond": {"Buys": juniorTrades.Buys, "Redeems": juniorTrades.Redeems, "Transfers": juniorTrades.Transfers},
+		"SeniorBond": {"Buys": seniorTrades.Buys, "Redeems": seniorTrades.Redeems, "Transfers": seniorTrades.Transfers},
+		"SYTokens":   {"Buys": syTokenTrades.Buys, "Sells": syTokenTrades.Sells},
+		"JToken:":    {"Transfers": jTokenTransfers}})
 }
