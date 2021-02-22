@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/pkg/errors"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 func (s Storable) callSimpleFunction(a abi.ABI, contract string, name string) (*big.Int, error) {

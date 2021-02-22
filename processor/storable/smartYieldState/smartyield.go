@@ -3,8 +3,9 @@ package smartYieldState
 import (
 	"sync"
 
-	"github.com/barnbridge/barnbridge-backend/types"
 	"golang.org/x/sync/errgroup"
+
+	"github.com/barnbridge/barnbridge-backend/types"
 )
 
 func (s Storable) getTotalLiquidity(wg *errgroup.Group, p types.SYPool, mu *sync.Mutex, results map[string]*State) {
