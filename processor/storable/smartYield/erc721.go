@@ -5,10 +5,11 @@ import (
 	"math/big"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/barnbridge/barnbridge-backend/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+
+	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type ERC721Transfer struct {
