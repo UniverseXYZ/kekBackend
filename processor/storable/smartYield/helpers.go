@@ -70,7 +70,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], TRANSFER_EVENT) {
-			a, err := s.decodeJTokenTransferEvent(log, TRANSFER_EVENT)
+			a, err := s.decodeJTokenTransferEvent(log, TRANSFER_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
