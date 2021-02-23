@@ -81,11 +81,10 @@ var runCmd = &cobra.Command{
 				},
 				SmartYield: smartYield.Config{},
 				SmartYieldState: smartYieldState.Config{
-					NodeURL:            viper.GetString("eth.client.http"),
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
 				},
 				SmartYieldPrice: smartYieldPrices.Config{
-					NodeURL: viper.GetString("eth.client.http"),
+					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
 				},
 			},
 		})

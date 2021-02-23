@@ -4,16 +4,13 @@ import (
 	"database/sql"
 	"fmt"
 	"math/big"
-	"sync"
 
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 
 	"github.com/ethereum/go-ethereum/accounts/abi"
-	"golang.org/x/sync/errgroup"
 )
 
 func (s Storable) callSimpleFunction(a abi.ABI, contract string, name string) (*big.Int, error) {
@@ -39,29 +36,14 @@ func (s Storable) callSimpleFunctionWithInput(a abi.ABI, contract string, name s
 	return decoded[""].(*big.Int), nil
 }
 
-func (s *Storable) getPrice(wg *errgroup.Group, p types.SYPool, mu *sync.Mutex) {
-	wg.Go(func() error {
-		price, err := s.callSimpleFunction(s.abis["smartyield"], p.SmartYieldAddress, "price")
-		if err != nil {
-			return err
-		}
-
-		mu.Lock()
-		s.Processed.Prices[p.UnderlyingAddress] = price
-		mu.Unlock()
-
-		return nil
-	})
-}
-
 func (s Storable) storePrices(tx *sql.Tx) error {
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_prices", "token_address", "price_usd", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_prices", "protocol_id", "token_address", "token_symbol", "price_usd", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
-	for key, a := range s.Processed.Prices {
-		_, err = stmt.Exec(key, a.String(), s.Processed.BlockTimestamp, s.Processed.BlockNumber)
+	for _, a := range s.Processed.Prices {
+		_, err = stmt.Exec(a.ProtocolId, a.TokenAddress, a.TokenSymbol, a.Value, s.Processed.BlockTimestamp, s.Processed.BlockNumber)
 		if err != nil {
 			return err
 		}

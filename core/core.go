@@ -5,9 +5,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/alethio/web3-go/ethrpc"
+	"github.com/alethio/web3-go/ethrpc/provider/httprpc"
 	"github.com/alethio/web3-go/validator"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/pkg/errors"
 	"github.com/pressly/goose"
 	"github.com/sirupsen/logrus"
 
@@ -32,8 +35,9 @@ type Core struct {
 	db               *sql.DB
 	integrityChecker *integrity.Checker
 
-	abis    map[string]abi.ABI
-	ethConn *ethclient.Client
+	abis     map[string]abi.ABI
+	ethConn  *ethclient.Client
+	ethBatch *ethrpc.ETH
 
 	stopMu sync.Mutex
 }
@@ -123,6 +127,21 @@ func New(config Config) *Core {
 	}
 
 	c.ethConn = conn
+
+	batchLoader, err := httprpc.NewBatchLoader(0, 4*time.Millisecond)
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "could not init batch loader"))
+	}
+
+	provider, err := httprpc.NewWithLoader(config.Scraper.NodeURL, batchLoader)
+	if err != nil {
+		log.Fatal(errors.Wrap(err, "could not init httprpc provider"))
+	}
+
+	c.ethBatch, err = ethrpc.New(provider)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag)
 
@@ -227,7 +246,7 @@ func (c *Core) Run() {
 
 			indexingStart := time.Now()
 
-			p, err := processor.New(c.config.Processor, blk, c.abis, c.ethConn)
+			p, err := processor.New(c.config.Processor, blk, c.abis, c.ethConn, c.ethBatch)
 			if err != nil {
 				c.stopMu.Unlock()
 				log.Error("error storing block: ", err)

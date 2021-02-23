@@ -2,23 +2,30 @@ package smartYieldPrices
 
 import (
 	"database/sql"
-	"math/big"
+	"fmt"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/alethio/web3-go/ethrpc"
-	"github.com/alethio/web3-go/ethrpc/provider/httprpc"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type Config struct {
-	NodeURL string
+	ComptrollerAddress string
+}
+
+type Price struct {
+	ProtocolId   string
+	TokenAddress string
+	TokenSymbol  string
+	Value        decimal.Decimal
 }
 
 type Storable struct {
@@ -29,17 +36,18 @@ type Storable struct {
 	eth  *ethrpc.ETH
 
 	Processed struct {
-		Prices         map[string]*big.Int
+		Prices         map[string]Price
 		BlockTimestamp int64
 		BlockNumber    int64
 	}
 }
 
-func New(config Config, raw *types.RawData, abis map[string]abi.ABI) (*Storable, error) {
+func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc.ETH) (*Storable, error) {
 	var s = &Storable{
 		config: config,
 		raw:    raw,
 		abis:   abis,
+		eth:    eth,
 	}
 
 	var err error
@@ -53,22 +61,7 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI) (*Storable,
 		return nil, errors.Wrap(err, "could not parse block timestamp")
 	}
 
-	s.Processed.Prices = make(map[string]*big.Int)
-
-	batchLoader, err := httprpc.NewBatchLoader(0, 4*time.Millisecond)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not init batch loader")
-	}
-
-	provider, err := httprpc.NewWithLoader(config.NodeURL, batchLoader)
-	if err != nil {
-		return nil, err
-	}
-
-	s.eth, err = ethrpc.New(provider)
-	if err != nil {
-		return nil, err
-	}
+	s.Processed.Prices = make(map[string]Price)
 
 	return s, nil
 }
@@ -77,11 +70,35 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	var wg = &errgroup.Group{}
 	var mu = &sync.Mutex{}
 
-	for _, p := range state.Pools() {
-		s.getPrice(wg, p, mu)
-	}
+	var compoundOracleAddress string
+	wg.Go(func() error {
+		input, err := utils.ABIGenerateInput(s.abis["comptroller"], "oracle")
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("could not generate input for %s.%s", s.config.ComptrollerAddress, "oracle"))
+		}
+
+		data, err := utils.CallAtBlock(s.eth, s.config.ComptrollerAddress, input, s.Processed.BlockNumber)
+		if err != nil {
+			return errors.Wrap(err, "could not call comptroller.oracle()")
+		}
+
+		compoundOracleAddress = utils.Topic2Address(data)
+
+		return nil
+	})
 
 	err := wg.Wait()
+	if err != nil {
+		return err
+	}
+
+	for _, p := range state.Pools() {
+		if p.ProtocolId == "compound/v2" {
+			s.getCompoundPrice(compoundOracleAddress, wg, p, mu)
+		}
+	}
+
+	err = wg.Wait()
 	if err != nil {
 		return err
 	}

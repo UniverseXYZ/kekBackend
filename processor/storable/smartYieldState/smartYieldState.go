@@ -4,10 +4,8 @@ import (
 	"database/sql"
 	"strconv"
 	"sync"
-	"time"
 
 	"github.com/alethio/web3-go/ethrpc"
-	"github.com/alethio/web3-go/ethrpc/provider/httprpc"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/pkg/errors"
@@ -18,7 +16,6 @@ import (
 )
 
 type Config struct {
-	NodeURL            string
 	ComptrollerAddress string
 }
 
@@ -35,11 +32,12 @@ type Storable struct {
 	}
 }
 
-func New(config Config, raw *types.RawData, abis map[string]abi.ABI) (*Storable, error) {
+func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc.ETH) (*Storable, error) {
 	var s = &Storable{
 		config: config,
 		raw:    raw,
 		abis:   abis,
+		eth:    eth,
 	}
 
 	var err error
@@ -51,21 +49,6 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI) (*Storable,
 	s.Preprocessed.BlockTimestamp, err = strconv.ParseInt(s.raw.Block.Timestamp, 0, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not parse block timestamp")
-	}
-
-	batchLoader, err := httprpc.NewBatchLoader(0, 4*time.Millisecond)
-	if err != nil {
-		return nil, errors.Wrap(err, "could not init batch loader")
-	}
-
-	provider, err := httprpc.NewWithLoader(config.NodeURL, batchLoader)
-	if err != nil {
-		return nil, err
-	}
-
-	s.eth, err = ethrpc.New(provider)
-	if err != nil {
-		return nil, err
 	}
 
 	return s, nil
