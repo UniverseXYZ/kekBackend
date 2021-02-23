@@ -43,20 +43,17 @@ func NewStorable(config Config, raw *types.RawData, abis map[string]abi.ABI) *St
 
 func (s *Storable) ToDB(tx *sql.Tx) error {
 	var smartYieldLogs []web3types.Log
-	var poolsForLogs []types.SYPool
 	var compoundProviderLogs []web3types.Log
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
 			if state.PoolBySmartYieldAddress(log.Address) != nil {
-				p := state.PoolBySmartYieldAddress(log.Address)
 				smartYieldLogs = append(smartYieldLogs, log)
-				poolsForLogs = append(poolsForLogs, *p)
 				continue
 			}
 
-			if state.PoolByJuniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["juniorbond"], TRANSFER_EVENT) {
-				p := state.PoolBySmartYieldAddress(log.Address)
+			if state.PoolByJuniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["juniorbond"], TransferEvent) {
+				p := state.PoolByJuniorBondAddress(log.Address)
 				a, err := s.decodeERC721TransferEvent(log)
 
 				if err != nil {
@@ -70,11 +67,14 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 				continue
 			}
 
-			if state.PoolBySeniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["seniorbond"], TRANSFER_EVENT) {
+			if state.PoolBySeniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["seniorbond"], TransferEvent) {
+				p := state.PoolBySeniorBondAddress(log.Address)
 				a, err := s.decodeERC721TransferEvent(log)
 				if err != nil {
 					return err
 				} else if a != nil {
+					a.ProtocolId = p.ProtocolId
+					a.SYAddress = p.SmartYieldAddress
 					a.TokenType = "senior"
 					s.processed.ERC721Transfers = append(s.processed.ERC721Transfers, *a)
 				}
@@ -88,7 +88,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 		}
 	}
 
-	err := s.decodeSmartYieldLog(smartYieldLogs, poolsForLogs)
+	err := s.decodeSmartYieldLog(smartYieldLogs)
 	if err != nil {
 		return err
 	}

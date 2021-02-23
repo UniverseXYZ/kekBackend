@@ -43,7 +43,7 @@ func (s *Storable) decodeHarvestEvent(log web3types.Log) (*Harvest, error) {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = s.abis["compoundprovider"].UnpackIntoInterface(&h, HARVEST_EVENT, data)
+	err = s.abis["compoundprovider"].UnpackIntoInterface(&h, HarvestEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -65,7 +65,7 @@ func (s *Storable) decodeTransferFeesEvent(log web3types.Log) (*TransferFees, er
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = s.abis["compoundprovider"].UnpackIntoInterface(&t, TRANSFER_FEES_EVENT, data)
+	err = s.abis["compoundprovider"].UnpackIntoInterface(&t, TransferFeesEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}

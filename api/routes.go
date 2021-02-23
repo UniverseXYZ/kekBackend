@@ -34,10 +34,4 @@ func (a *API) setRoutes() {
 
 	smartYield := a.engine.Group("/api/smartyield")
 	smartYield.GET("/pools", a.handlePools)
-	smartYield.GET("/tx", a.handleSYTxs)
-	smartYield.GET("/tx/jbond", a.handleJBondEvents)
-	smartYield.GET("/tx/sbond", a.handleSBondEvents)
-	smartYield.GET("/tx/sytoken", a.handleSYTokenEvents)
-	smartYield.GET("tx/jtoken", a.handleJTokenTransfer)
-
 }
