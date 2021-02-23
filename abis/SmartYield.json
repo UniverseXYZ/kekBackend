@@ -10,6 +10,11 @@
         "internalType": "string",
         "name": "symbol_",
         "type": "string"
+      },
+      {
+        "internalType": "uint8",
+        "name": "decimals_",
+        "type": "uint8"
       }
     ],
     "stateMutability": "nonpayable",
@@ -678,6 +683,19 @@
   {
     "inputs": [],
     "name": "juniorBondsMaturitiesPrev",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxBondDailyRate",
     "outputs": [
       {
         "internalType": "uint256",
