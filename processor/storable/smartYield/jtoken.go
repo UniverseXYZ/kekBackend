@@ -72,12 +72,33 @@ func (s *Storable) storeJTokenTransfers(tx *sql.Tx) error {
 	}
 
 	for _, a := range s.processed.jTokenTransfers {
-		_, err = tx.Exec(`insert into smart_yield_transaction_history (
-                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
-                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
-                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
-			a.ProtocolId, a.SYAddress, a.TokenAddress, a.From, a.Value.String(), "", JTOKEN_TRANSFER, a.TransactionHash, a.TransactionIndex, a.LogIndex,
-			s.processed.blockTimestamp, s.processed.blockNumber)
+		// we don't want to store Mint & Burn events in the transaction history table because there will already be another
+		// corresponding action (eg: SeniorDeposit)
+		if a.From == ZeroAddress || a.To == ZeroAddress {
+			continue
+		}
+
+		// ignore any transfers related to a 'BuyJuniorBond' event
+		if utils.NormalizeAddress(a.To) == utils.NormalizeAddress(a.SYAddress) {
+			continue
+		}
+
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
+														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,
+														 included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`, a.ProtocolId, a.SYAddress, a.TokenAddress, a.From, a.Value.String(), "JUNIOR", JtokenSend, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
+														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,
+														 included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`, a.ProtocolId, a.SYAddress, a.TokenAddress, a.To, a.Value.String(), "JUNIOR", JtokenReceive, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}

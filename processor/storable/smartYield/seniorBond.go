@@ -8,6 +8,7 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
@@ -129,12 +130,12 @@ func (s *Storable) storeSeniorBuyTrades(tx *sql.Tx) error {
 	}
 
 	for _, a := range s.processed.seniorActions.seniorBondBuys {
-		_, err = tx.Exec(`insert into smart_yield_transaction_history (
-                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
-                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
-                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
-			a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.BuyerAddress, a.UnderlyingIn.String(), "SENIOR", SENIOR_DEPOSIT, a.TransactionHash, a.TransactionIndex, a.LogIndex,
-			s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
+														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,
+														 included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`, a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.BuyerAddress, a.UnderlyingIn.String(), "SENIOR", SeniorDeposit, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
@@ -171,12 +172,22 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 	}
 
 	for _, a := range s.processed.seniorActions.seniorBondRedeems {
-		_, err = tx.Exec(`insert into smart_yield_transaction_history (
-                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
-                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
-                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
-			a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.OwnerAddress, a.Fee.String(), "SENIOR", SENIOR_REDEEM, a.TransactionHash, a.TransactionIndex, a.LogIndex,
-			s.processed.blockTimestamp, s.processed.blockNumber)
+		// todo: amount should be `underlying_in + gain - fee`
+
+		var underlyingIn, gain decimal.Decimal
+		err := tx.QueryRow(`select underlying_in, gain from smart_yield_senior_buy where senior_bond_id = $1`, a.SeniorBondID.Int64()).Scan(&underlyingIn, &gain)
+		if err != nil {
+			return errors.Wrap(err, "could not find SeniorBond by id in the databas ")
+		}
+
+		amount := underlyingIn.Add(gain).Sub(decimal.NewFromBigInt(a.Fee, 0))
+
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
+														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,
+														 included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+`, a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.OwnerAddress, amount, "SENIOR", SeniorRedeem, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}

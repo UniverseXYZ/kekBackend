@@ -8,6 +8,7 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
@@ -72,18 +73,48 @@ func (s *Storable) storeERC721Transfers(tx *sql.Tx) error {
 	}
 
 	for _, a := range s.processed.ERC721Transfers {
-		var tokenActionType string
-		if a.TokenType == "junior" {
-			tokenActionType = string(JBOND_TRANSFER)
-		} else {
-			tokenActionType = string(SBOND_TRANSFER)
+		// we don't want to store Mint & Burn events in the transaction history table because there will already be another
+		// corresponding action (eg: SeniorDeposit)
+		if a.Sender == ZeroAddress || a.Receiver == ZeroAddress {
+			continue
 		}
-		_, err = tx.Exec(`insert into smart_yield_transaction_history (
-                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
-                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
-                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
-			a.ProtocolId, a.SYAddress, a.TokenAddress, a.Sender, a.TokenID.String(), strings.ToUpper(a.TokenType), tokenActionType, a.TransactionHash, a.TransactionIndex, a.LogIndex,
-			s.processed.blockTimestamp, s.processed.blockNumber)
+
+		var tokenActionTypeSend, tokenActionTypeReceive string
+		var amount decimal.Decimal
+		if a.TokenType == "junior" {
+			tokenActionTypeSend = string(JbondSend)
+			tokenActionTypeReceive = string(JbondReceive)
+
+			err := tx.QueryRow(`select tokens_in from smart_yield_junior_buy where junior_bond_id = $1`, a.TokenID.Int64()).Scan(&amount)
+			if err != nil {
+				return errors.Wrap(err, "could not find JuniorBond by id in the database")
+			}
+		} else {
+			tokenActionTypeSend = string(SbondSend)
+			tokenActionTypeReceive = string(SbondReceive)
+
+			err := tx.QueryRow(`select underlying_in from smart_yield_senior_buy where senior_bond_id = $1`, a.TokenID.Int64()).Scan(&amount)
+			if err != nil {
+				return errors.Wrap(err, "could not find SeniorBond by id in the database")
+			}
+		}
+
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
+														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,
+														 included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`, a.ProtocolId, a.SYAddress, a.TokenAddress, a.Sender, amount, strings.ToUpper(a.TokenType), tokenActionTypeSend, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
+														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,
+														 included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`, a.ProtocolId, a.SYAddress, a.TokenAddress, a.Receiver, amount, strings.ToUpper(a.TokenType), tokenActionTypeReceive, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}

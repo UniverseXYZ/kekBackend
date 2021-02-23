@@ -1,27 +1,32 @@
 package smartYield
 
+const ZeroAddress = "0x0000000000000000000000000000000000000000"
+
 const (
-	BUY_TOKENS_EVENT         = "BuyTokens"
-	SELL_TOKENS_EVENT        = "SellTokens"
-	BUY_SENIOR_BOND_EVENT    = "BuySeniorBond"
-	REDEEM_SENIOR_BOND_EVENT = "RedeemSeniorBond"
-	BUY_JUNIOR_BOND_EVENT    = "BuyJuniorBond"
-	REDEEM_JUNIOR_BOND_EVENT = "RedeemJuniorBond"
-	TRANSFER_EVENT           = "Transfer"
-	HARVEST_EVENT            = "Harvest"
-	TRANSFER_FEES_EVENT      = "TransferFees"
+	BuyTokensEvent        = "BuyTokens"
+	SellTokensEvent       = "SellTokens"
+	BuySeniorBondEvent    = "BuySeniorBond"
+	RedeemSeniorBondEvent = "RedeemSeniorBond"
+	BuyJuniorBondEvent    = "BuyJuniorBond"
+	RedeemJuniorBondEvent = "RedeemJuniorBond"
+	TransferEvent         = "Transfer"
+	HarvestEvent          = "Harvest"
+	TransferFeesEvent     = "TransferFees"
 )
 
 type txType string
 
 const (
-	JUNIOR_DEPOSIT          txType = "JUNIOR_DEPOSIT"
-	JUNIOR_INSTANT_WITHDRAW txType = "JUNIOR_INSTANT_WITHDRAW"
-	JUNIOR_REGULAR_WITHDRAW txType = "JUNIOR_REGULAR_WITHDRAW"
-	JUNIOR_REDEEM           txType = "JUNIOR_REDEEM"
-	SENIOR_DEPOSIT          txType = "SENIOR_DEPOSIT"
-	SENIOR_REDEEM           txType = "SENIOR_REDEEM"
-	JTOKEN_TRANSFER         txType = "JTOKEN_TRANSFER"
-	JBOND_TRANSFER          txType = "JBOND_TRANSFER"
-	SBOND_TRANSFER          txType = "SBOND_TRANSFER"
+	JuniorDeposit         txType = "JUNIOR_DEPOSIT"
+	JuniorInstantWithdraw txType = "JUNIOR_INSTANT_WITHDRAW"
+	JuniorRegularWithdraw txType = "JUNIOR_REGULAR_WITHDRAW"
+	JuniorRedeem          txType = "JUNIOR_REDEEM"
+	SeniorDeposit         txType = "SENIOR_DEPOSIT"
+	SeniorRedeem          txType = "SENIOR_REDEEM"
+	JtokenSend            txType = "JTOKEN_SEND"
+	JtokenReceive         txType = "JTOKEN_RECEIVE"
+	JbondSend             txType = "JBOND_SEND"
+	JbondReceive          txType = "JBOND_RECEIVE"
+	SbondSend             txType = "SBOND_SEND"
+	SbondReceive          txType = "SBOND_RECEIVE"
 )

@@ -9,8 +9,8 @@ import (
 
 func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPool) error {
 	for i, log := range logs {
-		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_TOKENS_EVENT) {
-			a, err := s.decodeTokenBuyEvent(log, BUY_TOKENS_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], BuyTokensEvent) {
+			a, err := s.decodeTokenBuyEvent(log, BuyTokensEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -19,8 +19,8 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 			continue
 		}
 
-		if utils.LogIsEvent(log, s.abis["smartyield"], SELL_TOKENS_EVENT) {
-			a, err := s.decodeTokenSellEvent(log, SELL_TOKENS_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], SellTokensEvent) {
+			a, err := s.decodeTokenSellEvent(log, SellTokensEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -29,8 +29,8 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 			continue
 		}
 
-		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_SENIOR_BOND_EVENT) {
-			a, err := s.decodeSeniorBondBuyEvent(log, BUY_SENIOR_BOND_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], BuySeniorBondEvent) {
+			a, err := s.decodeSeniorBondBuyEvent(log, BuySeniorBondEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -39,8 +39,8 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 			continue
 		}
 
-		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_SENIOR_BOND_EVENT) {
-			a, err := s.decodeSeniorBondRedeemEvent(log, REDEEM_SENIOR_BOND_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], RedeemSeniorBondEvent) {
+			a, err := s.decodeSeniorBondRedeemEvent(log, RedeemSeniorBondEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -49,8 +49,8 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 			continue
 		}
 
-		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_JUNIOR_BOND_EVENT) {
-			a, err := s.decodeJuniorBondBuyEvent(log, BUY_JUNIOR_BOND_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], BuyJuniorBondEvent) {
+			a, err := s.decodeJuniorBondBuyEvent(log, BuyJuniorBondEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -59,8 +59,8 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 			continue
 		}
 
-		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_JUNIOR_BOND_EVENT) {
-			a, err := s.decodeJuniorBondRedeemEvent(log, REDEEM_JUNIOR_BOND_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], RedeemJuniorBondEvent) {
+			a, err := s.decodeJuniorBondRedeemEvent(log, RedeemJuniorBondEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -69,8 +69,8 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 			continue
 		}
 
-		if utils.LogIsEvent(log, s.abis["smartyield"], TRANSFER_EVENT) {
-			a, err := s.decodeJTokenTransferEvent(log, TRANSFER_EVENT, pools[i])
+		if utils.LogIsEvent(log, s.abis["smartyield"], TransferEvent) {
+			a, err := s.decodeJTokenTransferEvent(log, TransferEvent, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -85,7 +85,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 
 func (s *Storable) decodeCompoundProviderEvents(logs []web3types.Log) error {
 	for _, log := range logs {
-		if utils.LogIsEvent(log, s.abis["compoundprovider"], HARVEST_EVENT) {
+		if utils.LogIsEvent(log, s.abis["compoundprovider"], HarvestEvent) {
 			a, err := s.decodeHarvestEvent(log)
 			if err != nil {
 				return err
@@ -95,7 +95,7 @@ func (s *Storable) decodeCompoundProviderEvents(logs []web3types.Log) error {
 			}
 		}
 
-		if utils.LogIsEvent(log, s.abis["compoundprovider"], TRANSFER_FEES_EVENT) {
+		if utils.LogIsEvent(log, s.abis["compoundprovider"], TransferFeesEvent) {
 			a, err := s.decodeTransferFeesEvent(log)
 			if err != nil {
 				return err
