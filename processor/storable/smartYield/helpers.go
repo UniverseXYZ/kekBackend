@@ -30,7 +30,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_SENIOR_BOND_EVENT) {
-			a, err := s.decodeSeniorBondBuyEvent(log, BUY_SENIOR_BOND_EVENT)
+			a, err := s.decodeSeniorBondBuyEvent(log, BUY_SENIOR_BOND_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -40,7 +40,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_SENIOR_BOND_EVENT) {
-			a, err := s.decodeSeniorBondRedeemEvent(log, REDEEM_SENIOR_BOND_EVENT)
+			a, err := s.decodeSeniorBondRedeemEvent(log, REDEEM_SENIOR_BOND_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {

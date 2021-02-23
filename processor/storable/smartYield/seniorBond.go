@@ -37,9 +37,11 @@ type SeniorBondRedeemTrade struct {
 	Fee                    *big.Int
 }
 
-func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string) (*SeniorBondBuyTrade, error) {
+func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string, pool types.SYPool) (*SeniorBondBuyTrade, error) {
 	var t SeniorBondBuyTrade
-	t.SYAddress = utils.NormalizeAddress(log.Address)
+	t.SYAddress = pool.SmartYieldAddress
+	t.UnderlyingTokenAddress = pool.UnderlyingAddress
+	t.ProtocolId = pool.ProtocolId
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
@@ -67,9 +69,11 @@ func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string) (*S
 	return &t, nil
 }
 
-func (s *Storable) decodeSeniorBondRedeemEvent(log web3types.Log, event string) (*SeniorBondRedeemTrade, error) {
+func (s *Storable) decodeSeniorBondRedeemEvent(log web3types.Log, event string, pool types.SYPool) (*SeniorBondRedeemTrade, error) {
 	var t SeniorBondRedeemTrade
-	t.SYAddress = utils.NormalizeAddress(log.Address)
+	t.SYAddress = pool.SmartYieldAddress
+	t.UnderlyingTokenAddress = pool.UnderlyingAddress
+	t.ProtocolId = pool.ProtocolId
 
 	data, err := hex.DecodeString(utils.Trim0x(log.Data))
 	if err != nil {
@@ -124,6 +128,18 @@ func (s *Storable) storeSeniorBuyTrades(tx *sql.Tx) error {
 		return err
 	}
 
+	for _, a := range s.processed.seniorActions.seniorBondBuys {
+		_, err = tx.Exec(`insert into smart_yield_transaction_history (
+                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
+                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
+                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
+			a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.BuyerAddress, a.UnderlyingIn.String(), "SENIOR", SENIOR_DEPOSIT, a.TransactionHash, a.TransactionIndex, a.LogIndex,
+			s.processed.blockTimestamp, s.processed.blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -152,6 +168,18 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 	err = stmt.Close()
 	if err != nil {
 		return err
+	}
+
+	for _, a := range s.processed.seniorActions.seniorBondRedeems {
+		_, err = tx.Exec(`insert into smart_yield_transaction_history (
+                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
+                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
+                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
+			a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.OwnerAddress, a.Fee.String(), "SENIOR", SENIOR_REDEEM, a.TransactionHash, a.TransactionIndex, a.LogIndex,
+			s.processed.blockTimestamp, s.processed.blockNumber)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
