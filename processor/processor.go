@@ -14,6 +14,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 	"github.com/barnbridge/barnbridge-backend/types"
 )
@@ -108,11 +109,11 @@ func (fb *Processor) registerStorables() error {
 
 		fb.storables = append(fb.storables, smartYield.NewStorable(fb.config.SmartYield, fb.Raw, fb.abis))
 
-		/*	syState, err := smartYieldState.New(fb.config.SmartYieldState, fb.Raw, fb.abis)
-			if err != nil {
-				return errors.Wrap(err, "could not initialize SmartYieldState storable")
-			}
-			fb.storables = append(fb.storables, syState)*/
+		syState, err := smartYieldState.New(fb.config.SmartYieldState, fb.Raw, fb.abis)
+		if err != nil {
+			return errors.Wrap(err, "could not initialize SmartYieldState storable")
+		}
+		fb.storables = append(fb.storables, syState)
 	}
 
 	return nil
