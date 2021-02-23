@@ -16,21 +16,25 @@ import (
 type SeniorBondBuyTrade struct {
 	*types.Event
 
-	SYAddress    string
-	BuyerAddress string
-	SeniorBondID *big.Int
-	UnderlyingIn *big.Int
-	Gain         *big.Int
-	ForDays      *big.Int
+	SYAddress              string
+	ProtocolId             string
+	UnderlyingTokenAddress string
+	BuyerAddress           string
+	SeniorBondID           *big.Int
+	UnderlyingIn           *big.Int
+	Gain                   *big.Int
+	ForDays                *big.Int
 }
 
 type SeniorBondRedeemTrade struct {
 	*types.Event
 
-	SYAddress    string
-	OwnerAddress string
-	SeniorBondID *big.Int
-	Fee          *big.Int
+	SYAddress              string
+	ProtocolId             string
+	UnderlyingTokenAddress string
+	OwnerAddress           string
+	SeniorBondID           *big.Int
+	Fee                    *big.Int
 }
 
 func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string) (*SeniorBondBuyTrade, error) {

@@ -3,13 +3,14 @@ package smartYield
 import (
 	web3types "github.com/alethio/web3-go/types"
 
+	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-func (s *Storable) decodeSmartYieldLog(logs []web3types.Log) error {
-	for _, log := range logs {
+func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPool) error {
+	for i, log := range logs {
 		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_TOKENS_EVENT) {
-			a, err := s.decodeTokenBuyEvent(log, BUY_TOKENS_EVENT)
+			a, err := s.decodeTokenBuyEvent(log, BUY_TOKENS_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -19,7 +20,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log) error {
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], SELL_TOKENS_EVENT) {
-			a, err := s.decodeTokenSellEvent(log, SELL_TOKENS_EVENT)
+			a, err := s.decodeTokenSellEvent(log, SELL_TOKENS_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -49,7 +50,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log) error {
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], BUY_JUNIOR_BOND_EVENT) {
-			a, err := s.decodeJuniorBondBuyEvent(log, BUY_JUNIOR_BOND_EVENT)
+			a, err := s.decodeJuniorBondBuyEvent(log, BUY_JUNIOR_BOND_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -59,7 +60,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log) error {
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], REDEEM_JUNIOR_BOND_EVENT) {
-			a, err := s.decodeJuniorBondRedeemEvent(log, REDEEM_JUNIOR_BOND_EVENT)
+			a, err := s.decodeJuniorBondRedeemEvent(log, REDEEM_JUNIOR_BOND_EVENT, pools[i])
 			if err != nil {
 				return err
 			} else if a != nil {
