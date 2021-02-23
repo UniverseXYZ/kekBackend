@@ -4,11 +4,13 @@ import (
 	"database/sql"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/alethio/web3-go/ethrpc"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/barnbridge/barnbridge-backend/state"
@@ -27,7 +29,7 @@ type Storable struct {
 	eth  *ethrpc.ETH
 
 	Preprocessed struct {
-		BlockTimestamp int64
+		BlockTimestamp time.Time
 		BlockNumber    int64
 	}
 }
@@ -46,10 +48,12 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 		return nil, errors.Wrap(err, "unable to process block number")
 	}
 
-	s.Preprocessed.BlockTimestamp, err = strconv.ParseInt(s.raw.Block.Timestamp, 0, 64)
+	txUnix, err := strconv.ParseInt(s.raw.Block.Timestamp, 0, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not parse block timestamp")
 	}
+
+	s.Preprocessed.BlockTimestamp = time.Unix(txUnix, 0)
 
 	return s, nil
 }
@@ -70,6 +74,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		s.getTotalLiquidity(wg, p, mu, results)
 		s.getJuniorLiquidity(wg, p, mu, results)
 		s.getPrice(wg, p, mu, results)
+		s.getMaxBondDailyRate(wg, p, mu, results)
 
 		if p.ProtocolId == "compound/v2" {
 			s.getCompoundAPY(wg, p, mu, results)
@@ -81,7 +86,46 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
-	spew.Dump(results)
+	for _, p := range state.Pools() {
+		// 	(seniorLiq - (seniorAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
+		r := results[p.SmartYieldAddress]
+
+		if r.OriginatorNetApy == 0 || r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
+			results[p.SmartYieldAddress].JuniorAPY = 0
+			continue
+		}
+
+		seniorLiq := r.TotalLiquidity.Sub(r.JuniorLiquidity)
+
+		a := decimal.NewFromFloat(r.SeniorAPY / r.OriginatorNetApy).Mul(seniorLiq)
+
+		juniorApy := seniorLiq.Sub(a).Add(r.JuniorLiquidity).Mul(decimal.NewFromFloat(r.OriginatorNetApy)).Div(r.JuniorLiquidity)
+		results[p.SmartYieldAddress].JuniorAPY, _ = juniorApy.Float64()
+	}
+
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "block_number", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
+	if err != nil {
+		return err
+	}
+
+	for _, p := range state.Pools() {
+		r := results[p.SmartYieldAddress]
+
+		_, err = stmt.Exec(s.Preprocessed.BlockNumber, s.Preprocessed.BlockTimestamp, r.PoolAddress, r.TotalLiquidity.Sub(r.JuniorLiquidity), r.JuniorLiquidity, r.JTokenPrice, r.SeniorAPY, r.JuniorAPY, r.OriginatorApy, r.OriginatorNetApy)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
