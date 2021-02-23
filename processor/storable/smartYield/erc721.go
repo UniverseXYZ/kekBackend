@@ -3,6 +3,7 @@ package smartYield
 import (
 	"database/sql"
 	"math/big"
+	"strings"
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/lib/pq"
@@ -15,6 +16,8 @@ import (
 type ERC721Transfer struct {
 	*types.Event
 
+	SYAddress    string
+	ProtocolId   string
 	TokenAddress string
 	TokenType    string
 	Sender       string
@@ -66,6 +69,24 @@ func (s *Storable) storeERC721Transfers(tx *sql.Tx) error {
 	err = stmt.Close()
 	if err != nil {
 		return err
+	}
+
+	for _, a := range s.processed.ERC721Transfers {
+		var tokenActionType string
+		if a.TokenType == "junior" {
+			tokenActionType = string(JBOND_TRANSFER)
+		} else {
+			tokenActionType = string(SBOND_TRANSFER)
+		}
+		_, err = tx.Exec(`insert into smart_yield_transaction_history (
+                                             protocol_id, sy_address, underlying_token_address, user_address, amount, 
+                                             tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp, included_in_block)
+                                values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) `,
+			a.ProtocolId, a.SYAddress, a.TokenAddress, a.Sender, a.TokenID.String(), strings.ToUpper(a.TokenType), tokenActionType, a.TransactionHash, a.TransactionIndex, a.LogIndex,
+			s.processed.blockTimestamp, s.processed.blockNumber)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

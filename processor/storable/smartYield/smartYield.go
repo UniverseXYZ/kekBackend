@@ -56,10 +56,14 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if state.PoolByJuniorBondAddress(log.Address) != nil && utils.LogIsEvent(log, s.abis["juniorbond"], TRANSFER_EVENT) {
+				p := state.PoolBySmartYieldAddress(log.Address)
 				a, err := s.decodeERC721TransferEvent(log)
+
 				if err != nil {
 					return err
 				} else if a != nil {
+					a.ProtocolId = p.ProtocolId
+					a.SYAddress = p.SmartYieldAddress
 					a.TokenType = "junior"
 					s.processed.ERC721Transfers = append(s.processed.ERC721Transfers, *a)
 				}
