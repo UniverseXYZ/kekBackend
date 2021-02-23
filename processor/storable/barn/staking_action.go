@@ -6,9 +6,10 @@ import (
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 func (b *BarnStorable) handleStakingActions(logs []web3types.Log, tx *sql.Tx) error {

@@ -5,6 +5,8 @@ import (
 )
 
 type Transfer struct {
+	SYAddress        string
+	ProtocolId       string
 	TokenAddress     string
 	From             string
 	To               string

@@ -36,3 +36,4 @@ barnbridge-backend
 .dump/
 .volumes
 /dashboard/web/assets/css/tailwind.min.css
+blocks.txt

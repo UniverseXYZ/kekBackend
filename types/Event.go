@@ -5,6 +5,8 @@ import (
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/pkg/errors"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type Event struct {
@@ -16,7 +18,7 @@ type Event struct {
 
 func (e *Event) Build(log web3types.Log) (*Event, error) {
 	var err error
-	e.LoggedBy = log.Address
+	e.LoggedBy = utils.NormalizeAddress(log.Address)
 	e.TransactionHash = log.TransactionHash
 
 	e.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
