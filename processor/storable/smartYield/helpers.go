@@ -3,14 +3,13 @@ package smartYield
 import (
 	web3types "github.com/alethio/web3-go/types"
 
-	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPool) error {
-	for i, log := range logs {
+func (s *Storable) decodeSmartYieldLog(logs []web3types.Log) error {
+	for _, log := range logs {
 		if utils.LogIsEvent(log, s.abis["smartyield"], BuyTokensEvent) {
-			a, err := s.decodeTokenBuyEvent(log, BuyTokensEvent, pools[i])
+			a, err := s.decodeTokenBuyEvent(log, BuyTokensEvent)
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -20,7 +19,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], SellTokensEvent) {
-			a, err := s.decodeTokenSellEvent(log, SellTokensEvent, pools[i])
+			a, err := s.decodeTokenSellEvent(log, SellTokensEvent)
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -30,7 +29,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], BuySeniorBondEvent) {
-			a, err := s.decodeSeniorBondBuyEvent(log, BuySeniorBondEvent, pools[i])
+			a, err := s.decodeSeniorBondBuyEvent(log, BuySeniorBondEvent)
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -40,7 +39,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], RedeemSeniorBondEvent) {
-			a, err := s.decodeSeniorBondRedeemEvent(log, RedeemSeniorBondEvent, pools[i])
+			a, err := s.decodeSeniorBondRedeemEvent(log, RedeemSeniorBondEvent)
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -50,7 +49,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], BuyJuniorBondEvent) {
-			a, err := s.decodeJuniorBondBuyEvent(log, BuyJuniorBondEvent, pools[i])
+			a, err := s.decodeJuniorBondBuyEvent(log, BuyJuniorBondEvent)
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -60,7 +59,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], RedeemJuniorBondEvent) {
-			a, err := s.decodeJuniorBondRedeemEvent(log, RedeemJuniorBondEvent, pools[i])
+			a, err := s.decodeJuniorBondRedeemEvent(log, RedeemJuniorBondEvent)
 			if err != nil {
 				return err
 			} else if a != nil {
@@ -70,7 +69,7 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log, pools []types.SYPoo
 		}
 
 		if utils.LogIsEvent(log, s.abis["smartyield"], TransferEvent) {
-			a, err := s.decodeJTokenTransferEvent(log, TransferEvent, pools[i])
+			a, err := s.decodeJTokenTransferEvent(log, TransferEvent)
 			if err != nil {
 				return err
 			} else if a != nil {

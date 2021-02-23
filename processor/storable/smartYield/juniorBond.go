@@ -9,6 +9,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -36,7 +37,9 @@ type JuniorBondRedeemTrade struct {
 	UnderlyingOut          *big.Int
 }
 
-func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string, pool types.SYPool) (*JuniorBondBuyTrade, error) {
+func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string) (*JuniorBondBuyTrade, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t JuniorBondBuyTrade
 	t.SYAddress = pool.SmartYieldAddress
 	t.UnderlyingTokenAddress = pool.UnderlyingAddress
@@ -68,7 +71,9 @@ func (s *Storable) decodeJuniorBondBuyEvent(log web3types.Log, event string, poo
 	return &t, nil
 }
 
-func (s *Storable) decodeJuniorBondRedeemEvent(log web3types.Log, event string, pool types.SYPool) (*JuniorBondRedeemTrade, error) {
+func (s *Storable) decodeJuniorBondRedeemEvent(log web3types.Log, event string) (*JuniorBondRedeemTrade, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t JuniorBondRedeemTrade
 	t.SYAddress = pool.SmartYieldAddress
 	t.UnderlyingTokenAddress = pool.UnderlyingAddress

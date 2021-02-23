@@ -43,15 +43,12 @@ func NewStorable(config Config, raw *types.RawData, abis map[string]abi.ABI) *St
 
 func (s *Storable) ToDB(tx *sql.Tx) error {
 	var smartYieldLogs []web3types.Log
-	var poolsForLogs []types.SYPool
 	var compoundProviderLogs []web3types.Log
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
 			if state.PoolBySmartYieldAddress(log.Address) != nil {
-				p := state.PoolBySmartYieldAddress(log.Address)
 				smartYieldLogs = append(smartYieldLogs, log)
-				poolsForLogs = append(poolsForLogs, *p)
 				continue
 			}
 
@@ -91,7 +88,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 		}
 	}
 
-	err := s.decodeSmartYieldLog(smartYieldLogs, poolsForLogs)
+	err := s.decodeSmartYieldLog(smartYieldLogs)
 	if err != nil {
 		return err
 	}

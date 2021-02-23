@@ -10,6 +10,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -38,7 +39,9 @@ type SeniorBondRedeemTrade struct {
 	Fee                    *big.Int
 }
 
-func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string, pool types.SYPool) (*SeniorBondBuyTrade, error) {
+func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string) (*SeniorBondBuyTrade, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t SeniorBondBuyTrade
 	t.SYAddress = pool.SmartYieldAddress
 	t.UnderlyingTokenAddress = pool.UnderlyingAddress
@@ -70,7 +73,9 @@ func (s *Storable) decodeSeniorBondBuyEvent(log web3types.Log, event string, poo
 	return &t, nil
 }
 
-func (s *Storable) decodeSeniorBondRedeemEvent(log web3types.Log, event string, pool types.SYPool) (*SeniorBondRedeemTrade, error) {
+func (s *Storable) decodeSeniorBondRedeemEvent(log web3types.Log, event string) (*SeniorBondRedeemTrade, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t SeniorBondRedeemTrade
 	t.SYAddress = pool.SmartYieldAddress
 	t.UnderlyingTokenAddress = pool.UnderlyingAddress

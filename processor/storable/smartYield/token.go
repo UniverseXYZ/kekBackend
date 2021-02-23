@@ -9,6 +9,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -37,7 +38,9 @@ type TokenSellTrade struct {
 	Forfeits               *big.Int
 }
 
-func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string, pool types.SYPool) (*TokenBuyTrade, error) {
+func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string) (*TokenBuyTrade, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t TokenBuyTrade
 	t.SYAddress = pool.SmartYieldAddress
 	t.UnderlyingTokenAddress = pool.UnderlyingAddress
@@ -62,7 +65,9 @@ func (s *Storable) decodeTokenBuyEvent(log web3types.Log, event string, pool typ
 	return &t, nil
 }
 
-func (s *Storable) decodeTokenSellEvent(log web3types.Log, event string, pool types.SYPool) (*TokenSellTrade, error) {
+func (s *Storable) decodeTokenSellEvent(log web3types.Log, event string) (*TokenSellTrade, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t TokenSellTrade
 	t.SYAddress = pool.SmartYieldAddress
 	t.UnderlyingTokenAddress = pool.UnderlyingAddress

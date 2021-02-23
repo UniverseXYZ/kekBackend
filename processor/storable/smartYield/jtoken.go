@@ -9,11 +9,14 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
-func (s *Storable) decodeJTokenTransferEvent(log web3types.Log, event string, pool types.SYPool) (*types.Transfer, error) {
+func (s *Storable) decodeJTokenTransferEvent(log web3types.Log, event string) (*types.Transfer, error) {
+	pool := state.PoolBySmartYieldAddress(log.Address)
+
 	var t types.Transfer
 	t.TokenAddress = utils.NormalizeAddress(log.Address)
 	t.SYAddress = pool.SmartYieldAddress
