@@ -16,11 +16,11 @@ func upCreateTableHarvest(tx *sql.Tx) error {
 		(
 			provider_address     text    not null,
 			caller_address       text    not null,
-			underlying_got       bigint,
-			reward_expected      bigint,
-			underlying_deposited bigint,
-			fees                 bigint,
-			reward               bigint,
+			underlying_got       numeric(78),
+			reward_expected      numeric(78),
+			underlying_deposited numeric(78),
+			fees                 numeric(78),
+			reward               numeric(78),
 		
 			tx_hash              text    not null,
 			tx_index             integer not null,

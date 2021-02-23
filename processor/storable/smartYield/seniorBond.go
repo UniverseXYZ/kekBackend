@@ -112,13 +112,13 @@ func (s *Storable) storeSeniorBuyTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_senior_buy", "sy_address", "buyer_address", "senior_bond_id", "underlying_in", "gain", "for_days", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_senior_buy", "sy_address", "buyer_address", "senior_bond_address", "senior_bond_id", "underlying_in", "gain", "for_days", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.seniorActions.seniorBondBuys {
-		_, err = stmt.Exec(a.SYAddress, a.BuyerAddress, a.SeniorBondID.String(), a.UnderlyingIn.String(), a.Gain.String(), a.ForDays.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.BuyerAddress, state.PoolBySmartYieldAddress(a.SYAddress).SeniorBondAddress, a.SeniorBondID.String(), a.UnderlyingIn.String(), a.Gain.String(), a.ForDays.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
@@ -154,13 +154,13 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_senior_redeem", "sy_address", "owner_address", "senior_bond_id", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_senior_redeem", "sy_address", "owner_address", "senior_bond_address", "senior_bond_id", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
 
 	for _, a := range s.processed.seniorActions.seniorBondRedeems {
-		_, err = stmt.Exec(a.SYAddress, a.OwnerAddress, a.SeniorBondID.String(), a.Fee.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.OwnerAddress, state.PoolBySmartYieldAddress(a.SYAddress).JuniorBondAddress, a.SeniorBondID.String(), a.Fee.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}

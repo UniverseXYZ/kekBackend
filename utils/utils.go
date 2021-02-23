@@ -22,7 +22,8 @@ func ValidateAccount(accountAddress string) (string, error) {
 	if len(accountAddress) != 40 {
 		return "", errors.New("invalid account address")
 	}
-	return accountAddress, nil
+
+	return NormalizeAddress(accountAddress), nil
 }
 
 func AppendNotEmpty(slice []string, str string) []string {
@@ -57,7 +58,7 @@ func Trim0x(str string) string {
 
 func Topic2Address(topic string) string {
 	topic = Trim0x(topic)
-	return "0x" + topic[24:]
+	return NormalizeAddress(topic[24:])
 }
 
 func LogIsEvent(log web3types.Log, abi abi.ABI, event string) bool {

@@ -19,10 +19,9 @@ func upCreateTableSyTransactionHistory(tx *sql.Tx) error {
 			sy_address               text                  not null,
 			underlying_token_address text                  not null,
 			user_address             text                  not null,
-			amount                   bigint,
+			amount                   numeric(78),
 			tranche                  text                  not null,
 			transaction_type         sy_tx_history_tx_type not null,
-		
 		
 			tx_hash                  text                  not null,
 			tx_index                 integer               not null,

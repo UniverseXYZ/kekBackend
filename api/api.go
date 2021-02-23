@@ -6,6 +6,8 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+
+	"github.com/barnbridge/barnbridge-backend/state"
 )
 
 var log = logrus.WithField("module", "api")
@@ -24,6 +26,11 @@ type API struct {
 }
 
 func New(db *sql.DB, config Config) *API {
+	err := state.Init(db)
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	return &API{
 		config: config,
 		db:     db,

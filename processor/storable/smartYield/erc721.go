@@ -38,7 +38,7 @@ func (s *Storable) decodeERC721TransferEvent(log web3types.Log) (*ERC721Transfer
 	}
 
 	return &ERC721Transfer{
-		TokenAddress: utils.CleanUpHex(log.Address),
+		TokenAddress: utils.NormalizeAddress(log.Address),
 		Sender:       utils.Topic2Address(log.Topics[1]),
 		Receiver:     utils.Topic2Address(log.Topics[2]),
 		TokenID:      tokenID,
