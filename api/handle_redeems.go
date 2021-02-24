@@ -9,6 +9,7 @@ import (
 
 type seniorRedeem struct {
 	SeniorBondAddress string `json:"seniorBondAddress"`
+	UserAddress       string `json:"userAddress"`
 	SeniorBondID      int64  `json:"seniorBondId"`
 	SYAddress         string `json:"smartYieldAddress"`
 	Fee               int64  `json:"fee"`
@@ -20,6 +21,7 @@ type seniorRedeem struct {
 
 type juniorRedeem struct {
 	JuniorBondAddress string `json:"juniorBondAddress"`
+	UserAddress       string `json:"userAddress"`
 	JuniorBondID      int64  `json:"juniorBondId"`
 	SYAddress         string `json:"smartYieldAddress"`
 	TokensIn          int64  `json:"tokensIn"`
@@ -34,6 +36,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 	rows, err := a.db.Query(`
 				select b.sy_address,
 					   b.buyer_address,
+				       b.senior_bond_address,
 					   b.senior_bond_id,
 					   b.underlying_in,
 					   b.gain,
@@ -54,7 +57,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 	for rows.Next() {
 		var redeem seniorRedeem
-		err := rows.Scan(&redeem.SYAddress, &redeem.SeniorBondAddress, &redeem.SeniorBondID, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays, &redeem.Fee, &redeem.BlockTimestamp)
+		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.SeniorBondAddress, &redeem.SeniorBondID, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays, &redeem.Fee, &redeem.BlockTimestamp)
 		if err != nil {
 			Error(c, err)
 			return
@@ -71,7 +74,8 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 	var juniorBondRedeems []juniorRedeem
 	rows, err := a.db.Query(`
 				select b.sy_address,
-					   b.buyer_address,
+				       b.buyer_address,
+				       b.junior_bond_address,
 					   b.junior_bond_id,
 					   b.tokens_in,
 					   b.matures_at,
@@ -91,7 +95,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 
 	for rows.Next() {
 		var redeem juniorRedeem
-		err := rows.Scan(&redeem.SYAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.TokensIn, &redeem.MaturesAt, &redeem.UnderlyingOut, &redeem.BlockTimestamp)
+		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.TokensIn, &redeem.MaturesAt, &redeem.UnderlyingOut, &redeem.BlockTimestamp)
 		if err != nil {
 			Error(c, err)
 			return
