@@ -6,6 +6,7 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type State struct {
@@ -17,6 +18,10 @@ type State struct {
 var instance *State
 
 func Init(db *sql.DB) error {
+	if instance != nil {
+		return nil
+	}
+
 	instance = &State{db: db}
 
 	err := loadAllSYPools()
@@ -40,6 +45,16 @@ func loadAllSYPools() error {
 		if err != nil {
 			return errors.Wrap(err, "could not scan pools from database")
 		}
+
+		p.ControllerAddress = utils.NormalizeAddress(p.ControllerAddress)
+		p.ModelAddress = utils.NormalizeAddress(p.ModelAddress)
+		p.ProviderAddress = utils.NormalizeAddress(p.ProviderAddress)
+		p.SmartYieldAddress = utils.NormalizeAddress(p.SmartYieldAddress)
+		p.OracleAddress = utils.NormalizeAddress(p.OracleAddress)
+		p.JuniorBondAddress = utils.NormalizeAddress(p.JuniorBondAddress)
+		p.SeniorBondAddress = utils.NormalizeAddress(p.SeniorBondAddress)
+		p.ReceiptTokenAddress = utils.NormalizeAddress(p.ReceiptTokenAddress)
+		p.UnderlyingAddress = utils.NormalizeAddress(p.UnderlyingAddress)
 
 		pools = append(pools, p)
 	}

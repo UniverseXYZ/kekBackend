@@ -19,6 +19,7 @@ import (
 
 type Config struct {
 	ComptrollerAddress string
+	BlocksPerMinute    int64
 }
 
 type Storable struct {
@@ -75,6 +76,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		s.getJuniorLiquidity(wg, p, mu, results)
 		s.getPrice(wg, p, mu, results)
 		s.getMaxBondDailyRate(wg, p, mu, results)
+		s.getAbond(wg, p, mu, results)
 
 		if p.ProtocolId == "compound/v2" {
 			s.getCompoundAPY(wg, p, mu, results)
@@ -87,7 +89,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	for _, p := range state.Pools() {
-		// 	(seniorLiq - (seniorAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
+		// 	(seniorLiq - (abondAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
 		r := results[p.SmartYieldAddress]
 
 		if r.OriginatorNetApy == 0 || r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
@@ -97,13 +99,24 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 
 		seniorLiq := r.TotalLiquidity.Sub(r.JuniorLiquidity)
 
-		a := decimal.NewFromFloat(r.SeniorAPY / r.OriginatorNetApy).Mul(seniorLiq)
+		abondGain := decimal.NewFromBigInt(r.Abond.Gain, -int32(p.UnderlyingDecimals))
+		abondPrincipal := decimal.NewFromBigInt(r.Abond.Principal, -int32(p.UnderlyingDecimals))
+		abondIssuedAt := decimal.NewFromBigInt(r.Abond.IssuedAt, -18)
+		abondMaturesAt := decimal.NewFromBigInt(r.Abond.MaturesAt, -18)
+
+		var abondAPY float64
+		if !abondPrincipal.Equal(decimal.NewFromInt(0)) {
+			abondAPY, _ = abondGain.Div(abondPrincipal).Div(abondMaturesAt.Sub(abondIssuedAt)).Mul(decimal.NewFromInt(365 * 24 * 60 * 60)).Float64()
+		}
+
+		a := decimal.NewFromFloat(abondAPY / r.OriginatorNetApy).Mul(seniorLiq)
 
 		juniorApy := seniorLiq.Sub(a).Add(r.JuniorLiquidity).Mul(decimal.NewFromFloat(r.OriginatorNetApy)).Div(r.JuniorLiquidity)
 		results[p.SmartYieldAddress].JuniorAPY, _ = juniorApy.Float64()
+		results[p.SmartYieldAddress].AbondAPY = abondAPY
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "block_number", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "block_number", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "abond_principal", "abond_gain", "abond_issued_at", "abond_matures_at", "abond_apy", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
 	if err != nil {
 		return err
 	}
@@ -111,7 +124,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	for _, p := range state.Pools() {
 		r := results[p.SmartYieldAddress]
 
-		_, err = stmt.Exec(s.Preprocessed.BlockNumber, s.Preprocessed.BlockTimestamp, r.PoolAddress, r.TotalLiquidity.Sub(r.JuniorLiquidity), r.JuniorLiquidity, r.JTokenPrice, r.SeniorAPY, r.JuniorAPY, r.OriginatorApy, r.OriginatorNetApy)
+		_, err = stmt.Exec(s.Preprocessed.BlockNumber, s.Preprocessed.BlockTimestamp, r.PoolAddress, r.TotalLiquidity.Sub(r.JuniorLiquidity), r.JuniorLiquidity, r.JTokenPrice, r.Abond.Principal.String(), r.Abond.Gain.String(), decimal.NewFromBigInt(r.Abond.IssuedAt, -18).IntPart(), decimal.NewFromBigInt(r.Abond.MaturesAt, -18).IntPart(), r.AbondAPY, r.SeniorAPY, r.JuniorAPY, r.OriginatorApy, r.OriginatorNetApy)
 		if err != nil {
 			return err
 		}

@@ -33,7 +33,7 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 			r := decimal.NewFromBigInt(rate, -18)
 
 			rf, _ := r.Float64()
-			blocksPerDay := float64(4 * 60 * 24)
+			blocksPerDay := float64(s.config.BlocksPerMinute * 60 * 24)
 
 			apy := math.Pow(rf*blocksPerDay+1, 365) - 1
 
@@ -154,7 +154,7 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 		apr := compDollarsPerBlock.DivRound(tsDec, 18)
 
 		rf, _ := apr.Float64()
-		blocksPerDay := float64(4 * 60 * 24)
+		blocksPerDay := float64(s.config.BlocksPerMinute * 60 * 24)
 
 		apy := math.Pow(rf*blocksPerDay+1, 365) - 1
 

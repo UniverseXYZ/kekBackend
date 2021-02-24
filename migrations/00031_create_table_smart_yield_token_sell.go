@@ -16,9 +16,9 @@ func upCreateTableSmartYieldTokenSell(tx *sql.Tx) error {
 		(
 			sy_address        text    not null,
 			seller_address    text    not null,
-			tokens_in         bigint,
-			underlying_out    bigint,
-			forfeits          bigint,
+			tokens_in         numeric(78),
+			underlying_out    numeric(78),
+			forfeits          numeric(78),
 		
 			tx_hash           text    not null,
 			tx_index          integer not null,

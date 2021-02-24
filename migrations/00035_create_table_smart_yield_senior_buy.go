@@ -16,9 +16,10 @@ func upCreateTableSmartYieldSeniorBuy(tx *sql.Tx) error {
 		(
 			sy_address        text    not null,
 			buyer_address     text    not null,
-			senior_bond_id    bigint  not null,
-			underlying_in     bigint,
-			gain              bigint,
+			senior_bond_address text  not null,
+			senior_bond_id    numeric(78)  not null,
+			underlying_in     numeric(78),
+			gain              numeric(78),
 			for_days          bigint,
 		
 			tx_hash           text    not null,
