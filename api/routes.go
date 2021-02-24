@@ -34,4 +34,6 @@ func (a *API) setRoutes() {
 
 	smartYield := a.engine.Group("/api/smartyield")
 	smartYield.GET("/pools", a.handlePools)
+	smartYield.GET("/user/:user/redeems/senior", a.handleSeniorRedeems)
+	smartYield.GET("/user/:user/redeems/junior", a.handleJuniorRedeems)
 }
