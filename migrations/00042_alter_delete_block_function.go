@@ -31,7 +31,7 @@ func UpAlterDeleteBlockFunction(tx *sql.Tx) error {
 			'governance_votes_canceled',
 			'governance_abrogation_proposals',
 			'governance_abrogation_votes',
-			'governance_abrogation_votes_canceled'
+			'governance_abrogation_votes_canceled',
 		    'yield_farming_actions',
 		    'compound_provider_harvest',
 		    'compound_provider_transfer_fees',
@@ -39,12 +39,13 @@ func UpAlterDeleteBlockFunction(tx *sql.Tx) error {
 		    'jtoken_transfers',
 		    'smart_yield_junior_buy',
 		    'smart_yield_junior_redeem',
-		    'smart_yield_pools',
+		    'smart_yield_prices',
 		    'smart_yield_senior_buy',
 		    'smart_yield_senior_redeem',
+		    'smart_yield_state',
 		    'smart_yield_token_buy',
 		    'smart_yield_token_sell',
-		    'smart_yield_state'
+		    'smart_yield_transaction_history'
 			];
 	
 		foreach tbl in array tables

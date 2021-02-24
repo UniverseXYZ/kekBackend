@@ -14,7 +14,7 @@ func upCreateTableSmartYieldState(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create table smart_yield_state
 		(
-			block_number       bigint           not null,
+			included_in_block  bigint           not null,
 			block_timestamp    timestamp        not null,
 		
 			pool_address       text             not null,

@@ -121,7 +121,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		results[p.SmartYieldAddress].AbondAPY = abondAPY
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "block_number", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "abond_principal", "abond_gain", "abond_issued_at", "abond_matures_at", "abond_apy", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "included_in_block", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "abond_principal", "abond_gain", "abond_issued_at", "abond_matures_at", "abond_apy", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
 	if err != nil {
 		return err
 	}
