@@ -2,7 +2,6 @@ package smartYieldState
 
 import (
 	"database/sql"
-	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -107,17 +106,17 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 
 		var abondAPY float64
 		if !abondPrincipal.Equal(decimal.NewFromInt(0)) {
-			abondAPR, _ := abondGain.Div(abondPrincipal).Div(abondMaturesAt.Sub(abondIssuedAt)).Float64()
-			abondAPY = math.Pow(1+abondAPR, 365*24*60*60) - 1
+			abondAPY, _ = abondGain.Div(abondPrincipal).Div(abondMaturesAt.Sub(abondIssuedAt)).Mul(decimal.NewFromInt(365 * 24 * 60 * 60)).Float64()
 		}
 
 		a := decimal.NewFromFloat(abondAPY / r.OriginatorNetApy).Mul(seniorLiq)
 
 		juniorApy := seniorLiq.Sub(a).Add(r.JuniorLiquidity).Mul(decimal.NewFromFloat(r.OriginatorNetApy)).Div(r.JuniorLiquidity)
 		results[p.SmartYieldAddress].JuniorAPY, _ = juniorApy.Float64()
+		results[p.SmartYieldAddress].AbondAPY = abondAPY
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "block_number", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "block_number", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "abond_principal", "abond_gain", "abond_issued_at", "abond_matures_at", "abond_apy", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
 	if err != nil {
 		return err
 	}
@@ -125,7 +124,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	for _, p := range state.Pools() {
 		r := results[p.SmartYieldAddress]
 
-		_, err = stmt.Exec(s.Preprocessed.BlockNumber, s.Preprocessed.BlockTimestamp, r.PoolAddress, r.TotalLiquidity.Sub(r.JuniorLiquidity), r.JuniorLiquidity, r.JTokenPrice, r.SeniorAPY, r.JuniorAPY, r.OriginatorApy, r.OriginatorNetApy)
+		_, err = stmt.Exec(s.Preprocessed.BlockNumber, s.Preprocessed.BlockTimestamp, r.PoolAddress, r.TotalLiquidity.Sub(r.JuniorLiquidity), r.JuniorLiquidity, r.JTokenPrice, r.Abond.Principal.String(), r.Abond.Gain.String(), decimal.NewFromBigInt(r.Abond.IssuedAt, -18).IntPart(), decimal.NewFromBigInt(r.Abond.MaturesAt, -18).IntPart(), r.AbondAPY, r.SeniorAPY, r.JuniorAPY, r.OriginatorApy, r.OriginatorNetApy)
 		if err != nil {
 			return err
 		}

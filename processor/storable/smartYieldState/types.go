@@ -13,6 +13,7 @@ type State struct {
 	JuniorLiquidity decimal.Decimal
 	JTokenPrice     decimal.Decimal
 
+	AbondAPY         float64
 	SeniorAPY        float64
 	JuniorAPY        float64
 	OriginatorApy    float64
