@@ -2,6 +2,7 @@ package smartYieldState
 
 import (
 	"database/sql"
+	"math"
 	"strconv"
 	"sync"
 	"time"
@@ -19,6 +20,7 @@ import (
 
 type Config struct {
 	ComptrollerAddress string
+	BlocksPerMinute    int64
 }
 
 type Storable struct {
@@ -75,6 +77,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		s.getJuniorLiquidity(wg, p, mu, results)
 		s.getPrice(wg, p, mu, results)
 		s.getMaxBondDailyRate(wg, p, mu, results)
+		s.getAbond(wg, p, mu, results)
 
 		if p.ProtocolId == "compound/v2" {
 			s.getCompoundAPY(wg, p, mu, results)
@@ -87,7 +90,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	for _, p := range state.Pools() {
-		// 	(seniorLiq - (seniorAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
+		// 	(seniorLiq - (abondAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
 		r := results[p.SmartYieldAddress]
 
 		if r.OriginatorNetApy == 0 || r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
@@ -97,7 +100,18 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 
 		seniorLiq := r.TotalLiquidity.Sub(r.JuniorLiquidity)
 
-		a := decimal.NewFromFloat(r.SeniorAPY / r.OriginatorNetApy).Mul(seniorLiq)
+		abondGain := decimal.NewFromBigInt(r.Abond.Gain, -int32(p.UnderlyingDecimals))
+		abondPrincipal := decimal.NewFromBigInt(r.Abond.Principal, -int32(p.UnderlyingDecimals))
+		abondIssuedAt := decimal.NewFromBigInt(r.Abond.IssuedAt, -18)
+		abondMaturesAt := decimal.NewFromBigInt(r.Abond.MaturesAt, -18)
+
+		var abondAPY float64
+		if !abondPrincipal.Equal(decimal.NewFromInt(0)) {
+			abondAPR, _ := abondGain.Div(abondPrincipal).Div(abondMaturesAt.Sub(abondIssuedAt)).Float64()
+			abondAPY = math.Pow(1+abondAPR, 365*24*60*60) - 1
+		}
+
+		a := decimal.NewFromFloat(abondAPY / r.OriginatorNetApy).Mul(seniorLiq)
 
 		juniorApy := seniorLiq.Sub(a).Add(r.JuniorLiquidity).Mul(decimal.NewFromFloat(r.OriginatorNetApy)).Div(r.JuniorLiquidity)
 		results[p.SmartYieldAddress].JuniorAPY, _ = juniorApy.Float64()

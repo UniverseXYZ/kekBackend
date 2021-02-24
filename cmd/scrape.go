@@ -79,6 +79,7 @@ var scrapeCmd = &cobra.Command{
 				SmartYield: smartYield.Config{},
 				SmartYieldState: smartYieldState.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+					BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),
 				},
 				SmartYieldPrice: smartYieldPrices.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),

@@ -1,14 +1,18 @@
 package smartYieldState
 
 import (
+	"fmt"
 	"math"
+	"math/big"
 	"strings"
 	"sync"
 
+	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 func (s Storable) getTotalLiquidity(wg *errgroup.Group, p types.SYPool, mu *sync.Mutex, results map[string]*State) {
@@ -77,6 +81,37 @@ func (s Storable) getMaxBondDailyRate(wg *errgroup.Group, p types.SYPool, mu *sy
 
 		mu.Lock()
 		results[p.SmartYieldAddress].SeniorAPY = apy
+		mu.Unlock()
+
+		return nil
+	})
+}
+
+func (s Storable) getAbond(wg *errgroup.Group, p types.SYPool, mu *sync.Mutex, results map[string]*State) {
+	wg.Go(func() error {
+		input, err := utils.ABIGenerateInput(s.abis["smartyield"], "abond")
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("could not generate input for %s.%s", p.SmartYieldAddress, "abond"))
+		}
+
+		data, err := utils.CallAtBlock(s.eth, p.SmartYieldAddress, input, s.Preprocessed.BlockNumber)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("could not call %s.%s", p.SmartYieldAddress, "abond"))
+		}
+
+		decoded, err := utils.DecodeFunctionOutput(s.abis["smartyield"], "abond", data)
+		if err != nil {
+			return errors.Wrap(err, fmt.Sprintf("could not decode output from %s.%s", p.SmartYieldAddress, "abond"))
+		}
+
+		mu.Lock()
+		results[p.SmartYieldAddress].Abond = Abond{
+			Principal:  decoded["principal"].(*big.Int),
+			Gain:       decoded["gain"].(*big.Int),
+			MaturesAt:  decoded["maturesAt"].(*big.Int),
+			IssuedAt:   decoded["issuedAt"].(*big.Int),
+			Liquidated: decoded["liquidated"].(bool),
+		}
 		mu.Unlock()
 
 		return nil
