@@ -2,9 +2,10 @@ package api
 
 import (
 	"database/sql"
-	"strings"
 
 	"github.com/gin-gonic/gin"
+
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type seniorRedeem struct {
@@ -31,7 +32,7 @@ type juniorRedeem struct {
 }
 
 func (a *API) handleSeniorRedeems(c *gin.Context) {
-	userAddress := c.Param("user")
+	userAddress := utils.NormalizeAddress(c.Param("address"))
 	var seniorBondRedeems []seniorRedeem
 	rows, err := a.db.Query(`
 				select r.sy_address,
@@ -70,7 +71,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 }
 
 func (a *API) handleJuniorRedeems(c *gin.Context) {
-	userAddress := strings.ToLower(c.Param("user"))
+	userAddress := utils.NormalizeAddress(c.Param("address"))
 	var juniorBondRedeems []juniorRedeem
 	rows, err := a.db.Query(`
 				select r.sy_address,
