@@ -37,4 +37,6 @@ func (a *API) setRoutes() {
 	smartYield.GET("/pools/:address", a.handlePoolDetails)
 	smartYield.GET("/pools/:address/apy", a.handlePoolAPYTrend)
 	smartYield.GET("/users/:address/history", a.handleSYUserTransactionHistory)
+	smartYield.GET("/users/:address/redeems/senior", a.handleSeniorRedeems)
+	smartYield.GET("/users/:address/redeems/junior", a.handleJuniorRedeems)
 }
