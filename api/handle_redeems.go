@@ -52,11 +52,6 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 		return
 	}
 
-	if err == sql.ErrNoRows {
-		NotFound(c)
-		return
-	}
-
 	for rows.Next() {
 		var redeem seniorRedeem
 		err := rows.Scan(&redeem.SYAddress, &redeem.SeniorBondAddress, &redeem.SeniorBondID, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays, &redeem.Fee, &redeem.BlockTimestamp)
@@ -91,11 +86,6 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
-		return
-	}
-
-	if err == sql.ErrNoRows {
-		NotFound(c)
 		return
 	}
 
