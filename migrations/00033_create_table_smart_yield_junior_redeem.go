@@ -16,8 +16,9 @@ func upCreateTableSmartYieldJuniorRedeem(tx *sql.Tx) error {
 		(
 			sy_address        text    not null,
 			owner_address     text    not null,
+			junior_bond_address text not null,
 			junior_bond_id    bigint  not null,
-			underlying_out    bigint,
+			underlying_out    numeric(78),
 		
 			tx_hash           text    not null,
 			tx_index          integer not null,

@@ -16,8 +16,9 @@ func upCreateTableSmartYieldJuniorBuy(tx *sql.Tx) error {
 		(
 			sy_address        text    not null,
 			buyer_address     text    not null,
+			junior_bond_address text not null,
 			junior_bond_id    bigint  not null,
-			tokens_in         bigint,
+			tokens_in         numeric(78),
 			matures_at        bigint,
 		
 			tx_hash           text    not null,

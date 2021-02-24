@@ -17,7 +17,7 @@ func upCreateTableCompoundProviderTransferFees(tx *sql.Tx) error {
 			provider_address  text    not null,
 			caller_address    text    not null,
 			fees_owner        text    not null,
-			fees              bigint,
+			fees              numeric(78),
 		
 			tx_hash           text    not null,
 			tx_index          integer not null,
