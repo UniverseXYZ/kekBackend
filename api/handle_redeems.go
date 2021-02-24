@@ -34,21 +34,21 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 	userAddress := c.Param("user")
 	var seniorBondRedeems []seniorRedeem
 	rows, err := a.db.Query(`
-				select b.sy_address,
-					   b.buyer_address,
-				       b.senior_bond_address,
-					   b.senior_bond_id,
+				select r.sy_address,
+				       r.owner_address,
+				       r.senior_bond_address,
+				       r.fee,
+					   r.block_timestamp,
+					   r.senior_bond_id,
 					   b.underlying_in,
 					   b.gain,
-					   b.for_days,
-					   r.fee,
-					   r.block_timestamp
-				from smart_yield_senior_buy as b
-						 inner join smart_yield_senior_redeem as r
+					   b.for_days
+				from smart_yield_senior_redeem as r
+						 inner join smart_yield_senior_buy as b
 									on r.senior_bond_address = b.senior_bond_address
 										and r.senior_bond_id = b.senior_bond_id
-				where (r.owner_address = $1 or b.buyer_address = $1
-				)`, userAddress)
+				where r.owner_address = $1 
+				`, userAddress)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -57,7 +57,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 	for rows.Next() {
 		var redeem seniorRedeem
-		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.SeniorBondAddress, &redeem.SeniorBondID, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays, &redeem.Fee, &redeem.BlockTimestamp)
+		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.SeniorBondAddress, &redeem.Fee, &redeem.BlockTimestamp, &redeem.SeniorBondID, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays)
 		if err != nil {
 			Error(c, err)
 			return
@@ -73,20 +73,20 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 	userAddress := strings.ToLower(c.Param("user"))
 	var juniorBondRedeems []juniorRedeem
 	rows, err := a.db.Query(`
-				select b.sy_address,
-				       b.buyer_address,
-				       b.junior_bond_address,
-					   b.junior_bond_id,
+				select r.sy_address,
+				       r.owner_address,
+				       r.junior_bond_address,
+					   r.junior_bond_id,
+				       r.underlying_out,
+					   r.block_timestamp,
 					   b.tokens_in,
-					   b.matures_at,
-					   r.underlying_out,
-					   r.block_timestamp
-				from smart_yield_junior_buy as b
-						 inner join smart_yield_junior_redeem as r
+					   b.matures_at
+				from smart_yield_junior_redeem as r
+						 inner join smart_yield_junior_buy as b
 									on r.junior_bond_address = b.junior_bond_address
 										and r.junior_bond_id = b.junior_bond_id
-				where (r.owner_address = $1 or b.buyer_address = $1
-				)`, userAddress)
+				where r.owner_address = $1
+				`, userAddress)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -95,7 +95,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 
 	for rows.Next() {
 		var redeem juniorRedeem
-		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.TokensIn, &redeem.MaturesAt, &redeem.UnderlyingOut, &redeem.BlockTimestamp)
+		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.UnderlyingOut, &redeem.BlockTimestamp, &redeem.TokensIn, &redeem.MaturesAt)
 		if err != nil {
 			Error(c, err)
 			return
