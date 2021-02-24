@@ -19,6 +19,7 @@ import (
 
 type Config struct {
 	ComptrollerAddress string
+	StartAt            int64
 }
 
 type Price struct {
@@ -67,6 +68,10 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 }
 
 func (s Storable) ToDB(tx *sql.Tx) error {
+	if s.Processed.BlockNumber < s.config.StartAt {
+		return nil
+	}
+
 	var wg = &errgroup.Group{}
 	var mu = &sync.Mutex{}
 

@@ -155,7 +155,7 @@ func (a *API) handlePools(c *gin.Context) {
 			order by block_number desc
 			limit 1
 		`, p.SmartYieldAddress).Scan(&state.BlockNumber, &state.BlockTimestamp, &state.SeniorLiquidity, &state.JuniorLiquidity, &state.JTokenPrice, &state.SeniorAPY, &state.JuniorAPY, &state.OriginatorApy, &state.OriginatorNetApy, &state.NumberOfSeniors, &state.AvgSeniorMaturityDays, &state.NumberOfJuniors)
-		if err != nil {
+		if err != nil && err != sql.ErrNoRows {
 			Error(c, err)
 			return
 		}

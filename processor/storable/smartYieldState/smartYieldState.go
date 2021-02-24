@@ -20,6 +20,7 @@ import (
 type Config struct {
 	ComptrollerAddress string
 	BlocksPerMinute    int64
+	StartAt            int64
 }
 
 type Storable struct {
@@ -60,6 +61,10 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 }
 
 func (s Storable) ToDB(tx *sql.Tx) error {
+	if s.Preprocessed.BlockNumber < s.config.StartAt {
+		return nil
+	}
+
 	var wg = &errgroup.Group{}
 
 	var results = make(map[string]*State)

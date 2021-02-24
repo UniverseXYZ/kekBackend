@@ -83,9 +83,11 @@ var runCmd = &cobra.Command{
 				SmartYieldState: smartYieldState.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
 					BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),
+					StartAt:            viper.GetInt64("storable.smartYieldState.startAt"),
 				},
 				SmartYieldPrice: smartYieldPrices.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+					StartAt:            viper.GetInt64("storable.smartYieldState.startAt"),
 				},
 			},
 		})
