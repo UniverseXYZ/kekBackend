@@ -14,19 +14,19 @@ const (
 	TransferFeesEvent     = "TransferFees"
 )
 
-type txType string
+type TxType string
 
 const (
-	JuniorDeposit         txType = "JUNIOR_DEPOSIT"
-	JuniorInstantWithdraw txType = "JUNIOR_INSTANT_WITHDRAW"
-	JuniorRegularWithdraw txType = "JUNIOR_REGULAR_WITHDRAW"
-	JuniorRedeem          txType = "JUNIOR_REDEEM"
-	SeniorDeposit         txType = "SENIOR_DEPOSIT"
-	SeniorRedeem          txType = "SENIOR_REDEEM"
-	JtokenSend            txType = "JTOKEN_SEND"
-	JtokenReceive         txType = "JTOKEN_RECEIVE"
-	JbondSend             txType = "JBOND_SEND"
-	JbondReceive          txType = "JBOND_RECEIVE"
-	SbondSend             txType = "SBOND_SEND"
-	SbondReceive          txType = "SBOND_RECEIVE"
+	JuniorDeposit         TxType = "JUNIOR_DEPOSIT"
+	JuniorInstantWithdraw TxType = "JUNIOR_INSTANT_WITHDRAW"
+	JuniorRegularWithdraw TxType = "JUNIOR_REGULAR_WITHDRAW"
+	JuniorRedeem          TxType = "JUNIOR_REDEEM"
+	SeniorDeposit         TxType = "SENIOR_DEPOSIT"
+	SeniorRedeem          TxType = "SENIOR_REDEEM"
+	JtokenSend            TxType = "JTOKEN_SEND"
+	JtokenReceive         TxType = "JTOKEN_RECEIVE"
+	JbondSend             TxType = "JBOND_SEND"
+	JbondReceive          TxType = "JBOND_RECEIVE"
+	SbondSend             TxType = "SBOND_SEND"
+	SbondReceive          TxType = "SBOND_RECEIVE"
 )
