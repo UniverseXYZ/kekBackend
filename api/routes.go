@@ -39,4 +39,7 @@ func (a *API) setRoutes() {
 	smartYield.GET("/users/:address/history", a.handleSYUserTransactionHistory)
 	smartYield.GET("/users/:address/redeems/senior", a.handleSeniorRedeems)
 	smartYield.GET("/users/:address/redeems/junior", a.handleJuniorRedeems)
+	smartYield.GET("/users/:address/portfolio-value", a.handleSYUserPortfolioValue)
+	smartYield.GET("/users/:address/portfolio-value/junior", a.handleSYUserJuniorPortfolioValue)
+	smartYield.GET("/users/:address/portfolio-value/senior", a.handleSYUserSeniorPortfolioValue)
 }
