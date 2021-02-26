@@ -67,16 +67,17 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 	}
 
 	query, params := buildQueryWithFilter(`
-		select protocol_id,
-			   sy_address,
+		select h.protocol_id,
+			   h.sy_address,
 			   underlying_token_address,
+               (select underlying_symbol from smart_yield_pools p where h.sy_address = p.sy_address) as underlying_token_symbol, 
 			   amount,
 			   tranche,
 			   transaction_type,
 			   tx_hash,
 			   block_timestamp,
 			   included_in_block
-		from smart_yield_transaction_history
+		from smart_yield_transaction_history h
 		where %s
 		order by included_in_block desc, tx_index desc, log_index desc
 		%s %s;
@@ -96,7 +97,7 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 	for rows.Next() {
 		var h types.SYUserHistory
 
-		err := rows.Scan(&h.ProtocolId, &h.Pool, &h.UnderlyingTokenAddress, &h.Amount, &h.Tranche, &h.TransactionType, &h.TransactionHash, &h.BlockTimestamp, &h.BlockNumber)
+		err := rows.Scan(&h.ProtocolId, &h.Pool, &h.UnderlyingTokenAddress, &h.UnderlyingTokenSymbol, &h.Amount, &h.Tranche, &h.TransactionType, &h.TransactionHash, &h.BlockTimestamp, &h.BlockNumber)
 		if err != nil {
 			Error(c, err)
 			return
