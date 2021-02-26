@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -36,6 +37,8 @@ type juniorRedeem struct {
 
 func (a *API) handleSeniorRedeems(c *gin.Context) {
 	userAddress := utils.NormalizeAddress(c.Param("address"))
+	tokenAddress := strings.ToLower(c.DefaultQuery("token", ""))
+	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
@@ -83,6 +86,14 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 			return
 		}
 
+		if tokenAddress != "" && tokenAddress != p.UnderlyingAddress {
+			continue
+		}
+
+		if originator != "all" && originator != p.ProtocolId {
+			continue
+		}
+
 		tenPowDec := decimal.NewFromInt(10).Pow(decimal.NewFromInt(p.UnderlyingDecimals))
 
 		redeem.UnderlyingIn = redeem.UnderlyingIn.DivRound(tenPowDec, int32(p.UnderlyingDecimals))
@@ -112,6 +123,8 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 func (a *API) handleJuniorRedeems(c *gin.Context) {
 	userAddress := utils.NormalizeAddress(c.Param("address"))
+	tokenAddress := strings.ToLower(c.DefaultQuery("token", ""))
+	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
@@ -156,6 +169,14 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 		if p == nil {
 			Error(c, errors.New("could not find pool in state"))
 			return
+		}
+
+		if tokenAddress != "" && tokenAddress != p.UnderlyingAddress {
+			continue
+		}
+
+		if originator != "all" && originator != p.ProtocolId {
+			continue
 		}
 
 		tenPowDec := decimal.NewFromInt(10).Pow(decimal.NewFromInt(p.UnderlyingDecimals))
