@@ -11,10 +11,10 @@ import (
 )
 
 type APYTrendPoint struct {
-	Point         time.Time `json:"point"`
-	SeniorAPY     float64   `json:"seniorApy"`
-	JuniorAPY     float64   `json:"juniorApy"`
-	OriginatorAPY float64   `json:"originatorApy"`
+	Point            time.Time `json:"point"`
+	SeniorAPY        float64   `json:"seniorApy"`
+	JuniorAPY        float64   `json:"juniorApy"`
+	OriginatorNetAPY float64   `json:"originatorNetApy"`
 }
 
 func (a *API) handlePoolAPYTrend(c *gin.Context) {
@@ -30,7 +30,7 @@ func (a *API) handlePoolAPYTrend(c *gin.Context) {
 		select date_trunc('day', block_timestamp) as scale,
 			   avg(senior_apy) as senior_apy,
 			   avg(junior_apy) as junior_apy,
-		       avg(originator_net_apy) as originator_apy
+		       avg(originator_net_apy) as originator_net_apy
 		from smart_yield_state
 		where pool_address = $1
 		and block_timestamp > now() - interval '7 days'
@@ -46,7 +46,7 @@ func (a *API) handlePoolAPYTrend(c *gin.Context) {
 	for rows.Next() {
 		var p APYTrendPoint
 
-		err := rows.Scan(&p.Point, &p.SeniorAPY, &p.JuniorAPY, &p.OriginatorAPY)
+		err := rows.Scan(&p.Point, &p.SeniorAPY, &p.JuniorAPY, &p.OriginatorNetAPY)
 		if err != nil {
 			Error(c, err)
 			return
