@@ -84,6 +84,7 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 
 	tenPowDec := decimal.NewFromInt(10).Pow(decimal.NewFromInt(p.UnderlyingDecimals))
 
+	state.JuniorLiquidityLocked = state.JuniorLiquidityLocked.Div(tenPowDec)
 	state.JTokenPrice = state.JTokenPrice.DivRound(tenPow18, 18)
 	state.SeniorLiquidity = state.SeniorLiquidity.Div(tenPowDec)
 	state.JuniorLiquidity = state.JuniorLiquidity.Div(tenPowDec)
@@ -176,6 +177,7 @@ func (a *API) handlePools(c *gin.Context) {
 
 		tenPowDec := decimal.NewFromInt(10).Pow(decimal.NewFromInt(p.UnderlyingDecimals))
 
+		state.JuniorLiquidityLocked = state.JuniorLiquidityLocked.Div(tenPowDec)
 		state.JTokenPrice = state.JTokenPrice.DivRound(tenPow18, 18)
 		state.SeniorLiquidity = state.SeniorLiquidity.Div(tenPowDec)
 		state.JuniorLiquidity = state.JuniorLiquidity.Div(tenPowDec)
