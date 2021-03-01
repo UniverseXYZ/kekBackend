@@ -21,6 +21,7 @@ type seniorRedeem struct {
 	Gain              decimal.Decimal `json:"gain"`
 	ForDays           int64           `json:"forDays"`
 	BlockTimestamp    int64           `json:"blockTimestamp"`
+	TxHash            string          `json:"transactionHash"`
 }
 
 type juniorRedeem struct {
@@ -32,6 +33,7 @@ type juniorRedeem struct {
 	MaturesAt         int64           `json:"maturesAt"`
 	UnderlyingOut     decimal.Decimal `json:"underlyingOut"`
 	BlockTimestamp    int64           `json:"blockTimestamp"`
+	TxHash            string          `json:"transactionHash"`
 }
 
 func (a *API) handleSeniorRedeems(c *gin.Context) {
@@ -54,6 +56,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 			   r.fee,
 			   r.block_timestamp,
 			   r.senior_bond_id,
+		       r.tx_hash,
 			   b.underlying_in,
 			   b.gain,
 			   b.for_days
@@ -71,7 +74,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 	for rows.Next() {
 		var redeem seniorRedeem
-		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.SeniorBondAddress, &redeem.Fee, &redeem.BlockTimestamp, &redeem.SeniorBondID, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays)
+		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.SeniorBondAddress, &redeem.Fee, &redeem.BlockTimestamp, &redeem.SeniorBondID, &redeem.TxHash, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays)
 		if err != nil {
 			Error(c, err)
 			return
@@ -130,6 +133,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 			   r.junior_bond_id,
 			   r.underlying_out,
 			   r.block_timestamp,
+		       r.tx_hash,
 			   b.tokens_in,
 			   b.matures_at
 		from smart_yield_junior_redeem as r
@@ -146,7 +150,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 
 	for rows.Next() {
 		var redeem juniorRedeem
-		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.UnderlyingOut, &redeem.BlockTimestamp, &redeem.TokensIn, &redeem.MaturesAt)
+		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.UnderlyingOut, &redeem.BlockTimestamp, &redeem.TxHash, &redeem.TokensIn, &redeem.MaturesAt)
 		if err != nil {
 			Error(c, err)
 			return
