@@ -66,10 +66,10 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 				   (select count(*) from smart_yield_senior_buy where sy_address = pool_address ) as number_of_seniors,
 				   coalesce((select avg(for_days) from smart_yield_senior_buy where sy_address = pool_address), 0) as avg_senior_buy,
 				   (select count(*) from smart_yield_token_buy where sy_address = pool_address ) as number_of_juniors,
-					( select case 
+					( select sum(case 
 					    when (select count(*) from smart_yield_junior_redeem as r where r.junior_bond_address = b.junior_bond_address
 								 																and r.junior_bond_id = b.junior_bond_id) = 0 then tokens_in else 0
-				   		end
+				   		end)
 					from smart_yield_junior_buy as b
 					) as junior_liquidity_locked
 			from smart_yield_state
@@ -158,10 +158,10 @@ func (a *API) handlePools(c *gin.Context) {
 				   (select count(*) from smart_yield_senior_buy where sy_address = pool_address ) as number_of_seniors,
 				   coalesce((select avg(for_days) from smart_yield_senior_buy where sy_address = pool_address), 0) as avg_senior_buy,
 				   (select count(*) from smart_yield_token_buy where sy_address = pool_address ) as number_of_juniors,
-					( select case 
+					( select sum(case 
 					    when (select count(*) from smart_yield_junior_redeem as r where r.junior_bond_address = b.junior_bond_address
 								 																and r.junior_bond_id = b.junior_bond_id) = 0 then tokens_in else 0
-				   		end
+				   		end)
 					from smart_yield_junior_buy as b
 					) as junior_liquidity_locked
 			from smart_yield_state
