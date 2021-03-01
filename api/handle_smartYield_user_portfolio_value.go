@@ -24,8 +24,8 @@ func (a *API) handleSYUserPortfolioValue(c *gin.Context) {
 		select ts,
 			   junior_portfolio_value_at_ts($1, ts),
 			   senior_portfolio_value_at_ts($1, ts)
-		from generate_series(( select extract(epoch from now() - interval '7 days')::bigint ),
-							 ( select extract(epoch from now()) )::bigint, 60 * 60) as ts
+		from generate_series(( select extract(epoch from now() - interval '30 days')::bigint ),
+							 ( select extract(epoch from now()) )::bigint, 12 * 60 * 60) as ts
 	`, user)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -64,8 +64,8 @@ func (a *API) handleSYUserSeniorPortfolioValue(c *gin.Context) {
 	rows, err := a.db.Query(`
 		select ts,
 			   senior_portfolio_value_at_ts($1, ts)
-		from generate_series(( select extract(epoch from now() - interval '7 days')::bigint ),
-							 ( select extract(epoch from now()) )::bigint, 60 * 60) as ts
+		from generate_series(( select extract(epoch from now() - interval '30 days')::bigint ),
+							 ( select extract(epoch from now()) )::bigint, 12 * 60 * 60) as ts
 	`, user)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -103,8 +103,8 @@ func (a *API) handleSYUserJuniorPortfolioValue(c *gin.Context) {
 	rows, err := a.db.Query(`
 		select ts,
 			   junior_portfolio_value_at_ts($1, ts)
-		from generate_series(( select extract(epoch from now() - interval '7 days')::bigint ),
-							 ( select extract(epoch from now()) )::bigint, 60*60) as ts
+		from generate_series(( select extract(epoch from now() - interval '30 days')::bigint ),
+							 ( select extract(epoch from now()) )::bigint, 12 * 60 * 60) as ts
 	`, user)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
