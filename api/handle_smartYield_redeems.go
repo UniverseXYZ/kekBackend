@@ -38,7 +38,7 @@ type juniorRedeem struct {
 
 func (a *API) handleSeniorRedeems(c *gin.Context) {
 	userAddress := utils.NormalizeAddress(c.Param("address"))
-	tokenAddress := strings.ToLower(c.DefaultQuery("token", ""))
+	tokenAddress := strings.ToLower(c.DefaultQuery("token", "all"))
 	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 
 	limit := c.DefaultQuery("limit", "10")
@@ -68,7 +68,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 	var parameters = []interface{}{userAddress, offset, limit}
 
 	var tokenFilter string
-	if tokenAddress != "" {
+	if tokenAddress != "all" {
 		parameters = append(parameters, tokenAddress)
 		tokenFilter = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters))
 	}
@@ -121,7 +121,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 	var parameters2 = []interface{}{userAddress}
 	var tokenFilter2 string
-	if tokenAddress != "" {
+	if tokenAddress != "all" {
 		parameters2 = append(parameters2, tokenAddress)
 		tokenFilter2 = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters2))
 	}
@@ -147,7 +147,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 func (a *API) handleJuniorRedeems(c *gin.Context) {
 	userAddress := utils.NormalizeAddress(c.Param("address"))
-	tokenAddress := strings.ToLower(c.DefaultQuery("token", ""))
+	tokenAddress := strings.ToLower(c.DefaultQuery("token", "all"))
 	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 
 	limit := c.DefaultQuery("limit", "10")
@@ -176,7 +176,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 	var parameters = []interface{}{userAddress, offset, limit}
 
 	var tokenFilter string
-	if tokenAddress != "" {
+	if tokenAddress != "all" {
 		parameters = append(parameters, tokenAddress)
 		tokenFilter = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters))
 	}
@@ -228,7 +228,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 
 	var parameters2 = []interface{}{userAddress}
 	var tokenFilter2 string
-	if tokenAddress != "" {
+	if tokenAddress != "all" {
 		parameters2 = append(parameters2, tokenAddress)
 		tokenFilter2 = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters2))
 	}
