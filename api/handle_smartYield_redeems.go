@@ -135,6 +135,10 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 	query = fmt.Sprintf(query, tokenFilter2, originatorFilter2)
 
 	err = a.db.QueryRow(query, parameters2).Scan(&count)
+	if err != nil {
+		Error(c, err)
+		return
+	}
 
 	block, err := a.getHighestBlock()
 	if err != nil {
@@ -242,6 +246,10 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 	query = fmt.Sprintf(query, tokenFilter2, originatorFilter2)
 
 	err = a.db.QueryRow(query, parameters2...).Scan(&count)
+	if err != nil {
+		Error(c, err)
+		return
+	}
 
 	block, err := a.getHighestBlock()
 	if err != nil {
