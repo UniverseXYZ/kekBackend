@@ -2,6 +2,8 @@ package api
 
 import (
 	"database/sql"
+	"fmt"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
@@ -38,6 +40,8 @@ type juniorRedeem struct {
 
 func (a *API) handleSeniorRedeems(c *gin.Context) {
 	userAddress := utils.NormalizeAddress(c.Param("address"))
+	tokenAddress := strings.ToLower(c.DefaultQuery("token", "all"))
+	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
@@ -48,9 +52,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 		return
 	}
 
-	var seniorBondRedeems []seniorRedeem
-	rows, err := a.db.Query(`
-		select r.sy_address,
+	query := `select r.sy_address,
 			   r.owner_address,
 			   r.senior_bond_address,
 			   r.fee,
@@ -63,9 +65,26 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 		from smart_yield_senior_redeem as r
 				 inner join smart_yield_senior_buy as b
 							on r.senior_bond_address = b.senior_bond_address and r.senior_bond_id = b.senior_bond_id
-		where r.owner_address = $1
-		offset $2 limit $3
-	`, userAddress, offset, limit)
+		where r.owner_address = $1 %s %s
+		offset $2 limit $3`
+
+	var parameters = []interface{}{userAddress, offset, limit}
+
+	var tokenFilter string
+	if tokenAddress != "all" {
+		parameters = append(parameters, tokenAddress)
+		tokenFilter = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters))
+	}
+
+	var originatorFilter string
+	if originator != "all" {
+		parameters = append(parameters, originator)
+		originatorFilter = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters))
+	}
+	query = fmt.Sprintf(query, tokenFilter, originatorFilter)
+
+	var seniorBondRedeems []seniorRedeem
+	rows, err := a.db.Query(query, parameters...)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -96,13 +115,33 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 	}
 
 	var count int64
-	err = a.db.QueryRow(`
-		select count(*)
+
+	query = `select count(*)
 		from smart_yield_senior_redeem as r
 				 inner join smart_yield_senior_buy as b
 							on r.senior_bond_address = b.senior_bond_address and r.senior_bond_id = b.senior_bond_id
-		where r.owner_address = $1
-	`, userAddress).Scan(&count)
+		where r.owner_address = $1 %s %s`
+
+	var parameters2 = []interface{}{userAddress}
+	var tokenFilter2 string
+	if tokenAddress != "all" {
+		parameters2 = append(parameters2, tokenAddress)
+		tokenFilter2 = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters2))
+	}
+
+	var originatorFilter2 string
+	if originator != "all" {
+		parameters2 = append(parameters2, originator)
+		originatorFilter = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters2))
+	}
+
+	query = fmt.Sprintf(query, tokenFilter2, originatorFilter2)
+
+	err = a.db.QueryRow(query, parameters2).Scan(&count)
+	if err != nil {
+		Error(c, err)
+		return
+	}
 
 	block, err := a.getHighestBlock()
 	if err != nil {
@@ -115,6 +154,8 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 func (a *API) handleJuniorRedeems(c *gin.Context) {
 	userAddress := utils.NormalizeAddress(c.Param("address"))
+	tokenAddress := strings.ToLower(c.DefaultQuery("token", "all"))
+	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 
 	limit := c.DefaultQuery("limit", "10")
 	page := c.DefaultQuery("page", "1")
@@ -125,9 +166,7 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 		return
 	}
 
-	var juniorBondRedeems []juniorRedeem
-	rows, err := a.db.Query(`
-		select r.sy_address,
+	query := `select r.sy_address,
 			   r.owner_address,
 			   r.junior_bond_address,
 			   r.junior_bond_id,
@@ -139,9 +178,27 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 		from smart_yield_junior_redeem as r
 				 inner join smart_yield_junior_buy as b
 							on r.junior_bond_address = b.junior_bond_address and r.junior_bond_id = b.junior_bond_id
-		where r.owner_address = $1
-		offset $2 limit $3
-	`, userAddress, offset, limit)
+		where r.owner_address = $1 %s %s
+		offset $2 limit $3`
+
+	var parameters = []interface{}{userAddress, offset, limit}
+
+	var tokenFilter string
+	if tokenAddress != "all" {
+		parameters = append(parameters, tokenAddress)
+		tokenFilter = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters))
+	}
+
+	var originatorFilter string
+	if originator != "all" {
+		parameters = append(parameters, originator)
+		originatorFilter = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters))
+	}
+
+	query = fmt.Sprintf(query, tokenFilter, originatorFilter)
+
+	var juniorBondRedeems []juniorRedeem
+	rows, err := a.db.Query(query, parameters...)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -170,13 +227,33 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 	}
 
 	var count int64
-	err = a.db.QueryRow(`
-		select count(*)
+
+	query = `select count(*)
 		from smart_yield_junior_redeem as r
 				 inner join smart_yield_junior_buy as b
 							on r.junior_bond_address = b.junior_bond_address and r.junior_bond_id = b.junior_bond_id
-		where r.owner_address = $1
-	`, userAddress).Scan(&count)
+		where r.owner_address = $1 %s %s`
+
+	var parameters2 = []interface{}{userAddress}
+	var tokenFilter2 string
+	if tokenAddress != "all" {
+		parameters2 = append(parameters2, tokenAddress)
+		tokenFilter2 = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters2))
+	}
+
+	var originatorFilter2 string
+	if originator != "all" {
+		parameters2 = append(parameters2, originator)
+		originatorFilter2 = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters2))
+	}
+
+	query = fmt.Sprintf(query, tokenFilter2, originatorFilter2)
+
+	err = a.db.QueryRow(query, parameters2...).Scan(&count)
+	if err != nil {
+		Error(c, err)
+		return
+	}
 
 	block, err := a.getHighestBlock()
 	if err != nil {
