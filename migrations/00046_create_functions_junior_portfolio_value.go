@@ -126,30 +126,46 @@ begin
 end;
 $$;
 
+create or replace function junior_locked_positions_at_ts(addr text, ts bigint)
+	returns table
+			(
+				token_address text,
+				token_id      bigint
+			)
+	language plpgsql
+as
+$$
+begin
+	return query select distinct t.token_address, t.token_id
+	from erc721_transfers t
+	where token_type = 'junior'
+      and receiver = addr
+      and block_timestamp <= ts
+      and current_owner_of_token_at_ts(t.token_address, t.token_id, ts) = receiver
+      and not junior_bond_redeemed_at_ts(t.token_address, t.token_id, ts);
+end;
+$$;
+
 create or replace function junior_locked_balance_at_ts(addr text, ts bigint) returns double precision
     language plpgsql as
 $$
 declare
     value double precision;
 begin
-    select into value coalesce(sum(junior_bond_value_at_ts(token_address, token_id, ts)::numeric(78, 18) / pow(10,
-                                                                                                               ( select underlying_decimals
-                                                                                                                 from smart_yield_pools
-                                                                                                                 where junior_bond_address = token_address )) *
-                                   ( select jtoken_price / pow(10, 18)
-                                     from smart_yield_state
-                                     where pool_address = ( select sy_address
-                                                            from smart_yield_pools
-                                                            where junior_bond_address = token_address )
-                                       and block_timestamp <= to_timestamp(ts)
-                                     order by block_timestamp desc
-                                     limit 1 ) * junior_underlying_price_at_ts(token_address, ts)), 0)
-    from erc721_transfers
-    where token_type = 'junior'
-      and receiver = addr
-      and block_timestamp <= ts
-      and current_owner_of_token_at_ts(token_address, token_id, ts) = receiver
-      and not junior_bond_redeemed_at_ts(token_address, token_id, ts);
+    select into value coalesce(
+        sum(
+            junior_bond_value_at_ts(token_address, token_id, ts)::numeric(78, 18) /
+            pow(10,( select underlying_decimals from smart_yield_pools where junior_bond_address = token_address )) *
+            ( select jtoken_price / pow(10, 18)
+              from smart_yield_state
+              where pool_address = ( select sy_address from smart_yield_pools where junior_bond_address = token_address )
+                and block_timestamp <= to_timestamp(ts)
+             order by block_timestamp desc
+             limit 1 ) *
+            junior_underlying_price_at_ts(token_address, ts)),
+        0
+    )
+    from junior_locked_positions_at_ts(addr, ts);
 
     return value;
 end;
@@ -178,6 +194,7 @@ func downCreateFunctionsJuniorPortfolioValue(tx *sql.Tx) error {
 		drop function if exists junior_bond_value_at_ts;
 		drop function if exists junior_bond_redeemed_at_ts;
 		drop function if exists junior_underlying_price_at_ts;
+		drop function if exists junior_locked_positions_at_ts;
 		drop function if exists junior_locked_balance_at_ts;
 		drop function if exists junior_portfolio_value_at_ts;
 	`)

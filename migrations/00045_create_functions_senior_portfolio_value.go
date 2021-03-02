@@ -80,6 +80,26 @@ func upCreateFunctionsSeniorPortfolioValue(tx *sql.Tx) error {
 			return price;
 		end;
 		$$;
+
+		create or replace function senior_portfolio_at_ts(addr text, ts bigint)
+			returns table
+					(
+						token_address text,
+						token_id      bigint
+					)
+			language plpgsql
+		as
+		$$
+		begin
+			return query select distinct t.token_address, t.token_id
+			from erc721_transfers t
+			where token_type = 'senior'
+			  and receiver = addr
+			  and block_timestamp <= ts
+			  and current_owner_of_token_at_ts(t.token_address, t.token_id, ts) = receiver
+			  and not senior_bond_redeemed_at_ts(t.token_address, t.token_id, ts);
+		end;
+		$$;
 		
 		create or replace function senior_portfolio_value_at_ts(addr text, ts bigint) returns double precision
 			language plpgsql as
@@ -88,21 +108,14 @@ func upCreateFunctionsSeniorPortfolioValue(tx *sql.Tx) error {
 			value double precision;
 		begin
 			select into value coalesce(
-				sum(
-					senior_bond_value_at_ts(token_address, token_id, ts)::numeric(78, 18) /
-					pow(
-						10,
-						( select underlying_decimals from smart_yield_pools where senior_bond_address = token_address )
-					) *
-					senior_underlying_price_at_ts(token_address, ts)
-				),
-			0) as senior_portfolio_value
-			from erc721_transfers
-			where token_type = 'senior'
-			  and receiver = addr
-			  and block_timestamp <= ts
-			  and current_owner_of_token_at_ts(token_address, token_id, ts) = receiver
-			  and not senior_bond_redeemed_at_ts(token_address, token_id, ts);
+					sum(
+						senior_bond_value_at_ts(token_address, token_id, ts)::numeric(78, 18) / 
+						pow(10, ( select underlying_decimals from smart_yield_pools where senior_bond_address = token_address )) *
+						senior_underlying_price_at_ts(token_address, ts)
+					), 
+					0
+				) as senior_portfolio_value
+			from senior_portfolio_at_ts(addr, ts);
 		
 			return value;
 		end;
@@ -117,6 +130,7 @@ func downCreateFunctionsSeniorPortfolioValue(tx *sql.Tx) error {
 		drop function if exists senior_bond_value_at_ts;
 		drop function if exists senior_bond_redeemed_at_ts;
 		drop function if exists senior_underlying_price_at_ts;
+		drop function if exists senior_portfolio_at_ts;
 		drop function if exists senior_portfolio_value_at_ts;
 	`)
 	return err
