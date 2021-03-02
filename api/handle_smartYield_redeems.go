@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
@@ -10,7 +9,6 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/barnbridge/barnbridge-backend/state"
-	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type seniorRedeem struct {
@@ -39,58 +37,78 @@ type juniorRedeem struct {
 }
 
 func (a *API) handleSeniorRedeems(c *gin.Context) {
-	userAddress := utils.NormalizeAddress(c.Param("address"))
-	tokenAddress := strings.ToLower(c.DefaultQuery("token", "all"))
-	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
-
-	limit := c.DefaultQuery("limit", "10")
-	page := c.DefaultQuery("page", "1")
-
-	offset, err := calculateOffset(limit, page)
+	user, err := getQueryAddress(c, "address")
 	if err != nil {
-		Error(c, err)
+		BadRequest(c, err)
 		return
 	}
 
-	query := `select r.sy_address,
+	limit, err := getQueryLimit(c)
+	if err != nil {
+		BadRequest(c, err)
+		return
+	}
+
+	page, err := getQueryPage(c)
+	if err != nil {
+		BadRequest(c, err)
+	}
+
+	offset := (page - 1) * limit
+
+	filters := make(map[string]interface{})
+	filters["owner_address"] = user
+
+	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
+	if originator != "all" {
+		if !IsSupportedOriginator(originator) {
+			BadRequest(c, errors.New("invalid originator parameter"))
+			return
+		}
+
+		filters["( select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address )"] = originator
+	}
+
+	token := strings.ToLower(c.DefaultQuery("token", "all"))
+	if token != "all" {
+		if state.PoolByUnderlyingAddress(token) == nil {
+			BadRequest(c, errors.New("invalid token parameter"))
+			return
+		}
+
+		filters["( select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address )"] = token
+	}
+
+	query, params := buildQueryWithFilter(`
+		select r.sy_address,
 			   r.owner_address,
 			   r.senior_bond_address,
 			   r.fee,
 			   r.block_timestamp,
 			   r.senior_bond_id,
-		       r.tx_hash,
+			   r.tx_hash,
 			   b.underlying_in,
 			   b.gain,
 			   b.for_days
 		from smart_yield_senior_redeem as r
 				 inner join smart_yield_senior_buy as b
 							on r.senior_bond_address = b.senior_bond_address and r.senior_bond_id = b.senior_bond_id
-		where r.owner_address = $1 %s %s
-		offset $2 limit $3`
+		where %s
+		order by r.included_in_block desc, r.tx_index desc, r.log_index desc
+		%s %s
+	`,
+		filters,
+		&limit,
+		&offset,
+	)
 
-	var parameters = []interface{}{userAddress, offset, limit}
-
-	var tokenFilter string
-	if tokenAddress != "all" {
-		parameters = append(parameters, tokenAddress)
-		tokenFilter = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters))
-	}
-
-	var originatorFilter string
-	if originator != "all" {
-		parameters = append(parameters, originator)
-		originatorFilter = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters))
-	}
-	query = fmt.Sprintf(query, tokenFilter, originatorFilter)
-
-	var seniorBondRedeems []seniorRedeem
-	rows, err := a.db.Query(query, parameters...)
-
+	rows, err := a.db.Query(query, params...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
 	}
 
+	var seniorBondRedeems []seniorRedeem
 	for rows.Next() {
 		var redeem seniorRedeem
 		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.SeniorBondAddress, &redeem.Fee, &redeem.BlockTimestamp, &redeem.SeniorBondID, &redeem.TxHash, &redeem.UnderlyingIn, &redeem.Gain, &redeem.ForDays)
@@ -115,29 +133,20 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 	}
 
 	var count int64
-
-	query = `select count(*)
+	query, params = buildQueryWithFilter(`
+		select count(*)
 		from smart_yield_senior_redeem as r
 				 inner join smart_yield_senior_buy as b
 							on r.senior_bond_address = b.senior_bond_address and r.senior_bond_id = b.senior_bond_id
-		where r.owner_address = $1 %s %s`
+		where %s
+		%s %s;
+	`,
+		filters,
+		nil,
+		nil,
+	)
 
-	var parameters2 = []interface{}{userAddress}
-	var tokenFilter2 string
-	if tokenAddress != "all" {
-		parameters2 = append(parameters2, tokenAddress)
-		tokenFilter2 = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters2))
-	}
-
-	var originatorFilter2 string
-	if originator != "all" {
-		parameters2 = append(parameters2, originator)
-		originatorFilter = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address) = $%d`, len(parameters2))
-	}
-
-	query = fmt.Sprintf(query, tokenFilter2, originatorFilter2)
-
-	err = a.db.QueryRow(query, parameters2).Scan(&count)
+	err = a.db.QueryRow(query, params...).Scan(&count)
 	if err != nil {
 		Error(c, err)
 		return
@@ -153,58 +162,77 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 }
 
 func (a *API) handleJuniorRedeems(c *gin.Context) {
-	userAddress := utils.NormalizeAddress(c.Param("address"))
-	tokenAddress := strings.ToLower(c.DefaultQuery("token", "all"))
-	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
-
-	limit := c.DefaultQuery("limit", "10")
-	page := c.DefaultQuery("page", "1")
-
-	offset, err := calculateOffset(limit, page)
+	user, err := getQueryAddress(c, "address")
 	if err != nil {
-		Error(c, err)
+		BadRequest(c, err)
 		return
 	}
 
-	query := `select r.sy_address,
+	limit, err := getQueryLimit(c)
+	if err != nil {
+		BadRequest(c, err)
+		return
+	}
+
+	page, err := getQueryPage(c)
+	if err != nil {
+		BadRequest(c, err)
+	}
+
+	offset := (page - 1) * limit
+
+	filters := make(map[string]interface{})
+	filters["owner_address"] = user
+
+	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
+	if originator != "all" {
+		if !IsSupportedOriginator(originator) {
+			BadRequest(c, errors.New("invalid originator parameter"))
+			return
+		}
+
+		filters["( select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address )"] = originator
+	}
+
+	token := strings.ToLower(c.DefaultQuery("token", "all"))
+	if token != "all" {
+		if state.PoolByUnderlyingAddress(token) == nil {
+			BadRequest(c, errors.New("invalid token parameter"))
+			return
+		}
+
+		filters["( select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address )"] = token
+	}
+
+	query, params := buildQueryWithFilter(`
+		select r.sy_address,
 			   r.owner_address,
 			   r.junior_bond_address,
 			   r.junior_bond_id,
 			   r.underlying_out,
 			   r.block_timestamp,
-		       r.tx_hash,
+			   r.tx_hash,
 			   b.tokens_in,
 			   b.matures_at
 		from smart_yield_junior_redeem as r
 				 inner join smart_yield_junior_buy as b
 							on r.junior_bond_address = b.junior_bond_address and r.junior_bond_id = b.junior_bond_id
-		where r.owner_address = $1 %s %s
-		offset $2 limit $3`
+		where %s
+		order by r.included_in_block desc, r.tx_index desc, r.log_index desc
+		%s %s
+	`,
+		filters,
+		&limit,
+		&offset,
+	)
 
-	var parameters = []interface{}{userAddress, offset, limit}
-
-	var tokenFilter string
-	if tokenAddress != "all" {
-		parameters = append(parameters, tokenAddress)
-		tokenFilter = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters))
-	}
-
-	var originatorFilter string
-	if originator != "all" {
-		parameters = append(parameters, originator)
-		originatorFilter = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters))
-	}
-
-	query = fmt.Sprintf(query, tokenFilter, originatorFilter)
-
-	var juniorBondRedeems []juniorRedeem
-	rows, err := a.db.Query(query, parameters...)
-
+	rows, err := a.db.Query(query, params...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
 	}
 
+	var juniorBondRedeems []juniorRedeem
 	for rows.Next() {
 		var redeem juniorRedeem
 		err := rows.Scan(&redeem.SYAddress, &redeem.UserAddress, &redeem.JuniorBondAddress, &redeem.JuniorBondID, &redeem.UnderlyingOut, &redeem.BlockTimestamp, &redeem.TxHash, &redeem.TokensIn, &redeem.MaturesAt)
@@ -227,29 +255,19 @@ func (a *API) handleJuniorRedeems(c *gin.Context) {
 	}
 
 	var count int64
-
-	query = `select count(*)
+	query, params = buildQueryWithFilter(`
+		select count(*)
 		from smart_yield_junior_redeem as r
 				 inner join smart_yield_junior_buy as b
 							on r.junior_bond_address = b.junior_bond_address and r.junior_bond_id = b.junior_bond_id
-		where r.owner_address = $1 %s %s`
-
-	var parameters2 = []interface{}{userAddress}
-	var tokenFilter2 string
-	if tokenAddress != "all" {
-		parameters2 = append(parameters2, tokenAddress)
-		tokenFilter2 = fmt.Sprintf(`and (select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters2))
-	}
-
-	var originatorFilter2 string
-	if originator != "all" {
-		parameters2 = append(parameters2, originator)
-		originatorFilter2 = fmt.Sprintf(`and (select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address ) = $%d`, len(parameters2))
-	}
-
-	query = fmt.Sprintf(query, tokenFilter2, originatorFilter2)
-
-	err = a.db.QueryRow(query, parameters2...).Scan(&count)
+		where %s
+		%s %s;
+	`,
+		filters,
+		nil,
+		nil,
+	)
+	err = a.db.QueryRow(query, params...).Scan(&count)
 	if err != nil {
 		Error(c, err)
 		return
