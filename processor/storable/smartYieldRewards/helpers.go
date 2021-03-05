@@ -28,7 +28,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 		}
 
 		if utils.LogIsEvent(log, s.syRewardABI, "Deposit") {
-			a, err := s.decodeStakingEvent(log)
+			a, err := s.decodeStakingEvent(log, "Deposit")
 			if err != nil {
 				return errors.Wrap(err, "coud not decode deposit event")
 			}
@@ -44,7 +44,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 		}
 
 		if utils.LogIsEvent(log, s.syRewardABI, "Withdraw") {
-			a, err := s.decodeStakingEvent(log)
+			a, err := s.decodeStakingEvent(log, "Withdraw")
 			if err != nil {
 				return errors.Wrap(err, "coud not decode withdraw event")
 			}
@@ -85,6 +85,24 @@ func (s *Storable) decodeClaimEvent(log web3types.Log, action string) (*ClaimEve
 	return &e, nil
 }
 
-func (s *Storable) decodeStakingEvent(log web3types.Log) (*StakingAction, error) {
-	return nil, nil
+func (s *Storable) decodeStakingEvent(log web3types.Log, action string) (*StakingAction, error) {
+	var a StakingAction
+	var err error
+	a.UserAddress = utils.Topic2Address(log.Topics[1])
+	a.Event, err = new(types.Event).Build(log)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := hex.DecodeString(utils.Trim0x(log.Data))
+	if err != nil {
+		return nil, errors.Wrap(err, "could not decode log data")
+	}
+
+	err = s.syRewardABI.UnpackIntoInterface(&a, action, data)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not unpack log data")
+	}
+
+	return &a, nil
 }

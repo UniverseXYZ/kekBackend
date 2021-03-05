@@ -3,16 +3,14 @@ package smartYieldRewards
 import (
 	"math/big"
 
-	"github.com/shopspring/decimal"
-
 	"github.com/barnbridge/barnbridge-backend/types"
 )
 
 type StakingAction struct {
 	*types.Event
 	UserAddress  string
-	Amount       decimal.Decimal
-	BalanceAfter decimal.Decimal
+	Amount       *big.Int
+	BalanceAfter *big.Int
 	ActionType   ActionType
 
 	PoolAddress string
