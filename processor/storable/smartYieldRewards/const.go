@@ -1,8 +1,8 @@
 package smartYieldRewards
 
-type StakingAction string
+type ActionType string
 
 const (
-	DEPOSIT  StakingAction = "DEPOSIT"
-	WITHDRAW StakingAction = "WITHDRAW"
+	DEPOSIT  ActionType = "DEPOSIT"
+	WITHDRAW ActionType = "WITHDRAW"
 )
