@@ -2,9 +2,11 @@ package smartYieldRewards
 
 import (
 	"database/sql"
+	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
 	"github.com/barnbridge/barnbridge-backend/state"
@@ -52,6 +54,26 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	if len(rewardLogs) == 0 {
 		log.WithField("handler", "smart yield rewards").Debug("No events found")
 		return nil
+	}
+
+	err := s.decodeEvents(rewardLogs)
+	if err != nil {
+		return err
+	}
+
+	s.processed.blockNumber, err = strconv.ParseInt(s.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	s.processed.blockTimestamp, err = strconv.ParseInt(s.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	err = s.storeProcessed(tx)
+	if err != nil {
+		return err
 	}
 
 	return nil
