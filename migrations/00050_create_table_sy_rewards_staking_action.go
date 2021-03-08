@@ -33,6 +33,6 @@ func upCreateTableSyRewardsStakingAction(tx *sql.Tx) error {
 }
 
 func downCreateTableSyRewardsStakingAction(tx *sql.Tx) error {
-	_, err := tx.Exec(`drop table if exists smart_yield_rewards_claim;`)
+	_, err := tx.Exec(`drop table if exists smart_yield_rewards_staking_action;`)
 	return err
 }
