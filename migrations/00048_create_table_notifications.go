@@ -15,13 +15,13 @@ func upCreateTableNotifications(tx *sql.Tx) error {
 		create table "notifications"
 		(
 			"target"             text,
-			"type"               text      not null,
+			"type"               text      	not null,
 			"triggered_by_block" bigint,
-			"starts_on"          timestamp,
-			"expires_on"         timestamp not null,
+			"starts_on"          bigint,
+			"expires_on"         bigint 	not null,
 			"message"            text,
 			"metadata"           jsonb,
-			"created_on"		 timestamp default now()
+			"created_on"		 timestamp 	default now()
 		)
 		;
 		
