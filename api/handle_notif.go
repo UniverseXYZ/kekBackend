@@ -28,13 +28,12 @@ func (a *API) handleNotifications(c *gin.Context) {
 				select 
 					   target,
 					   "type",
-					   triggered_by_block,
 					   starts_on,
 					   expires_on,
 					   "message",
 					   "metadata"
 				from notifications
-				where 1=1 %s %s
+				where (target = 'system' %s) %s
 				order by starts_on desc
 				offset $1 limit $2`
 
@@ -45,7 +44,7 @@ func (a *API) handleNotifications(c *gin.Context) {
 
 	if target != "system" {
 		parameters = append(parameters, target)
-		targetFilter = fmt.Sprintf("and target = $%d", len(parameters))
+		targetFilter = fmt.Sprintf("or target = $%d", len(parameters))
 	}
 
 	timestamp, err := getQueryTimestamp(c)
@@ -72,7 +71,7 @@ func (a *API) handleNotifications(c *gin.Context) {
 	var notifications []types.Notification
 	for rows.Next() {
 		var n types.Notification
-		err := rows.Scan(&n.Target, &n.NotificationType, &n.TriggeredByBlock, &n.StartsOn, &n.ExpiresOn, &n.Message, &n.Metadata)
+		err := rows.Scan(&n.Target, &n.NotificationType, &n.StartsOn, &n.ExpiresOn, &n.Message, &n.Metadata)
 		if err != nil {
 			Error(c, err)
 			return
