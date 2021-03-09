@@ -43,4 +43,7 @@ func (a *API) setRoutes() {
 	smartYield.GET("/users/:address/portfolio-value", a.handleSYUserPortfolioValue)
 	smartYield.GET("/users/:address/portfolio-value/junior", a.handleSYUserJuniorPortfolioValue)
 	smartYield.GET("/users/:address/portfolio-value/senior", a.handleSYUserSeniorPortfolioValue)
+
+	notifications := a.engine.Group("/api/notifications")
+	notifications.GET("/", a.handleNotifications)
 }
