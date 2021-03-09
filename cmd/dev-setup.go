@@ -48,6 +48,8 @@ var devSetupCmd = &cobra.Command{
 			}
 		}
 
+		_, err = db.Exec("insert into smart_yield_reward_pools (pool_address, pool_token_address, reward_token_address) values ($1,$2,$3)", "0x31c5A8F6864AEDD4146BBE435A07b3d4d7Ef3595", "0x32", "0x3121")
+
 		log.Println("done")
 	},
 }
