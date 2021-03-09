@@ -20,7 +20,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 			}
 
 			if a != nil {
-				p := state.PoolByAddress(log.Address)
+				p := state.RewardPoolByAddress(log.Address)
 				a.PoolAddress = p.PoolAddress
 				s.processed.claims = append(s.processed.claims, *a)
 				continue
@@ -34,9 +34,9 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 			}
 
 			if a != nil {
-				p := state.PoolByAddress(log.Address)
+				p := state.RewardPoolByAddress(log.Address)
 				a.PoolAddress = p.PoolAddress
-				a.ActionType = DEPOSIT
+				a.ActionType = JuniorStake
 				s.processed.stakingActions = append(s.processed.stakingActions, *a)
 				continue
 			}
@@ -50,9 +50,9 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 			}
 
 			if a != nil {
-				p := state.PoolByAddress(log.Address)
+				p := state.RewardPoolByAddress(log.Address)
 				a.PoolAddress = p.PoolAddress
-				a.ActionType = WITHDRAW
+				a.ActionType = JuniorUnstake
 				s.processed.stakingActions = append(s.processed.stakingActions, *a)
 				continue
 			}

@@ -4,6 +4,8 @@ import (
 	"database/sql"
 
 	"github.com/lib/pq"
+
+	"github.com/barnbridge/barnbridge-backend/state"
 )
 
 func (s *Storable) storeProcessed(tx *sql.Tx) error {
@@ -77,5 +79,20 @@ func (s *Storable) storeStakingEvents(tx *sql.Tx) error {
 		return err
 	}
 
+	for _, a := range s.processed.stakingActions {
+		rewardPool := state.RewardPoolByAddress(a.PoolAddress)
+		syPool := state.PoolBySmartYieldAddress(rewardPool.PoolTokenAddress)
+
+		_, err = tx.Exec(`
+			insert into smart_yield_transaction_history (
+			    	protocol_id, sy_address, underlying_token_address, user_address, amount,tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,included_in_block)
+			values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		`, syPool.ProtocolId, syPool.SmartYieldAddress, syPool.UnderlyingAddress, a.UserAddress, a.Amount.String(), "JUNIOR", a.ActionType, a.TransactionHash,
+			a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

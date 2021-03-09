@@ -45,7 +45,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
-			if state.PoolByAddress(log.Address) != nil {
+			if state.RewardPoolByAddress(log.Address) != nil {
 				rewardLogs = append(rewardLogs, log)
 			}
 		}

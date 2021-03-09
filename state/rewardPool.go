@@ -9,7 +9,7 @@ func RewardPools() []types.SYRewardPool {
 	return instance.rewardPools
 }
 
-func PoolByAddress(address string) *types.SYRewardPool {
+func RewardPoolByAddress(address string) *types.SYRewardPool {
 	for _, p := range instance.rewardPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.PoolAddress) {
 			return &p

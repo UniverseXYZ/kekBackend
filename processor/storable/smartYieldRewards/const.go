@@ -3,6 +3,6 @@ package smartYieldRewards
 type ActionType string
 
 const (
-	DEPOSIT  ActionType = "DEPOSIT"
-	WITHDRAW ActionType = "WITHDRAW"
+	JuniorStake   ActionType = "JUNIOR_STAKE"
+	JuniorUnstake ActionType = "JUNIOR_UNSTAKE"
 )
