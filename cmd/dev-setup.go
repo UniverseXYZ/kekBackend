@@ -50,9 +50,9 @@ var devSetupCmd = &cobra.Command{
 
 		var rewardsPools = []types.SYRewardPool{
 			{
-				PoolAddress:        "0x31c5A8F6864AEDD4146BBE435A07b3d4d7Ef3595",
-				PoolTokenAddress:   "0xD165c8CAE4D824E75588282821C57fB3b74c7f33",
-				RewardTokenAddress: "0xAad4380ED94C7372cbEac0f5AdA627B57b3D5C38",
+				PoolAddress:        utils.NormalizeAddress("0x30c7E7e9B3f1f15C2Ba71D8f7e8e68915c967cB3"),
+				PoolTokenAddress:   utils.NormalizeAddress("0xD165c8CAE4D824E75588282821C57fB3b74c7f33"),
+				RewardTokenAddress: utils.NormalizeAddress("0xAad4380ED94C7372cbEac0f5AdA627B57b3D5C38"),
 			},
 		}
 
