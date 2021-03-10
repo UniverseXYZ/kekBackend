@@ -13,10 +13,6 @@ import (
 	"github.com/barnbridge/barnbridge-backend/types"
 )
 
-//event Claim(address indexed user, uint256 amount);
-//event Deposit(address indexed user, uint256 amount, uint256 balanceAfter);
-//event Withdraw(address indexed user, uint256 amount, uint256 balanceAfter);
-
 var log = logrus.WithField("module", "storable(smart yield rewards)")
 
 type Storable struct {
