@@ -12,7 +12,8 @@ import (
 type State struct {
 	db *sql.DB
 
-	pools []types.SYPool
+	syPools     []types.SYPool
+	rewardPools []types.SYRewardPool
 }
 
 var instance *State
@@ -27,6 +28,11 @@ func Init(db *sql.DB) error {
 	err := loadAllSYPools()
 	if err != nil {
 		return errors.Wrap(err, "could not load SmartYield pools")
+	}
+
+	err = loadAllRewardPools()
+	if err != nil {
+		return errors.Wrap(err, "could not load SmartYield Reward pools")
 	}
 
 	return nil
@@ -59,7 +65,32 @@ func loadAllSYPools() error {
 		pools = append(pools, p)
 	}
 
-	instance.pools = pools
+	instance.syPools = pools
+
+	return nil
+}
+
+func loadAllRewardPools() error {
+	rows, err := instance.db.Query(`select pool_address,pool_token_address,reward_token_address from smart_yield_reward_pools;`)
+	if err != nil {
+		return errors.Wrap(err, "could not query database for SmartYield Reward pools")
+	}
+
+	var pools []types.SYRewardPool
+	for rows.Next() {
+		var p types.SYRewardPool
+		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress)
+		if err != nil {
+			return errors.Wrap(err, "could not scan reward pools from database")
+		}
+		p.PoolAddress = utils.NormalizeAddress(p.PoolAddress)
+		p.PoolTokenAddress = utils.NormalizeAddress(p.PoolTokenAddress)
+		p.RewardTokenAddress = utils.NormalizeAddress(p.RewardTokenAddress)
+
+		pools = append(pools, p)
+	}
+
+	instance.rewardPools = pools
 
 	return nil
 }
