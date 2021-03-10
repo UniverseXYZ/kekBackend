@@ -96,10 +96,7 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 
 func (a *API) handlePools(c *gin.Context) {
 	protocols := strings.ToLower(c.DefaultQuery("originator", "all"))
-
-	protocolsArray := strings.Split(protocols, ",")
-
-	var pools []types.SYPool
+	underlyingSymbol := strings.ToLower(c.DefaultQuery("underlyingSymbol", "all"))
 
 	query := `
 		select protocol_id,
@@ -115,20 +112,28 @@ func (a *API) handlePools(c *gin.Context) {
 			   underlying_symbol,
 			   underlying_decimals
 		from smart_yield_pools p
-		where 1 = 1 %s
+		where 1 = 1 %s %s
 	`
 
 	var parameters []interface{}
+	var protocolFilter, symbolFilter string
 
-	if protocols == "all" {
-		query = fmt.Sprintf(query, "")
-	} else {
-		protocolFilter := fmt.Sprintf("and protocol_id = ANY($1)")
+	if protocols != "all" {
+		protocolsArray := strings.Split(protocols, ",")
+
+		protocolFilter = fmt.Sprintf("and protocol_id = ANY($1)")
 		parameters = append(parameters, pq.Array(protocolsArray))
-		query = fmt.Sprintf(query, protocolFilter)
 	}
-	rows, err := a.db.Query(query, parameters...)
 
+	if underlyingSymbol != "all" {
+		parameters = append(parameters, underlyingSymbol)
+
+		symbolFilter = fmt.Sprintf("and lower(underlying_symbol) = $%d", len(parameters))
+	}
+
+	query = fmt.Sprintf(query, protocolFilter, symbolFilter)
+
+	rows, err := a.db.Query(query, parameters...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -136,6 +141,7 @@ func (a *API) handlePools(c *gin.Context) {
 
 	tenPow18 := decimal.NewFromInt(10).Pow(decimal.NewFromInt(18))
 
+	var pools []types.SYPool
 	for rows.Next() {
 		var p types.SYPool
 
