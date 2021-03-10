@@ -6,6 +6,7 @@ import (
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 
 	"github.com/barnbridge/barnbridge-backend/types"
@@ -16,6 +17,7 @@ type Storable struct {
 	config   Config
 	raw      *types.RawData
 	erc20ABI abi.ABI
+	ethConn  *ethclient.Client
 
 	processed struct {
 		transfers      []types.Transfer
@@ -24,11 +26,12 @@ type Storable struct {
 	}
 }
 
-func NewStorable(config Config, raw *types.RawData, erc20ABI abi.ABI) *Storable {
+func NewStorable(config Config, raw *types.RawData, erc20ABI abi.ABI, ethConn *ethclient.Client) *Storable {
 	return &Storable{
 		config:   config,
 		raw:      raw,
 		erc20ABI: erc20ABI,
+		ethConn:  ethConn,
 	}
 
 }
@@ -40,6 +43,10 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 			if utils.LogIsEvent(log, s.erc20ABI, "Transfer") &&
 				s.addressExist(log) {
 				logs = append(logs, log)
+				err := s.checkTokenExists(tx, utils.NormalizeAddress(log.Address))
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}

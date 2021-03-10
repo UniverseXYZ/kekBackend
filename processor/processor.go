@@ -136,11 +136,11 @@ func (p *Processor) registerStorables() error {
 	}
 
 	{
-		if _, exists := p.abis["bond"]; !exists {
-			return errors.New("could not find bond abi")
+		if _, exists := p.abis["erc20"]; !exists {
+			return errors.New("could not find erc20 abi")
 		}
 
-		p.storables = append(p.storables, accountERC20Transfers.NewStorable(p.config.AccountErc20Transfers, p.Raw, p.abis["bond"]))
+		p.storables = append(p.storables, accountERC20Transfers.NewStorable(p.config.AccountErc20Transfers, p.Raw, p.abis["erc20"], p.ethConn))
 	}
 
 	return nil
