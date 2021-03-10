@@ -7,6 +7,7 @@ import (
 
 	"github.com/barnbridge/barnbridge-backend/dashboard"
 	"github.com/barnbridge/barnbridge-backend/processor"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/accountERC20Transfers"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
@@ -88,6 +89,9 @@ var runCmd = &cobra.Command{
 				SmartYieldPrice: smartYieldPrices.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
 					StartAt:            viper.GetInt64("storable.smartYieldState.startAt"),
+				},
+				AccountErc20Transfers: accountERC20Transfers.Config{
+					Addresses: viper.GetStringSlice("storable.erc20Transfers.addresses"),
 				},
 			},
 		})
