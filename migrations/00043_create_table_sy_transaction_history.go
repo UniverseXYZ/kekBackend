@@ -12,7 +12,7 @@ func init() {
 
 func upCreateTableSyTransactionHistory(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-		create type sy_tx_history_tx_type as enum ('JUNIOR_DEPOSIT','JUNIOR_INSTANT_WITHDRAW','JUNIOR_REGULAR_WITHDRAW','JUNIOR_REDEEM','SENIOR_DEPOSIT','SENIOR_REDEEM','JTOKEN_SEND', 'JTOKEN_RECEIVE','JBOND_SEND', 'JBOND_RECEIVE', 'SBOND_SEND', 'SBOND_RECEIVE');
+		create type sy_tx_history_tx_type as enum ('JUNIOR_DEPOSIT','JUNIOR_INSTANT_WITHDRAW','JUNIOR_REGULAR_WITHDRAW','JUNIOR_REDEEM','SENIOR_DEPOSIT','SENIOR_REDEEM','JTOKEN_SEND', 'JTOKEN_RECEIVE','JBOND_SEND', 'JBOND_RECEIVE', 'SBOND_SEND', 'SBOND_RECEIVE','JUNIOR_UNSTAKE','JUNIOR_STAKE');
 		create table smart_yield_transaction_history
 		(
 			protocol_id              text                  not null,

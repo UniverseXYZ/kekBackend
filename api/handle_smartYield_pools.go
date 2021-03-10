@@ -189,3 +189,26 @@ func (a *API) handlePools(c *gin.Context) {
 
 	OK(c, pools)
 }
+
+func (a *API) handleRewardPools(c *gin.Context) {
+	var pools []types.SYRewardPool
+
+	rows, err := a.db.Query(`select pool_address,pool_token_address,reward_token_address from smart_yield_reward_pools`)
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+
+	for rows.Next() {
+		var p types.SYRewardPool
+		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress)
+		if err != nil {
+			Error(c, err)
+			return
+		}
+
+		pools = append(pools, p)
+	}
+
+	OK(c, pools)
+}

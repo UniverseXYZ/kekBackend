@@ -33,7 +33,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 
 			if a != nil {
 				a.PoolAddress = utils.NormalizeAddress(log.Address)
-				a.ActionType = DEPOSIT
+				a.ActionType = JuniorStake
 				s.processed.stakingActions = append(s.processed.stakingActions, *a)
 				continue
 			}
@@ -48,7 +48,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 
 			if a != nil {
 				a.PoolAddress = utils.NormalizeAddress(log.Address)
-				a.ActionType = WITHDRAW
+				a.ActionType = JuniorUnstake
 				s.processed.stakingActions = append(s.processed.stakingActions, *a)
 				continue
 			}

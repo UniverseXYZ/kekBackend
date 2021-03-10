@@ -38,3 +38,9 @@ type SYPoolState struct {
 	NumberOfJuniors       int64           `json:"numberOfJuniors"`
 	JuniorLiquidityLocked decimal.Decimal `json:"juniorLiquidityLocked"`
 }
+
+type SYRewardPool struct {
+	PoolAddress        string `json:"poolAddress"`
+	PoolTokenAddress   string `json:"poolTokenAddress"`
+	RewardTokenAddress string `json:"rewardTokenAddress"`
+}

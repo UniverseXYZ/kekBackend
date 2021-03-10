@@ -48,6 +48,21 @@ var devSetupCmd = &cobra.Command{
 			}
 		}
 
+		var rewardsPools = []types.SYRewardPool{
+			{
+				PoolAddress:        "0x31c5A8F6864AEDD4146BBE435A07b3d4d7Ef3595",
+				PoolTokenAddress:   "0xD165c8CAE4D824E75588282821C57fB3b74c7f33",
+				RewardTokenAddress: "0xAad4380ED94C7372cbEac0f5AdA627B57b3D5C38",
+			},
+		}
+
+		for _, p := range rewardsPools {
+			_, err = db.Exec("insert into smart_yield_reward_pools (pool_address, pool_token_address, reward_token_address) values ($1,$2,$3)", p.PoolAddress, p.PoolTokenAddress, p.RewardTokenAddress)
+			if err != nil {
+				log.Fatal(err)
+			}
+		}
+
 		log.Println("done")
 	},
 }
