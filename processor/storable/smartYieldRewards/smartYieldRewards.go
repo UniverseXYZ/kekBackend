@@ -13,10 +13,6 @@ import (
 	"github.com/barnbridge/barnbridge-backend/types"
 )
 
-//event Claim(address indexed user, uint256 amount);
-//event Deposit(address indexed user, uint256 amount, uint256 balanceAfter);
-//event Withdraw(address indexed user, uint256 amount, uint256 balanceAfter);
-
 var log = logrus.WithField("module", "storable(smart yield rewards)")
 
 type Storable struct {
@@ -45,7 +41,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
-			if state.PoolByAddress(log.Address) != nil {
+			if state.RewardPoolByAddress(log.Address) != nil {
 				rewardLogs = append(rewardLogs, log)
 			}
 		}

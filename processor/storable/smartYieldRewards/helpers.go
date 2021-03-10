@@ -6,7 +6,6 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -20,8 +19,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 			}
 
 			if a != nil {
-				p := state.PoolByAddress(log.Address)
-				a.PoolAddress = p.PoolAddress
+				a.PoolAddress = utils.NormalizeAddress(log.Address)
 				s.processed.claims = append(s.processed.claims, *a)
 				continue
 			}
@@ -34,8 +32,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 			}
 
 			if a != nil {
-				p := state.PoolByAddress(log.Address)
-				a.PoolAddress = p.PoolAddress
+				a.PoolAddress = utils.NormalizeAddress(log.Address)
 				a.ActionType = DEPOSIT
 				s.processed.stakingActions = append(s.processed.stakingActions, *a)
 				continue
@@ -50,8 +47,7 @@ func (s *Storable) decodeEvents(logs []web3types.Log) error {
 			}
 
 			if a != nil {
-				p := state.PoolByAddress(log.Address)
-				a.PoolAddress = p.PoolAddress
+				a.PoolAddress = utils.NormalizeAddress(log.Address)
 				a.ActionType = WITHDRAW
 				s.processed.stakingActions = append(s.processed.stakingActions, *a)
 				continue
