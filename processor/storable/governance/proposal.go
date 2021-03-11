@@ -71,7 +71,7 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
-	var notifs []notifications.Notification
+	var jobs []*notifications.Job
 
 	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_id", "proposer", "description", "title", "create_time", "targets", "values", "signatures", "calldatas", "warm_up_duration", "active_duration", "queue_duration", "grace_period_duration", "acceptance_threshold", "min_quorum", "included_in_block", "block_timestamp"))
 	if err != nil {
@@ -94,12 +94,12 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 			return errors.Wrap(err, "could not execute statement")
 		}
 
-		n := notifications.FromGovernanceProposal(p.Id.Int64(), p.Proposer.String(), p.Title, p.CreateTime.Int64(), p.WarmUpDuration.Int64(), p.ActiveDuration.Int64(), p.QueueDuration.Int64(), p.GracePeriodDuration.Int64(), g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
+		j, err := notifications.ProposalCreatedJob(p.Id.Int64())
 		if err != nil {
-			return errors.Wrap(err, "could not create notifications")
+			return errors.Wrap(err, "could not create notification job")
 		}
 
-		notifs = append(notifs, n...)
+		jobs = append(jobs, j)
 	}
 
 	_, err = stmt.Exec()
@@ -112,16 +112,9 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return errors.Wrap(err, "could not close statement")
 	}
 
-	n, err := notifications.NewWithTx(tx)
+	err = notifications.ExecuteJobsWithTx(tx, jobs...)
 	if err != nil {
-		return errors.Wrap(err, "could not prepare notifications")
-	}
-
-	n.Append(notifs...)
-
-	err = n.Exec()
-	if err != nil {
-		return errors.Wrap(err, "could not exec notifications")
+		return errors.Wrap(err, "could not execute notification jobs")
 	}
 
 	return nil

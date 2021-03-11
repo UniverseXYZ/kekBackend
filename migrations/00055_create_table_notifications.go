@@ -16,7 +16,7 @@ func upCreateTableNotifications(tx *sql.Tx) error {
 		(
 			"target"             text,
 			"type"               text      	not null,
-			"triggered_by_block" bigint,
+			"included_in_block" bigint,
 			"starts_on"          bigint,
 			"expires_on"         bigint 	not null,
 			"message"            text,
@@ -29,8 +29,8 @@ func upCreateTableNotifications(tx *sql.Tx) error {
 			on "notifications" ("target" asc, "starts_on" desc)
 		;
 		
-		create index "notifications_triggered_by_block_index"
-			on "notifications" ("triggered_by_block" desc)
+		create index "notifications_included_in_block_index"
+			on "notifications" ("included_in_block" desc)
 		;
 	`)
 
