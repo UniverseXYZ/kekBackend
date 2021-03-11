@@ -86,6 +86,10 @@ func (s *Storable) storeJTokenTransfers(tx *sql.Tx) error {
 			continue
 		}
 
+		if state.RewardPoolByAddress(utils.NormalizeAddress(a.To)) != nil || state.RewardPoolByAddress(utils.NormalizeAddress(a.From)) != nil {
+			continue
+		}
+
 		_, err = tx.Exec(`
 			insert into smart_yield_transaction_history (protocol_id, sy_address, underlying_token_address, user_address, amount,
 														 tranche, transaction_type, tx_hash, tx_index, log_index, block_timestamp,

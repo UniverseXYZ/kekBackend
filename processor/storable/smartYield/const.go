@@ -29,4 +29,6 @@ const (
 	JbondReceive          TxType = "JBOND_RECEIVE"
 	SbondSend             TxType = "SBOND_SEND"
 	SbondReceive          TxType = "SBOND_RECEIVE"
+	JuniorStake           TxType = "JUNIOR_STAKE"
+	JuniorUnstake         TxType = "JUNIOR_UNSTAKE"
 )

@@ -6,11 +6,11 @@ import (
 )
 
 func Pools() []types.SYPool {
-	return instance.pools
+	return instance.syPools
 }
 
 func PoolBySmartYieldAddress(address string) *types.SYPool {
-	for _, p := range instance.pools {
+	for _, p := range instance.syPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.SmartYieldAddress) {
 			return &p
 		}
@@ -20,7 +20,7 @@ func PoolBySmartYieldAddress(address string) *types.SYPool {
 }
 
 func PoolByJuniorBondAddress(address string) *types.SYPool {
-	for _, p := range instance.pools {
+	for _, p := range instance.syPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.JuniorBondAddress) {
 			return &p
 		}
@@ -30,7 +30,7 @@ func PoolByJuniorBondAddress(address string) *types.SYPool {
 }
 
 func PoolBySeniorBondAddress(address string) *types.SYPool {
-	for _, p := range instance.pools {
+	for _, p := range instance.syPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.SeniorBondAddress) {
 			return &p
 		}
@@ -40,7 +40,7 @@ func PoolBySeniorBondAddress(address string) *types.SYPool {
 }
 
 func PoolByProviderAddress(address string) *types.SYPool {
-	for _, p := range instance.pools {
+	for _, p := range instance.syPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.ProviderAddress) {
 			return &p
 		}
@@ -50,7 +50,7 @@ func PoolByProviderAddress(address string) *types.SYPool {
 }
 
 func PoolByUnderlyingAddress(address string) *types.SYPool {
-	for _, p := range instance.pools {
+	for _, p := range instance.syPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.UnderlyingAddress) {
 			return &p
 		}
