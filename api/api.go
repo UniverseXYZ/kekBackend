@@ -41,6 +41,22 @@ func New(db *sql.DB, config Config) *API {
 func (a *API) Run() {
 	a.engine = gin.Default()
 
+	t := time.NewTicker(1 * time.Minute)
+
+	go func() {
+		log.Info("setting up ticker to refresh state")
+
+		for {
+			select {
+			case <-t.C:
+				err := state.Refresh()
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}()
+
 	if a.config.DevCorsEnabled {
 		a.engine.Use(cors.New(cors.Config{
 			AllowOrigins:     []string{a.config.DevCorsHost},
@@ -57,20 +73,6 @@ func (a *API) Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	go func() {
-		t := time.NewTicker(1 * time.Minute)
-
-		for {
-			select {
-			case <-t.C:
-				err := state.Refresh()
-				if err != nil {
-					log.Error(err)
-				}
-			}
-		}
-	}()
 }
 
 func (a *API) Close() {
