@@ -16,6 +16,9 @@ type JuniorTrades struct {
 }
 
 type CompoundProvider struct {
-	harvests      []Harvest
 	transfersFees []TransferFees
+}
+
+type CompoundController struct {
+	harvests []Harvest
 }
