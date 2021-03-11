@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -70,6 +71,8 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
+	var notifs []notifications.Notification
+
 	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_id", "proposer", "description", "title", "create_time", "targets", "values", "signatures", "calldatas", "warm_up_duration", "active_duration", "queue_duration", "grace_period_duration", "acceptance_threshold", "min_quorum", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
@@ -90,6 +93,13 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
+
+		n := notifications.FromGovernanceProposal(p.Id.Int64(), p.Proposer.String(), p.Title, p.CreateTime.Int64(), p.WarmUpDuration.Int64(), p.ActiveDuration.Int64(), p.QueueDuration.Int64(), p.GracePeriodDuration.Int64(), g.Preprocessed.BlockNumber, g.Preprocessed.BlockTimestamp)
+		if err != nil {
+			return errors.Wrap(err, "could not create notifications")
+		}
+
+		notifs = append(notifs, n...)
 	}
 
 	_, err = stmt.Exec()
@@ -100,6 +110,18 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 	err = stmt.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close statement")
+	}
+
+	n, err := notifications.NewWithTx(tx)
+	if err != nil {
+		return errors.Wrap(err, "could not prepare notifications")
+	}
+
+	n.Append(notifs...)
+
+	err = n.Exec()
+	if err != nil {
+		return errors.Wrap(err, "could not exec notifications")
 	}
 
 	return nil
