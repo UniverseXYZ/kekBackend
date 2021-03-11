@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -56,6 +57,20 @@ func (a *API) Run() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	go func() {
+		t := time.NewTicker(1 * time.Minute)
+
+		for {
+			select {
+			case <-t.C:
+				err := state.Refresh()
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}()
 }
 
 func (a *API) Close() {
