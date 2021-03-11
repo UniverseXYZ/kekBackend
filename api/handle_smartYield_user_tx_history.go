@@ -104,6 +104,11 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 		}
 
 		p := state.PoolBySmartYieldAddress(h.Pool)
+		if p == nil {
+			Error(c, errors.New("could not find pool in state"))
+			return
+		}
+
 		h.Amount = h.Amount.DivRound(decimal.NewFromInt(10).Pow(decimal.NewFromInt(p.UnderlyingDecimals)), int32(p.UnderlyingDecimals))
 
 		history = append(history, h)

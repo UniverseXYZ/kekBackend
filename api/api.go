@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -39,6 +40,22 @@ func New(db *sql.DB, config Config) *API {
 
 func (a *API) Run() {
 	a.engine = gin.Default()
+
+	t := time.NewTicker(1 * time.Minute)
+
+	go func() {
+		log.Info("setting up ticker to refresh state")
+
+		for {
+			select {
+			case <-t.C:
+				err := state.Refresh()
+				if err != nil {
+					log.Error(err)
+				}
+			}
+		}
+	}()
 
 	if a.config.DevCorsEnabled {
 		a.engine.Use(cors.New(cors.Config{

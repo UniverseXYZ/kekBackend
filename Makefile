@@ -12,7 +12,7 @@ gen:
 reset:
 	./barnbridge-backend reset --force
 	./barnbridge-backend migrate
-	./barnbridge-backend dev-setup
 
 clean-run: build reset
+	./barnbridge-backend sync-sy-pools
 	./barnbridge-backend scrape --vv
