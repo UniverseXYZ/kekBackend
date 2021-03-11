@@ -49,6 +49,16 @@ func PoolByProviderAddress(address string) *types.SYPool {
 	return nil
 }
 
+func PoolByControllerAddress(address string) *types.SYPool {
+	for _, p := range instance.syPools {
+		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.ControllerAddress) {
+			return &p
+		}
+	}
+
+	return nil
+}
+
 func PoolByUnderlyingAddress(address string) *types.SYPool {
 	for _, p := range instance.syPools {
 		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.UnderlyingAddress) {
