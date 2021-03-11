@@ -22,14 +22,15 @@ type Storable struct {
 	abis   map[string]abi.ABI
 
 	processed struct {
-		tokenActions     TokenTrades
-		seniorActions    SeniorTrades
-		juniorActions    JuniorTrades
-		jTokenTransfers  []types.Transfer
-		ERC721Transfers  []ERC721Transfer
-		compoundProvider CompoundProvider
-		blockNumber      int64
-		blockTimestamp   int64
+		tokenActions       TokenTrades
+		seniorActions      SeniorTrades
+		juniorActions      JuniorTrades
+		jTokenTransfers    []types.Transfer
+		ERC721Transfers    []ERC721Transfer
+		compoundProvider   CompoundProvider
+		compoundController CompoundController
+		blockNumber        int64
+		blockTimestamp     int64
 	}
 }
 
@@ -94,6 +95,11 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	err = s.decodeCompoundProviderEvents(compoundProviderLogs)
+	if err != nil {
+		return err
+	}
+
+	err = s.decodeCompoundControllerEvents(compoundProviderLogs)
 	if err != nil {
 		return err
 	}

@@ -82,17 +82,24 @@ func (s *Storable) decodeSmartYieldLog(logs []web3types.Log) error {
 	return nil
 }
 
-func (s *Storable) decodeCompoundProviderEvents(logs []web3types.Log) error {
+func (s *Storable) decodeCompoundControllerEvents(logs []web3types.Log) error {
 	for _, log := range logs {
-		if utils.LogIsEvent(log, s.abis["compoundprovider"], HarvestEvent) {
+		if utils.LogIsEvent(log, s.abis["compoundcontroller"], HarvestEvent) {
 			a, err := s.decodeHarvestEvent(log)
 			if err != nil {
 				return err
 			}
 			if a != nil {
-				s.processed.compoundProvider.harvests = append(s.processed.compoundProvider.harvests, *a)
+				s.processed.compoundController.harvests = append(s.processed.compoundController.harvests, *a)
 			}
 		}
+	}
+
+	return nil
+}
+
+func (s *Storable) decodeCompoundProviderEvents(logs []web3types.Log) error {
+	for _, log := range logs {
 
 		if utils.LogIsEvent(log, s.abis["compoundprovider"], TransferFeesEvent) {
 			a, err := s.decodeTransferFeesEvent(log)

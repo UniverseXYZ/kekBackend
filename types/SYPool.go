@@ -13,4 +13,5 @@ type SYPool struct {
 	UnderlyingAddress   string
 	UnderlyingSymbol    string
 	UnderlyingDecimals  int64
+	StartAtBlock        int64
 }
