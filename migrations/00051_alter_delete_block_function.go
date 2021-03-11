@@ -25,7 +25,7 @@ func UpAlterDeleteBlock2Function(tx *sql.Tx) error {
 			'barn_locks',
 			'barn_staking_actions',
 			'bond_transfers',
-		    'compound_provider_harvest',
+		    'compound_controller_harvests',
 		    'compound_provider_transfer_fees',
 		    'erc721_transfers',
 			'governance_abrogation_proposals',
