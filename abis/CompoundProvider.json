@@ -1,46 +1,14 @@
 [
   {
-    "anonymous": false,
     "inputs": [
       {
-        "indexed": true,
         "internalType": "address",
-        "name": "caller",
+        "name": "cToken_",
         "type": "address"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "underlyingGot",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "rewardExpected",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "underlyingDeposited",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "fees",
-        "type": "uint256"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "reward",
-        "type": "uint256"
       }
     ],
-    "name": "Harvest",
-    "type": "event"
+    "stateMutability": "nonpayable",
+    "type": "constructor"
   },
   {
     "anonymous": false,
@@ -66,6 +34,32 @@
     ],
     "name": "TransferFees",
     "type": "event"
+  },
+  {
+    "inputs": [],
+    "name": "EXP_SCALE",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "MAX_UINT256",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
   },
   {
     "inputs": [
@@ -99,13 +93,7 @@
       }
     ],
     "name": "_sendUnderlying",
-    "outputs": [
-      {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -186,45 +174,6 @@
   },
   {
     "inputs": [],
-    "name": "compRewardExpected",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "compSupplierIndexLast",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "comptroller",
-    "outputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
     "name": "controller",
     "outputs": [
       {
@@ -238,68 +187,11 @@
   },
   {
     "inputs": [],
-    "name": "cumulativeSecondlyYieldLast",
+    "name": "exchangeRateCurrent",
     "outputs": [
       {
         "internalType": "uint256",
         "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cumulativeTimestampLast",
-    "outputs": [
-      {
-        "internalType": "uint32",
-        "name": "",
-        "type": "uint32"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cumulativeUnderlyingBalanceHarvestedLast",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cumulativeUnderlyingBalanceLast",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "cumulatives",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "cumulativeSecondlyYield",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cumulativeUnderlyingBalance",
         "type": "uint256"
       }
     ],
@@ -308,25 +200,7 @@
   },
   {
     "inputs": [],
-    "name": "currentCumulatives",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "cumulativeSecondlyYield",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "cumulativeUnderlyingBalance",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "currentTime",
+    "name": "exchangeRateCurrentCached",
     "outputs": [
       {
         "internalType": "uint256",
@@ -339,14 +213,7 @@
   },
   {
     "inputs": [],
-    "name": "harvest",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "harvestedLast",
+    "name": "exchangeRateCurrentCachedAt",
     "outputs": [
       {
         "internalType": "uint256",
@@ -358,16 +225,16 @@
     "type": "function"
   },
   {
-    "inputs": [],
-    "name": "rewardCToken",
-    "outputs": [
+    "inputs": [
       {
         "internalType": "address",
-        "name": "",
+        "name": "newController_",
         "type": "address"
       }
     ],
-    "stateMutability": "view",
+    "name": "setController",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -380,11 +247,6 @@
       {
         "internalType": "address",
         "name": "controller_",
-        "type": "address"
-      },
-      {
-        "internalType": "address",
-        "name": "cToken_",
         "type": "address"
       }
     ],
@@ -436,20 +298,7 @@
         "type": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "underlyingBalanceLast",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
+    "stateMutability": "nonpayable",
     "type": "function"
   },
   {
@@ -463,6 +312,13 @@
       }
     ],
     "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "updateAllowances",
+    "outputs": [],
+    "stateMutability": "nonpayable",
     "type": "function"
   }
 ]

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 
 	"github.com/alethio/web3-go/ethrpc"
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
@@ -46,7 +47,12 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, ethConn *et
 		ethBatch: ethBatch,
 	}
 
-	err := p.registerStorables()
+	err := state.Refresh()
+	if err != nil {
+		return nil, errors.Wrap(err, "could not refresh state")
+	}
+
+	err = p.registerStorables()
 	if err != nil {
 		return nil, err
 	}

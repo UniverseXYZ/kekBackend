@@ -13,7 +13,8 @@ func init() {
 func upCreateTableSyRewardsStakingAction(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create type reward_action as enum('JUNIOR_STAKE','JUNIOR_UNSTAKE');
-		create table smart_yield_rewards_staking_action
+
+		create table smart_yield_rewards_staking_actions
 		(
 		    user_address 		text not null,
 		    amount		 		numeric(78),

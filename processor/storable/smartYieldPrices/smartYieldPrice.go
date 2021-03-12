@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"strconv"
 	"sync"
+	"time"
 
 	"github.com/alethio/web3-go/ethrpc"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/barnbridge/barnbridge-backend/state"
@@ -19,7 +21,6 @@ import (
 
 type Config struct {
 	ComptrollerAddress string
-	StartAt            int64
 }
 
 type Price struct {
@@ -33,8 +34,9 @@ type Storable struct {
 	config Config
 	raw    *types.RawData
 
-	abis map[string]abi.ABI
-	eth  *ethrpc.ETH
+	abis   map[string]abi.ABI
+	eth    *ethrpc.ETH
+	logger *logrus.Entry
 
 	Processed struct {
 		Prices         map[string]Price
@@ -49,6 +51,7 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 		raw:    raw,
 		abis:   abis,
 		eth:    eth,
+		logger: logrus.WithField("module", "storable(smartYieldPrice)"),
 	}
 
 	var err error
@@ -68,9 +71,11 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 }
 
 func (s Storable) ToDB(tx *sql.Tx) error {
-	if s.Processed.BlockNumber < s.config.StartAt {
-		return nil
-	}
+	s.logger.Debug("executing")
+	start := time.Now()
+	defer func() {
+		s.logger.WithField("duration", time.Since(start)).Debug("done")
+	}()
 
 	var wg = &errgroup.Group{}
 	var mu = &sync.Mutex{}
@@ -98,6 +103,11 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	for _, p := range state.Pools() {
+		if s.Processed.BlockNumber < p.StartAtBlock {
+			s.logger.WithField("pool", p.SmartYieldAddress).Info("skipping pool due to StartAtBlock property")
+			continue
+		}
+
 		if p.ProtocolId == "compound/v2" {
 			s.getCompoundPrice(compoundOracleAddress, wg, p, mu)
 		}
