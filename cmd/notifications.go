@@ -24,7 +24,7 @@ var notifsCmd = &cobra.Command{
 		signal.Notify(stopChan, syscall.SIGINT)
 		signal.Notify(stopChan, syscall.SIGTERM)
 
-		n, err := notifications.New(notifications.Config{
+		n, err := notifications.NewWorker(notifications.Config{
 			PostgresConnectionString: viper.GetString("db.connection-string"),
 		})
 		if err != nil {

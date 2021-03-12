@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"context"
 	"database/sql"
 
 	"github.com/barnbridge/barnbridge-backend/types"
@@ -17,13 +18,15 @@ type Notification struct {
 	IncludedInBlock  int64
 }
 
-func (n *Notification) ToDBWithTx(tx *sql.Tx) error {
+func (n *Notification) ToDBWithTx(ctx context.Context, tx *sql.Tx) error {
 	ins := `
-		insert into notifications ("target", "type", "starts_on", "expires_on", "message", "metadata", "included_in_block") 
-			values($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO
+			"notifications" ("target", "type", "starts_on", "expires_on", "message", "metadata", "included_in_block")
+		VALUES
+			("$1", "$2", "$3", "$4", "$5", "$6", "$7")
 		;
 	`
-	_, err := tx.Exec(ins, n.Target, n.NotificationType, n.StartsOn, n.ExpiresOn, n.Message, n.Metadata, n.IncludedInBlock)
+	_, err := tx.ExecContext(ctx, ins, n.Target, n.NotificationType, n.StartsOn, n.ExpiresOn, n.Message, n.Metadata, n.IncludedInBlock)
 	if err != nil {
 		return errors.Wrap(err, "could not exec statement")
 	}

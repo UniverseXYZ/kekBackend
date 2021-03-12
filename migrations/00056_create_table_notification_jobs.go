@@ -14,6 +14,7 @@ func upCreateTableNotificationJobs(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create table "notification_jobs"
 		(
+		    "id" 				 bigserial primary key,
 			"type"               text      	not null,
 			"execute_on"         bigint,
 			"metadata"           jsonb,

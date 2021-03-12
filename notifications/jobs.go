@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"context"
 	"database/sql"
 	"encoding/json"
 
@@ -14,10 +15,11 @@ const (
 )
 
 type JobExecuter interface {
-	ExecuteWithTx(tx *sql.Tx) (*Job, error)
+	ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error)
 }
 
 type Job struct {
+	Id              int64
 	JobType         string
 	ExecuteOn       int64
 	JobData         json.RawMessage
@@ -38,7 +40,7 @@ func NewJob(typ string, executeOn int64, block int64, data interface{}) (*Job, e
 	}, nil
 }
 
-func ExecuteJobsWithTx(tx *sql.Tx, jobs ...*Job) error {
+func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 	var nextJobs []*Job
 	for _, j := range jobs {
 		var je JobExecuter
@@ -47,21 +49,32 @@ func ExecuteJobsWithTx(tx *sql.Tx, jobs ...*Job) error {
 			var jd ProposalCreatedJobData
 			err := json.Unmarshal(j.JobData, &jd)
 			if err != nil {
-				return errors.Wrap(err, "unmarshal job data")
+				return errors.Wrap(err, "unmarshal proposal created job data")
+			}
+			je = &jd
+		case ProposalActivated:
+			var jd ProposalActivatedJobData
+			err := json.Unmarshal(j.JobData, &jd)
+			if err != nil {
+				return errors.Wrap(err, "unmarshal proposal activated job data")
 			}
 			je = &jd
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)
 		}
-		n, err := je.ExecuteWithTx(tx)
+		n, err := je.ExecuteWithTx(ctx, tx)
 		if err != nil {
 			return errors.Wrap(err, "execute job")
 		}
-		nextJobs = append(nextJobs, n)
+		if n != nil {
+			nextJobs = append(nextJobs, n)
+		}
+
+		// cleanup
 	}
 
 	if len(nextJobs) > 0 {
-		err := ScheduleJobsWithTx(tx, nextJobs...)
+		err := ScheduleJobsWithTx(ctx, tx, nextJobs...)
 		if err != nil {
 			return errors.Wrap(err, "scheduling next jobs")
 		}
@@ -69,13 +82,13 @@ func ExecuteJobsWithTx(tx *sql.Tx, jobs ...*Job) error {
 	return nil
 }
 
-func ScheduleJobsWithTx(tx *sql.Tx, jobs ...*Job) error {
-	stmt, err := tx.Prepare(pq.CopyIn("notification_jobs", "type", "execute_on", "metadata", "included_in_block"))
+func ScheduleJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
+	stmt, err := tx.PrepareContext(ctx, pq.CopyIn("notification_jobs", "type", "execute_on", "metadata", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "prepare notification job statement")
 	}
 	for _, j := range jobs {
-		_, err := stmt.Exec(j.JobType, j.ExecuteOn, j.JobData, j.IncludedInBlock)
+		_, err := stmt.ExecContext(ctx, j.JobType, j.ExecuteOn, j.JobData, j.IncludedInBlock)
 		if err != nil {
 			return errors.Wrap(err, "could not exec statement")
 		}

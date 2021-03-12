@@ -1,6 +1,7 @@
 package notifications
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 
@@ -22,7 +23,7 @@ type ProposalJobData struct {
 	IncludedInBlockNumber int64
 }
 
-func (j *ProposalCreatedJobData) ExecuteWithTx(tx *sql.Tx) (*Job, error) {
+func (j *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
 	log.Tracef("executing proposal created job for PID-%d", j.Id)
 
 	// send created notification
@@ -36,7 +37,7 @@ func (j *ProposalCreatedJobData) ExecuteWithTx(tx *sql.Tx) (*Job, error) {
 		j.IncludedInBlockNumber,
 	)
 
-	err := notif.ToDBWithTx(tx)
+	err := notif.ToDBWithTx(ctx, tx)
 	if err != nil {
 		return nil, errors.Wrap(err, "save create proposal notification to db")
 	}
@@ -50,7 +51,7 @@ func (j *ProposalCreatedJobData) ExecuteWithTx(tx *sql.Tx) (*Job, error) {
 	return next, nil
 }
 
-func (j *ProposalActivatedJobData) ExecuteWithTx(tx *sql.Tx) (*Job, error) {
+func (j *ProposalActivatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
 	log.Tracef("executing proposal activated job for PID-%d", j.Id)
 	// check if proposal is still in warm up phase
 

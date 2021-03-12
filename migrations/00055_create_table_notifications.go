@@ -14,7 +14,6 @@ func upCreateTableNotifications(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create table "notifications"
 		(
-		    "id" 				 bigserial primary key,
 			"target"             text,
 			"type"               text      	not null,
 			"starts_on"          bigint,

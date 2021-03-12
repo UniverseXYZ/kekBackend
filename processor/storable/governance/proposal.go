@@ -1,8 +1,10 @@
 package governance
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/barnbridge/barnbridge-backend/notifications"
@@ -123,7 +125,8 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return errors.Wrap(err, "could not close statement")
 	}
 
-	err = notifications.ExecuteJobsWithTx(tx, jobs...)
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+	err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
 	if err != nil {
 		return errors.Wrap(err, "could not execute notification jobs")
 	}
