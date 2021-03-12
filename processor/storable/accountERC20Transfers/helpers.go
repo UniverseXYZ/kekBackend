@@ -3,6 +3,7 @@ package accountERC20Transfers
 import (
 	"database/sql"
 	"encoding/hex"
+	"math/big"
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
@@ -12,16 +13,6 @@ import (
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
-
-func (s *Storable) addressExist(log web3types.Log) bool {
-	for _, a := range s.config.Addresses {
-		if utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[1]) ||
-			utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[2]) {
-			return true
-		}
-	}
-	return false
-}
 
 func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
 	var t types.Transfer
@@ -33,8 +24,18 @@ func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
+	var decoded = make(map[string]interface{})
 
-	err = s.erc20ABI.UnpackIntoInterface(&t, "Transfer", data)
+	err = s.erc20ABI.UnpackIntoMap(decoded, "Transfer", data)
+
+	if decoded["value"] != nil {
+		t.Value = decoded["value"].(*big.Int)
+	} else if decoded["amount"] != nil {
+		t.Value = decoded["amount"].(*big.Int)
+	} else {
+		t.Value = new(big.Int)
+	}
+
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}

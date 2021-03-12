@@ -62,7 +62,7 @@ var devSetupCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 		}
-
+		_, err = db.Exec("insert into monitored_accounts (address) values ($1)", "0xbbbbbbf2e986C085bF79d44BaCFA791C92b71fe8")
 		log.Println("done")
 	},
 }

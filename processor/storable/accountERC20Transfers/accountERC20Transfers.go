@@ -5,10 +5,12 @@ import (
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -41,15 +43,17 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
 			if utils.LogIsEvent(log, s.erc20ABI, "Transfer") &&
-				s.addressExist(log) {
+				state.AddressExist(log) {
 				logs = append(logs, log)
 				err := s.checkTokenExists(tx, utils.NormalizeAddress(log.Address))
+
 				if err != nil {
 					return err
 				}
 			}
 		}
 	}
+	spew.Dump("akakaka")
 
 	err := s.decodeLogs(logs)
 	if err != nil {

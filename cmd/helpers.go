@@ -145,7 +145,6 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b", "Address of compound comptroller")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
 	cmd.Flags().Int64("storable.smartYieldState.startAt", 0, "How many blocks per minute on the blockchain we're scraping")
-	cmd.Flags().StringSlice("storable.erc20Transfers.addresses", []string{"0xbbbbbbf2e986C085bF79d44BaCFA791C92b71fe8"}, "List of address for recording transfers")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
@@ -156,5 +155,4 @@ func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
 	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
 	viper.BindPFlag("storable.smartYieldState.startAt", cmd.Flag("storable.smartYieldState.startAt"))
-	viper.BindPFlag("storable.erc20Transfers.addresses", cmd.Flag("storable.erc20Transfers.addresses"))
 }
