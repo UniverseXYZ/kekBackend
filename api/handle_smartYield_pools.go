@@ -63,13 +63,13 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 				   junior_apy,
 				   originator_apy,
 				   originator_net_apy,
-				   number_of_seniors(pool_address)                  as number_of_seniors,
-				   number_of_jtoken_holders(pool_address)           as number_of_juniors,
-			       number_of_juniors_locked(pool_address)           as number_of_juniors_locked,
+				   number_of_seniors(pool_address)                      as number_of_seniors,
+				   number_of_jtoken_holders(pool_address)               as number_of_juniors,
+			       number_of_juniors_locked(pool_address)               as number_of_juniors_locked,
 				   coalesce(( select sum(for_days * underlying_in) / sum(underlying_in)
 							  from smart_yield_senior_buy
-							  where sy_address = pool_address ), 0) as avg_senior_buy,
-				   junior_liquidity_locked(pool_address)            as junior_liquidity_locked
+							  where sy_address = pool_address ), 0)     as avg_senior_buy,
+				   coalesce(junior_liquidity_locked(pool_address), 0)   as junior_liquidity_locked
 			from smart_yield_state
 			where pool_address = $1
 			order by included_in_block desc
@@ -160,13 +160,13 @@ func (a *API) handlePools(c *gin.Context) {
 				   junior_apy,
 				   originator_apy,
 				   originator_net_apy,
-				   number_of_seniors(pool_address)                  as number_of_seniors,
-				   number_of_jtoken_holders(pool_address)           as number_of_juniors,
-			       number_of_juniors_locked(pool_address)           as number_of_juniors_locked,
+				   number_of_seniors(pool_address)                      as number_of_seniors,
+				   number_of_jtoken_holders(pool_address)               as number_of_juniors,
+			       number_of_juniors_locked(pool_address)               as number_of_juniors_locked,
 				   coalesce(( select sum(for_days * underlying_in) / sum(underlying_in)
 							  from smart_yield_senior_buy
-							  where sy_address = pool_address ), 0) as avg_senior_buy,
-				   junior_liquidity_locked(pool_address)            as junior_liquidity_locked
+							  where sy_address = pool_address ), 0)     as avg_senior_buy,
+				   coalesce(junior_liquidity_locked(pool_address), 0)   as junior_liquidity_locked
 			from smart_yield_state
 			where pool_address = $1
 			order by included_in_block desc
