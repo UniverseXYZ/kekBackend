@@ -4,7 +4,9 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"os"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
@@ -62,6 +64,7 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)
 		}
+
 		n, err := je.ExecuteWithTx(ctx, tx)
 		if err != nil {
 			return errors.Wrap(err, "execute job")
@@ -69,8 +72,6 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 		if n != nil {
 			nextJobs = append(nextJobs, n)
 		}
-
-		// cleanup
 	}
 
 	if len(nextJobs) > 0 {
@@ -99,5 +100,27 @@ func ScheduleJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 		return errors.Wrap(err, "could not close exec statement")
 	}
 
+	return nil
+}
+
+func DeleteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
+	var ids []int64
+	for _, j := range jobs {
+		ids = append(ids, j.Id)
+	}
+	spew.Dump(ids, pq.Array(ids))
+	del := `
+		DELETE FROM
+			"notification_jobs"
+		WHERE
+			id = ANY($1)
+		;
+	`
+	res, err := tx.ExecContext(ctx, del, pq.Array(ids))
+	if err != nil {
+		return errors.Wrap(err, "delete notification jobs")
+	}
+	spew.Dump(res)
+	os.Exit(1)
 	return nil
 }

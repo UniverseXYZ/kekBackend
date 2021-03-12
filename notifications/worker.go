@@ -25,13 +25,20 @@ func (w *Worker) Run(ctx context.Context) {
 				if err != nil {
 					log.Fatalf("start worker tx: %s", err)
 				}
+
 				jobs, err := w.jobs(ctx, tx)
 				if err != nil {
 					log.Fatalf("failed to get jobs: %s", err)
 				}
+
 				err = ExecuteJobsWithTx(ctx, tx, jobs...)
 				if err != nil {
 					log.Fatalf("failed to execute jobs: %s", err)
+				}
+
+				err = DeleteJobsWithTx(ctx, tx, jobs...)
+				if err != nil {
+					log.Fatalf("failed to cleanup jobs: %s", err)
 				}
 			case <-ctx.Done():
 				log.Info("received exit signal, stopping")

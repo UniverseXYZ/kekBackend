@@ -23,27 +23,28 @@ type ProposalJobData struct {
 	IncludedInBlockNumber int64
 }
 
-func (j *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
-	log.Tracef("executing proposal created job for PID-%d", j.Id)
+func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal created job for PID-%d", jd.Id)
 
 	// send created notification
 	notif := NewNotification(
 		"system",
 		ProposalCreated,
-		j.CreateTime,
-		j.CreateTime+j.WarmUpDuration-300,
-		fmt.Sprintf("Proposal PID-%d created by %s", j.Id, j.Proposer),
+		jd.CreateTime,
+		jd.CreateTime+jd.WarmUpDuration-300,
+		fmt.Sprintf("Proposal PID-%d created by %s", jd.Id, jd.Proposer),
 		nil,
-		j.IncludedInBlockNumber,
+		jd.IncludedInBlockNumber,
 	)
 
 	err := notif.ToDBWithTx(ctx, tx)
 	if err != nil {
 		return nil, errors.Wrap(err, "save create proposal notification to db")
 	}
+
 	// schedule job for next notification
-	jd := ProposalActivatedJobData(*j)
-	next, err := NewProposalActivatedJob(&jd)
+	njd := ProposalActivatedJobData(*jd)
+	next, err := NewProposalActivatedJob(&njd)
 	if err != nil {
 		return nil, errors.Wrap(err, "create create proposal next job")
 	}
@@ -51,27 +52,28 @@ func (j *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) 
 	return next, nil
 }
 
-func (j *ProposalActivatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
-	log.Tracef("executing proposal activated job for PID-%d", j.Id)
+func (jd *ProposalActivatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal activated job for PID-%d", jd.Id)
 	// check if proposal is still in warm up phase
 
-	// send created notification
-	// notif := NewNotification(
-	// 	"system",
-	// 	ProposalCreated,
-	// 	j.CreateTime,
-	// 	j.CreateTime+j.WarmUpDuration-300,
-	// 	fmt.Sprintf("Proposal PID-%d created by %s", j.Id, j.Proposer),
-	// 	nil,
-	// 	j.IncludedInBlockNumber,
-	// )
-	//
-	// err := notif.ToDBWithTx(tx)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "save create proposal notification to db")
-	// }
+	// send activated notification
+	notif := NewNotification(
+		"system",
+		ProposalCreated,
+		jd.CreateTime,
+		jd.CreateTime+jd.WarmUpDuration-300,
+		fmt.Sprintf("Proposal PID-%d activating in 5 minutes", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+
+	err := notif.ToDBWithTx(ctx, tx)
+	if err != nil {
+		return nil, errors.Wrap(err, "save activated proposal notification to db")
+	}
+
 	// // schedule job for next notification
-	// jd := ProposalActivatedJobData(*j)
+	// jd := ProposalActivatedJobData(*jd)
 	// next, err := NewProposalActivatedJob(&jd)
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "create create proposal next job")
