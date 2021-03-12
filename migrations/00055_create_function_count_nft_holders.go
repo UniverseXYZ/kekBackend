@@ -106,6 +106,12 @@ func upCreateFunctionCountNftHolders(tx *sql.Tx) error {
 }
 
 func downCreateFunctionCountNftHolders(tx *sql.Tx) error {
-	_, err := tx.Exec(`drop function if exists number_of_nft_holders;`)
+	_, err := tx.Exec(`
+		drop function if exists number_of_nft_holders;
+		drop function if exists number_of_seniors;
+		drop function if exists number_of_juniors_locked;
+		drop function if exists number_of_jtoken_holders;
+		drop function if exists junior_liquidity_locked;
+	`)
 	return err
 }
