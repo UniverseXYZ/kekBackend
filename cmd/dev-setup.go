@@ -62,6 +62,7 @@ var devSetupCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 		}
+		log.Println("done")
 
 	},
 }

@@ -3,7 +3,6 @@ package accountERC20Transfers
 import (
 	"database/sql"
 	"encoding/hex"
-	"math/big"
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
@@ -24,21 +23,16 @@ func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
-	var decoded = make(map[string]interface{})
 
-	err = s.erc20ABI.UnpackIntoMap(decoded, "Transfer", data)
-
-	if decoded["value"] != nil {
-		t.Value = decoded["value"].(*big.Int)
-	} else if decoded["amount"] != nil {
-		t.Value = decoded["amount"].(*big.Int)
-	} else {
-		t.Value = new(big.Int)
+	if len(data) == 0 {
+		return nil, nil
 	}
 
+	err = s.erc20ABI.UnpackIntoInterface(&t, "Transfer", data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
+
 	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")

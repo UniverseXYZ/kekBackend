@@ -5,7 +5,6 @@ import (
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
@@ -53,7 +52,6 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 			}
 		}
 	}
-	spew.Dump("akakaka")
 
 	err := s.decodeLogs(logs)
 	if err != nil {
