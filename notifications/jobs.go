@@ -4,16 +4,14 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"os"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 )
 
 const (
-	ProposalCreated   = "proposal-created"
-	ProposalActivated = "proposal-activated"
+	ProposalCreated    = "proposal-created"
+	ProposalActivating = "proposal-activated"
 )
 
 type JobExecuter interface {
@@ -54,8 +52,8 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 				return errors.Wrap(err, "unmarshal proposal created job data")
 			}
 			je = &jd
-		case ProposalActivated:
-			var jd ProposalActivatedJobData
+		case ProposalActivating:
+			var jd ProposalActivatingJobData
 			err := json.Unmarshal(j.JobData, &jd)
 			if err != nil {
 				return errors.Wrap(err, "unmarshal proposal activated job data")
@@ -108,7 +106,7 @@ func DeleteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 	for _, j := range jobs {
 		ids = append(ids, j.Id)
 	}
-	spew.Dump(ids, pq.Array(ids))
+
 	del := `
 		DELETE FROM
 			"notification_jobs"
@@ -116,11 +114,9 @@ func DeleteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			id = ANY($1)
 		;
 	`
-	res, err := tx.ExecContext(ctx, del, pq.Array(ids))
+	_, err := tx.ExecContext(ctx, del, pq.Array(ids))
 	if err != nil {
 		return errors.Wrap(err, "delete notification jobs")
 	}
-	spew.Dump(res)
-	os.Exit(1)
 	return nil
 }

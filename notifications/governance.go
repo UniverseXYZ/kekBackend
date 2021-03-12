@@ -9,7 +9,7 @@ import (
 )
 
 type ProposalCreatedJobData ProposalJobData
-type ProposalActivatedJobData ProposalJobData
+type ProposalActivatingJobData ProposalJobData
 
 type ProposalJobData struct {
 	Id                    int64
@@ -43,7 +43,7 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 	}
 
 	// schedule job for next notification
-	njd := ProposalActivatedJobData(*jd)
+	njd := ProposalActivatingJobData(*jd)
 	next, err := NewProposalActivatedJob(&njd)
 	if err != nil {
 		return nil, errors.Wrap(err, "create create proposal next job")
@@ -52,14 +52,14 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 	return next, nil
 }
 
-func (jd *ProposalActivatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
 	log.Tracef("executing proposal activated job for PID-%d", jd.Id)
 	// check if proposal is still in warm up phase
 
 	// send activated notification
 	notif := NewNotification(
 		"system",
-		ProposalCreated,
+		ProposalActivating,
 		jd.CreateTime,
 		jd.CreateTime+jd.WarmUpDuration-300,
 		fmt.Sprintf("Proposal PID-%d activating in 5 minutes", jd.Id),
@@ -73,7 +73,7 @@ func (jd *ProposalActivatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.T
 	}
 
 	// // schedule job for next notification
-	// jd := ProposalActivatedJobData(*jd)
+	// jd := ProposalActivatingJobData(*jd)
 	// next, err := NewProposalActivatedJob(&jd)
 	// if err != nil {
 	// 	return nil, errors.Wrap(err, "create create proposal next job")
@@ -87,9 +87,9 @@ func NewProposalCreatedJob(data *ProposalCreatedJobData) (*Job, error) {
 	return NewJob(ProposalCreated, 0, data.IncludedInBlockNumber, data)
 }
 
-func NewProposalActivatedJob(data *ProposalActivatedJobData) (*Job, error) {
+func NewProposalActivatedJob(data *ProposalActivatingJobData) (*Job, error) {
 	x := data.CreateTime + data.WarmUpDuration - 300
-	return NewJob(ProposalActivated, x, data.IncludedInBlockNumber, data)
+	return NewJob(ProposalActivating, x, data.IncludedInBlockNumber, data)
 }
 
 // 		_, err = stmt.Exec(p.Id.Int64(), p.Proposer.String(), p.Title, p.CreateTime.Int64(), p.WarmUpDuration.Int64(), p.ActiveDuration.Int64(), p.QueueDuration.Int64(), p.GracePeriodDuration.Int64(), g.Preprocessed.BlockTimestamp)

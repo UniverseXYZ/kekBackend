@@ -40,6 +40,12 @@ func (w *Worker) Run(ctx context.Context) {
 				if err != nil {
 					log.Fatalf("failed to cleanup jobs: %s", err)
 				}
+
+				err = tx.Commit()
+				if err != nil {
+					log.Fatalf("failed to commit jobs: %s", err)
+				}
+
 			case <-ctx.Done():
 				log.Info("received exit signal, stopping")
 				return
