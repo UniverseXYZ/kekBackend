@@ -21,6 +21,7 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 
 		var compSpeeds *big.Int
 		var totalBorrows *big.Int
+		var harvestCost *big.Int
 		var cash *big.Int
 		var oracleAddress string
 
@@ -98,6 +99,17 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 			return nil
 		})
 
+		subWG.Go(func() error {
+			hc, err := s.callSimpleFunction(s.abis["compoundcontroller"], p.ControllerAddress, "HARVEST_COST")
+			if err != nil {
+				return errors.Wrap(err, "could not call CompoundController.HARVEST_COST")
+			}
+
+			harvestCost = hc
+
+			return nil
+		})
+
 		err := subWG.Wait()
 		if err != nil {
 			return errors.Wrap(err, "could not get compound distribution apy")
@@ -145,6 +157,10 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 
 		compPriceDec := decimal.NewFromBigInt(compPrice, -6)
 		tokenPriceDec := decimal.NewFromBigInt(tokenPrice, -int32(18+18-p.UnderlyingDecimals))
+
+		// subtract the HARVEST_COST from the COMP price
+		harvestCostDec := decimal.NewFromBigInt(harvestCost, -18).Mul(compPriceDec)
+		compPriceDec = compPriceDec.Sub(harvestCostDec)
 
 		compDollarsPerBlock := decimal.NewFromBigInt(compSpeeds, -18).Mul(compPriceDec)
 
