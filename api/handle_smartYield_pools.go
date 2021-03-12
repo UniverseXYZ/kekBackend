@@ -63,20 +63,18 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 				   junior_apy,
 				   originator_apy,
 				   originator_net_apy,
-				   (select count(distinct buyer_address) from smart_yield_senior_buy where sy_address = pool_address ) as number_of_seniors,
-				   coalesce((select sum(for_days*underlying_in)/sum(underlying_in) from smart_yield_senior_buy where sy_address = pool_address), 0) as avg_senior_buy,
-				   (select count(distinct buyer_address) from smart_yield_token_buy where sy_address = pool_address ) as number_of_juniors,
-					( select sum(case 
-					    when (select count(*) from smart_yield_junior_redeem as r where r.junior_bond_address = b.junior_bond_address
-								 																and r.junior_bond_id = b.junior_bond_id) = 0 then tokens_in else 0
-				   		end)
-					from smart_yield_junior_buy as b
-					) as junior_liquidity_locked
+				   number_of_seniors(pool_address)                  as number_of_seniors,
+				   number_of_jtoken_holders(pool_address)           as number_of_juniors,
+			       number_of_juniors_locked(pool_address)           as number_of_juniors_locked,
+				   coalesce(( select sum(for_days * underlying_in) / sum(underlying_in)
+							  from smart_yield_senior_buy
+							  where sy_address = pool_address ), 0) as avg_senior_buy,
+				   junior_liquidity_locked(pool_address)            as junior_liquidity_locked
 			from smart_yield_state
 			where pool_address = $1
 			order by included_in_block desc
-			limit 1
-		`, p.SmartYieldAddress).Scan(&state.BlockNumber, &state.BlockTimestamp, &state.SeniorLiquidity, &state.JuniorLiquidity, &state.JTokenPrice, &state.SeniorAPY, &state.JuniorAPY, &state.OriginatorApy, &state.OriginatorNetApy, &state.NumberOfSeniors, &state.AvgSeniorMaturityDays, &state.NumberOfJuniors, &state.JuniorLiquidityLocked)
+			limit 1;
+		`, p.SmartYieldAddress).Scan(&state.BlockNumber, &state.BlockTimestamp, &state.SeniorLiquidity, &state.JuniorLiquidity, &state.JTokenPrice, &state.SeniorAPY, &state.JuniorAPY, &state.OriginatorApy, &state.OriginatorNetApy, &state.NumberOfSeniors, &state.NumberOfJuniors, &state.NumberOfJuniorsLocked, &state.AvgSeniorMaturityDays, &state.JuniorLiquidityLocked)
 	if err != nil {
 		Error(c, err)
 		return
@@ -162,20 +160,18 @@ func (a *API) handlePools(c *gin.Context) {
 				   junior_apy,
 				   originator_apy,
 				   originator_net_apy,
-				   (select count(distinct buyer_address) from smart_yield_senior_buy where sy_address = pool_address ) as number_of_seniors,
-				   coalesce((select sum(for_days*underlying_in)/sum(underlying_in) from smart_yield_senior_buy where sy_address = pool_address), 0) as avg_senior_buy,
-				   (select count(distinct buyer_address) from smart_yield_token_buy where sy_address = pool_address ) as number_of_juniors,
-					( select sum(case 
-					    when (select count(*) from smart_yield_junior_redeem as r where r.junior_bond_address = b.junior_bond_address
-								 																and r.junior_bond_id = b.junior_bond_id) = 0 then tokens_in else 0
-				   		end)
-					from smart_yield_junior_buy as b
-					) as junior_liquidity_locked
+				   number_of_seniors(pool_address)                  as number_of_seniors,
+				   number_of_jtoken_holders(pool_address)           as number_of_juniors,
+			       number_of_juniors_locked(pool_address)           as number_of_juniors_locked,
+				   coalesce(( select sum(for_days * underlying_in) / sum(underlying_in)
+							  from smart_yield_senior_buy
+							  where sy_address = pool_address ), 0) as avg_senior_buy,
+				   junior_liquidity_locked(pool_address)            as junior_liquidity_locked
 			from smart_yield_state
 			where pool_address = $1
 			order by included_in_block desc
-			limit 1
-		`, p.SmartYieldAddress).Scan(&state.BlockNumber, &state.BlockTimestamp, &state.SeniorLiquidity, &state.JuniorLiquidity, &state.JTokenPrice, &state.SeniorAPY, &state.JuniorAPY, &state.OriginatorApy, &state.OriginatorNetApy, &state.NumberOfSeniors, &state.AvgSeniorMaturityDays, &state.NumberOfJuniors, &state.JuniorLiquidityLocked)
+			limit 1;
+		`, p.SmartYieldAddress).Scan(&state.BlockNumber, &state.BlockTimestamp, &state.SeniorLiquidity, &state.JuniorLiquidity, &state.JTokenPrice, &state.SeniorAPY, &state.JuniorAPY, &state.OriginatorApy, &state.OriginatorNetApy, &state.NumberOfSeniors, &state.NumberOfJuniors, &state.NumberOfJuniorsLocked, &state.AvgSeniorMaturityDays, &state.JuniorLiquidityLocked)
 		if err != nil && err != sql.ErrNoRows {
 			Error(c, err)
 			return
