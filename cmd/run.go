@@ -86,7 +86,6 @@ var runCmd = &cobra.Command{
 				},
 				SmartYieldPrice: smartYieldPrices.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
-					StartAt:            viper.GetInt64("storable.smartYieldPrice.startAt"),
 				},
 			},
 		})
