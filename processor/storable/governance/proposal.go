@@ -94,7 +94,18 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 			return errors.Wrap(err, "could not execute statement")
 		}
 
-		j, err := notifications.ProposalCreatedJob(p.Id.Int64())
+		jd := notifications.ProposalCreatedJobData{
+			Id:                    p.Id.Int64(),
+			Proposer:              p.Proposer.String(),
+			Title:                 p.Title,
+			CreateTime:            p.CreateTime.Int64(),
+			WarmUpDuration:        p.WarmUpDuration.Int64(),
+			ActiveDuration:        p.ActiveDuration.Int64(),
+			QueueDuration:         p.QueueDuration.Int64(),
+			GraceDuration:         p.GracePeriodDuration.Int64(),
+			IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+		}
+		j, err := notifications.NewProposalCreatedJob(&jd)
 		if err != nil {
 			return errors.Wrap(err, "could not create notification job")
 		}

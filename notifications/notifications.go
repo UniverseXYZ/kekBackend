@@ -22,6 +22,8 @@ func (n *Notifications) Run(ctx context.Context) {
 			select {
 			case <-time.After(time.Second):
 				log.Info("loop")
+				// get jobs
+				// execute jobs
 			case <-ctx.Done():
 				log.Info("received exit signal, stopping")
 			}
@@ -46,11 +48,6 @@ func New(config Config) (*Notifications, error) {
 	}, nil
 }
 
-//
-// type Notification struct {
-// 	types.Notification
-// 	IncludedInBlock int64
-// }
 //
 // type Notifications struct {
 // 	stmt   *sql.Stmt
@@ -90,16 +87,3 @@ func New(config Config) (*Notifications, error) {
 // 	return &n, nil
 // }
 //
-// func NewNotification(target string, typ string, block int64, starts int64, expires int64, msg string, metadata map[string]interface{}) Notification {
-// 	return Notification{
-// 		Notification: types.Notification{
-// 			Target:           target,
-// 			NotificationType: typ,
-// 			StartsOn:         starts,
-// 			ExpiresOn:        expires,
-// 			Message:          msg,
-// 			Metadata:         metadata,
-// 		},
-// 		IncludedInBlock: block,
-// 	}
-// }

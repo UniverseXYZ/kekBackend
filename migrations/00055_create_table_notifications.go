@@ -14,13 +14,14 @@ func upCreateTableNotifications(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create table "notifications"
 		(
+		    "id" 				 bigserial primary key,
 			"target"             text,
 			"type"               text      	not null,
-			"included_in_block" bigint,
 			"starts_on"          bigint,
 			"expires_on"         bigint 	not null,
 			"message"            text,
 			"metadata"           jsonb,
+			"included_in_block"  bigint,
 			"created_on"		 timestamp 	default now()
 		)
 		;
