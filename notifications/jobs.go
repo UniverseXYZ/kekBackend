@@ -9,11 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-const (
-	ProposalCreated    = "proposal-created"
-	ProposalActivating = "proposal-activated"
-)
-
 type JobExecuter interface {
 	ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error)
 }

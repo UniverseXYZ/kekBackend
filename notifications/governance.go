@@ -8,8 +8,38 @@ import (
 	"github.com/pkg/errors"
 )
 
+const (
+	ProposalCreated      = "proposal-created"
+	ProposalActivating   = "proposal-activated"
+	ProposalVotingOpen   = "proposal-voting-open"
+	ProposalVotingEnding = "proposal-voting-ending"
+	ProposalOutcome      = "proposal-outcome"
+	ProposalAccepted     = "proposal-accepted"
+	ProposalFailed       = "proposal-failed"
+)
+
+const (
+	ProposalStateWarmUp   = "WARMUP"
+	ProposalStateActive   = "ACTIVE"
+	ProposalStateAccepted = "ACCEPTED"
+	ProposalStateFailed   = "FAILED"
+	ProposalStateQueued   = "QUEUED"
+	ProposalStateExecuted = "EXECUTED"
+	ProposalStateCanceled = "CANCELED"
+)
+
+// new proposal
 type ProposalCreatedJobData ProposalJobData
 type ProposalActivatingJobData ProposalJobData
+type ProposalVotingOpenJobData ProposalJobData
+type ProposalVotingEndingJobData ProposalJobData
+type ProposalOutcomeJobData ProposalJobData
+
+// canceled proposal
+
+// queued proposal
+
+// abrogated proposal
 
 type ProposalJobData struct {
 	Id                    int64
@@ -23,11 +53,17 @@ type ProposalJobData struct {
 	IncludedInBlockNumber int64
 }
 
+// proposal created job
+func NewProposalCreatedJob(data *ProposalCreatedJobData) (*Job, error) {
+	return NewJob(ProposalCreated, 0, data.IncludedInBlockNumber, data)
+}
+
 func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
 	log.Tracef("executing proposal created job for PID-%d", jd.Id)
 
 	// send created notification
-	notif := NewNotification(
+	err := saveNotification(
+		ctx, tx,
 		"system",
 		ProposalCreated,
 		jd.CreateTime,
@@ -36,15 +72,13 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		nil,
 		jd.IncludedInBlockNumber,
 	)
-
-	err := notif.ToDBWithTx(ctx, tx)
 	if err != nil {
 		return nil, errors.Wrap(err, "save create proposal notification to db")
 	}
 
 	// schedule job for next notification
 	njd := ProposalActivatingJobData(*jd)
-	next, err := NewProposalActivatedJob(&njd)
+	next, err := NewProposalActivatingJob(&njd)
 	if err != nil {
 		return nil, errors.Wrap(err, "create create proposal next job")
 	}
@@ -52,82 +86,211 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 	return next, nil
 }
 
-func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
-	log.Tracef("executing proposal activated job for PID-%d", jd.Id)
-	// check if proposal is still in warm up phase
-
-	// send activated notification
-	notif := NewNotification(
-		"system",
-		ProposalActivating,
-		jd.CreateTime,
-		jd.CreateTime+jd.WarmUpDuration-300,
-		fmt.Sprintf("Proposal PID-%d activating in 5 minutes", jd.Id),
-		nil,
-		jd.IncludedInBlockNumber,
-	)
-
-	err := notif.ToDBWithTx(ctx, tx)
-	if err != nil {
-		return nil, errors.Wrap(err, "save activated proposal notification to db")
-	}
-
-	// // schedule job for next notification
-	// jd := ProposalActivatingJobData(*jd)
-	// next, err := NewProposalActivatedJob(&jd)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "create create proposal next job")
-	// }
-
-	//return next, nil
-	return nil, nil
-}
-
-func NewProposalCreatedJob(data *ProposalCreatedJobData) (*Job, error) {
-	return NewJob(ProposalCreated, 0, data.IncludedInBlockNumber, data)
-}
-
-func NewProposalActivatedJob(data *ProposalActivatingJobData) (*Job, error) {
+// proposal voting starting soon
+func NewProposalActivatingJob(data *ProposalActivatingJobData) (*Job, error) {
 	x := data.CreateTime + data.WarmUpDuration - 300
 	return NewJob(ProposalActivating, x, data.IncludedInBlockNumber, data)
 }
 
-// 		_, err = stmt.Exec(p.Id.Int64(), p.Proposer.String(), p.Title, p.CreateTime.Int64(), p.WarmUpDuration.Int64(), p.ActiveDuration.Int64(), p.QueueDuration.Int64(), p.GracePeriodDuration.Int64(), g.Preprocessed.BlockTimestamp)
-// func FromGovernanceProposal(id int64, proposer string, title string, createTime int64, warmUpDuration int64, activeDuration int64, queueDuration int64, graceDuration int64, blockNumber int64, blockTime int64) []Notification {
-// 	// TODO starts at blockTime -1 or creation time?
-// 	startTime := blockTime - 1
-//
-// 	createNotif := NewNotification(
-// 		"system",
-// 		"proposal-created",
-// 		blockNumber,
-// 		startTime,
-// 		startTime+warmUpDuration-300,
-// 		fmt.Sprintf("Proposal PID-%d created by %s", id, proposer),
-// 		nil,
-// 	)
-// 	activatingNotif := NewNotification(
-// 		"system",
-// 		"proposal-activating",
-// 		blockNumber,
-// 		startTime+warmUpDuration-300,
-// 		startTime+warmUpDuration,
-// 		fmt.Sprintf(fmt.Sprintf("Voting period for PID-%d starting in 5 minutes"), id),
-// 		nil,
-// 	)
-// 	activeNotif := NewNotification(
-// 		"system",
-// 		"proposal-active",
-// 		blockNumber,
-// 		startTime+warmUpDuration,
-// 		startTime+warmUpDuration+activeDuration-300,
-// 		fmt.Sprintf(fmt.Sprintf("Governace proposal PID-%d is now active"), id),
-// 		nil,
-// 	)
-//
-// 	return []Notification{
-// 		createNotif,
-// 		activatingNotif,
-// 		activeNotif,
-// 	}
-// }
+func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal activated job for PID-%d", jd.Id)
+
+	// check if proposal is still in warm up phase
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if ps != ProposalStateWarmUp {
+		return nil, nil
+	}
+
+	// send voting starts notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalActivating,
+		jd.CreateTime+jd.WarmUpDuration-300,
+		jd.CreateTime+jd.WarmUpDuration,
+		fmt.Sprintf("Proposal PID-%d voting starts in 5 minutes", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save activating proposal notification to db")
+	}
+
+	// schedule job for next notification
+	njd := ProposalVotingOpenJobData(*jd)
+	next, err := NewProposalVotingOpenJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create create proposal next job")
+	}
+
+	return next, nil
+}
+
+// proposal started - voting open
+func NewProposalVotingOpenJob(data *ProposalVotingOpenJobData) (*Job, error) {
+	x := data.CreateTime + data.WarmUpDuration
+	return NewJob(ProposalVotingOpen, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalVotingOpenJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal voting open job for PID-%d", jd.Id)
+
+	// check if proposal in active phase
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if ps != ProposalStateActive {
+		return nil, nil
+	}
+
+	// send voting started notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalVotingOpen,
+		jd.CreateTime+jd.WarmUpDuration,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration-300,
+		fmt.Sprintf("Proposal PID-%d voting period started, cast your vote now", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+	}
+
+	// schedule job for next notification
+	njd := ProposalVotingEndingJobData(*jd)
+	next, err := NewProposalVotingEndingJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create proposal voting open next job")
+	}
+
+	return next, nil
+}
+
+// voting ending soon
+func NewProposalVotingEndingJob(data *ProposalVotingEndingJobData) (*Job, error) {
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration - 300
+	return NewJob(ProposalVotingEnding, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal voting ending job for PID-%d", jd.Id)
+
+	// check if proposal in active phase
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+	if ps != ProposalStateActive {
+		return nil, nil
+	}
+
+	// send voting ending soon notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalVotingEnding,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration-300,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
+		fmt.Sprintf("Proposal PID-%d voting period ending soon, cast your vote now", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+	}
+
+	// schedule job for next notification
+	njd := ProposalOutcomeJobData(*jd)
+	next, err := NewProposalOutcomeJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create proposal voting open next job")
+	}
+
+	return next, nil
+}
+
+// outcome of proposal voting period
+func NewProposalOutcomeJob(data *ProposalOutcomeJobData) (*Job, error) {
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration
+	return NewJob(ProposalOutcome, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal voting outcome job for PID-%d", jd.Id)
+
+	// check if proposal in active phase
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	if ps == ProposalAccepted {
+		// send proposal accepted notification
+		err = saveNotification(
+			ctx, tx,
+			"system",
+			ProposalAccepted,
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
+			// TODO ? decide timings
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
+			fmt.Sprintf("Proposal PID-%d has been accepted", jd.Id),
+			nil,
+			jd.IncludedInBlockNumber,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+		}
+	} else if ps == ProposalFailed {
+		// send proposal failed notification
+		err = saveNotification(
+			ctx, tx,
+			"system",
+			ProposalFailed,
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
+			// TODO ? decide timings
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*25,
+			fmt.Sprintf("Proposal PID-%d failed to achive voting quorum", jd.Id),
+			nil,
+			jd.IncludedInBlockNumber,
+		)
+		if err != nil {
+			return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+		}
+	} else {
+		log.Errorf("unknown proposal state after ending: PID-%d: %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	// // schedule job for next notification
+	// njd := ProposalOutcomeJobData(*jd)
+	// next, err := NewProposalOutcomeJob(&njd)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "create proposal voting open next job")
+	// }
+
+	return nil, nil
+}
+
+func proposalState(ctx context.Context, tx *sql.Tx, Id int64) (string, error) {
+	var ps string
+	err := tx.QueryRowContext(ctx, "select * from proposal_state($1)", Id).Scan(&ps)
+	if err != nil && err != sql.ErrNoRows {
+		return ps, errors.Wrap(err, "get proposal state")
+	}
+
+	return ps, nil
+}
+
+func saveNotification(ctx context.Context, tx *sql.Tx, target string, typ string, starts int64, expires int64, msg string, metadata map[string]interface{}, block int64) error {
+	notif := NewNotification(
+		target,
+		typ,
+		starts,
+		expires,
+		msg,
+		metadata,
+		block,
+	)
+
+	return notif.ToDBWithTx(ctx, tx)
+}
