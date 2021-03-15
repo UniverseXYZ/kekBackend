@@ -16,16 +16,20 @@ const (
 	ProposalOutcome      = "proposal-outcome"
 	ProposalAccepted     = "proposal-accepted"
 	ProposalFailed       = "proposal-failed"
+	ProposalGracePeriod  = "proposal-grace"
+	ProposalFinalState   = "proposal-final-state"
 )
 
 const (
-	ProposalStateWarmUp   = "WARMUP"
-	ProposalStateActive   = "ACTIVE"
-	ProposalStateAccepted = "ACCEPTED"
-	ProposalStateFailed   = "FAILED"
-	ProposalStateQueued   = "QUEUED"
-	ProposalStateExecuted = "EXECUTED"
-	ProposalStateCanceled = "CANCELED"
+	ProposalStateWarmUp      = "WARMUP"
+	ProposalStateActive      = "ACTIVE"
+	ProposalStateAccepted    = "ACCEPTED"
+	ProposalStateFailed      = "FAILED"
+	ProposalStateQueued      = "QUEUED"
+	ProposalStateGracePeriod = "GRACE"
+	ProposalStateExecuted    = "EXECUTED"
+	ProposalStateExpired     = "EXPIRED"
+	ProposalStateCanceled    = "CANCELED"
 )
 
 // new proposal
@@ -34,6 +38,8 @@ type ProposalActivatingJobData ProposalJobData
 type ProposalVotingOpenJobData ProposalJobData
 type ProposalVotingEndingJobData ProposalJobData
 type ProposalOutcomeJobData ProposalJobData
+type ProposalGracePeriodJobData ProposalJobData
+type ProposalFinalStateJobData ProposalJobData
 
 // canceled proposal
 
@@ -53,7 +59,7 @@ type ProposalJobData struct {
 	IncludedInBlockNumber int64
 }
 
-// proposal created job
+// proposal created
 func NewProposalCreatedJob(data *ProposalCreatedJobData) (*Job, error) {
 	return NewJob(ProposalCreated, 0, data.IncludedInBlockNumber, data)
 }
@@ -97,7 +103,11 @@ func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 
 	// check if proposal is still in warm up phase
 	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
 	if ps != ProposalStateWarmUp {
+		log.Tracef("proposal PID-%d was not in WARMUP state but %s", jd.Id, ps)
 		return nil, nil
 	}
 
@@ -137,7 +147,11 @@ func (jd *ProposalVotingOpenJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 
 	// check if proposal in active phase
 	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
 	if ps != ProposalStateActive {
+		log.Tracef("proposal PID-%d was not in ACTIVE state but %s", jd.Id, ps)
 		return nil, nil
 	}
 
@@ -181,6 +195,7 @@ func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sq
 		return nil, err
 	}
 	if ps != ProposalStateActive {
+		log.Tracef("proposal PID-%d was not in ACTIVE state but %s", jd.Id, ps)
 		return nil, nil
 	}
 
@@ -191,19 +206,19 @@ func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sq
 		ProposalVotingEnding,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration-300,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
-		fmt.Sprintf("Proposal PID-%d voting period ending soon, cast your vote now", jd.Id),
+		fmt.Sprintf("Voting period for proposal PID-%d is ending soon, cast your vote now", jd.Id),
 		nil,
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+		return nil, errors.Wrap(err, "save proposal voting ending soon notification to db")
 	}
 
 	// schedule job for next notification
 	njd := ProposalOutcomeJobData(*jd)
 	next, err := NewProposalOutcomeJob(&njd)
 	if err != nil {
-		return nil, errors.Wrap(err, "create proposal voting open next job")
+		return nil, errors.Wrap(err, "create proposal voting ending next job")
 	}
 
 	return next, nil
@@ -224,7 +239,7 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		return nil, err
 	}
 
-	if ps == ProposalAccepted {
+	if ps == ProposalStateAccepted {
 		// send proposal accepted notification
 		err = saveNotification(
 			ctx, tx,
@@ -233,14 +248,14 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
-			fmt.Sprintf("Proposal PID-%d has been accepted", jd.Id),
+			fmt.Sprintf("Proposal PID-%d has been accepted and is queued for execution", jd.Id),
 			nil,
 			jd.IncludedInBlockNumber,
 		)
 		if err != nil {
-			return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+			return nil, errors.Wrap(err, "save proposal accepted notification to db")
 		}
-	} else if ps == ProposalFailed {
+	} else if ps == ProposalStateFailed {
 		// send proposal failed notification
 		err = saveNotification(
 			ctx, tx,
@@ -248,25 +263,114 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			ProposalFailed,
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
 			// TODO ? decide timings
-			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*25,
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
 			fmt.Sprintf("Proposal PID-%d failed to achive voting quorum", jd.Id),
 			nil,
 			jd.IncludedInBlockNumber,
 		)
 		if err != nil {
-			return nil, errors.Wrap(err, "save proposal voting opened notification to db")
+			return nil, errors.Wrap(err, "save proposal failed notification to db")
 		}
 	} else {
 		log.Errorf("unknown proposal state after ending: PID-%d: %s", jd.Id, ps)
 		return nil, nil
 	}
 
-	// // schedule job for next notification
-	// njd := ProposalOutcomeJobData(*jd)
-	// next, err := NewProposalOutcomeJob(&njd)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "create proposal voting open next job")
-	// }
+	// schedule job for next notification
+	njd := ProposalGracePeriodJobData(*jd)
+	next, err := NewProposalGracePeriodJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create proposal voting outcome next job")
+	}
+
+	return next, nil
+}
+
+// proposal entering the grace period
+func NewProposalGracePeriodJob(data *ProposalGracePeriodJobData) (*Job, error) {
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration
+	return NewJob(ProposalGracePeriod, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal entering grace period job for PID-%d", jd.Id)
+
+	// check if proposal in grace period
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+	if ps != ProposalStateGracePeriod {
+		log.Tracef("proposal PID-%d was not in GRACE state but %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	// send proposal in grace period notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalGracePeriod,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration,
+		fmt.Sprintf("Proposal PID-%d can now be executed", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal in grace period notification to db")
+	}
+
+	// schedule job for next notification
+	njd := ProposalFinalStateJobData(*jd)
+	next, err := NewProposalFinalStateJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create proposal voting open next job")
+	}
+
+	return next, nil
+}
+
+// proposal execution result
+func NewProposalFinalStateJob(data *ProposalFinalStateJobData) (*Job, error) {
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + data.GraceDuration
+	return NewJob(ProposalFinalState, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalFinalStateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing proposal entering grace period job for PID-%d", jd.Id)
+
+	// check if proposal in grace period
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	var msg string
+	switch ps {
+	case ProposalStateExecuted:
+		msg = fmt.Sprintf("Proposal PID-%d has been executed sucessfully", jd.Id)
+	case ProposalStateExpired:
+		msg = fmt.Sprintf("Proposal PID-%d has not been executed and it expired", jd.Id)
+	default:
+		log.Tracef("proposal PID-%d was not in EXECUTED or EXPIRED state but %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	// send proposal in grace period notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalFinalState,
+		// TODO ? decide timings
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration+60*60*24,
+		msg,
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal in grace period notification to db")
+	}
 
 	return nil, nil
 }

@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"time"
 
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -30,6 +31,7 @@ func (w *Worker) Run(ctx context.Context) {
 				if err != nil {
 					log.Fatalf("failed to get jobs: %s", err)
 				}
+				spew.Dump(jobs)
 
 				err = ExecuteJobsWithTx(ctx, tx, jobs...)
 				if err != nil {
@@ -70,13 +72,13 @@ func (w *Worker) jobs(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 		LIMIT 1000
 		;
 	`
-	var j Job
 	rows, err := tx.QueryContext(ctx, sel)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, errors.Wrap(err, "get jobs")
 	}
 
 	for rows.Next() {
+		var j Job
 		err = rows.Scan(&j.Id, &j.JobType, &j.ExecuteOn, &j.JobData, &j.IncludedInBlock)
 		if err != nil {
 			return nil, errors.Wrap(err, "scan job row")
