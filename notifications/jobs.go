@@ -10,7 +10,7 @@ import (
 )
 
 type JobExecuter interface {
-	ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error)
+	ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error)
 }
 
 type Job struct {
@@ -71,7 +71,7 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			return errors.Wrap(err, "execute job")
 		}
 		if n != nil {
-			nextJobs = append(nextJobs, n)
+			nextJobs = append(nextJobs, n...)
 		}
 	}
 

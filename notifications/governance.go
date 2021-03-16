@@ -73,7 +73,7 @@ func NewProposalCreatedJob(data *ProposalCreatedJobData) (*Job, error) {
 	return NewJob(ProposalCreated, 0, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal created job for PID-%d", jd.Id)
 
 	// send created notification
@@ -98,7 +98,17 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		return nil, errors.Wrap(err, "create create proposal next job")
 	}
 
-	return next, nil
+	// failasafe notificatio for when all ends
+	nnjd := ProposalFinalStateJobData(*jd)
+	failsafe, err := NewProposalFinalStateJob(&nnjd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create create proposal next job")
+	}
+
+	return []*Job{
+		next,
+		failsafe,
+	}, nil
 }
 
 // proposal voting starting soon
@@ -107,7 +117,7 @@ func NewProposalActivatingJob(data *ProposalActivatingJobData) (*Job, error) {
 	return NewJob(ProposalActivating, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal activated job for PID-%d", jd.Id)
 
 	// check if proposal is still in warm up phase
@@ -142,7 +152,9 @@ func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 		return nil, errors.Wrap(err, "create create proposal next job")
 	}
 
-	return next, nil
+	return []*Job{
+		next,
+	}, nil
 }
 
 // proposal started - voting open
@@ -151,7 +163,7 @@ func NewProposalVotingOpenJob(data *ProposalVotingOpenJobData) (*Job, error) {
 	return NewJob(ProposalVotingOpen, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalVotingOpenJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalVotingOpenJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal voting open job for PID-%d", jd.Id)
 
 	// check if proposal in active phase
@@ -186,7 +198,9 @@ func (jd *ProposalVotingOpenJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 		return nil, errors.Wrap(err, "create proposal voting open next job")
 	}
 
-	return next, nil
+	return []*Job{
+		next,
+	}, nil
 }
 
 // voting ending soon
@@ -195,7 +209,7 @@ func NewProposalVotingEndingJob(data *ProposalVotingEndingJobData) (*Job, error)
 	return NewJob(ProposalVotingEnding, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal voting ending job for PID-%d", jd.Id)
 
 	// check if proposal in active phase
@@ -230,16 +244,18 @@ func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sq
 		return nil, errors.Wrap(err, "create proposal voting ending next job")
 	}
 
-	return next, nil
+	return []*Job{
+		next,
+	}, nil
 }
 
 // outcome of proposal voting period
 func NewProposalOutcomeJob(data *ProposalOutcomeJobData) (*Job, error) {
-	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + 300 // delay to make sure we are free of reorgs
 	return NewJob(ProposalOutcome, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal voting outcome job for PID-%d", jd.Id)
 
 	// check if proposal in active phase
@@ -292,7 +308,9 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		return nil, errors.Wrap(err, "create proposal voting outcome next job")
 	}
 
-	return next, nil
+	return []*Job{
+		next,
+	}, nil
 }
 
 // proposal entering the grace period
@@ -301,7 +319,7 @@ func NewProposalGracePeriodJob(data *ProposalGracePeriodJobData) (*Job, error) {
 	return NewJob(ProposalGracePeriod, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal entering grace period job for PID-%d", jd.Id)
 
 	// check if proposal in grace period
@@ -337,19 +355,20 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 		return nil, errors.Wrap(err, "create proposal voting open next job")
 	}
 
-	return next, nil
+	return []*Job{
+		next,
+	}, nil
 }
 
 // proposal execution result
 func NewProposalFinalStateJob(data *ProposalFinalStateJobData) (*Job, error) {
-	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + data.GraceDuration
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + data.GraceDuration + 300 // delay to make sure we are free of reorgs
 	return NewJob(ProposalFinalState, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalFinalStateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *ProposalFinalStateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing proposal entering grace period job for PID-%d", jd.Id)
 
-	// check if proposal in grace period
 	ps, err := proposalState(ctx, tx, jd.Id)
 	if err != nil {
 		return nil, err
@@ -361,6 +380,8 @@ func (jd *ProposalFinalStateJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 		msg = fmt.Sprintf("Proposal PID-%d has been executed sucessfully", jd.Id)
 	case ProposalStateExpired:
 		msg = fmt.Sprintf("Proposal PID-%d has not been executed and it expired", jd.Id)
+		// TODO abrogated as well?
+		// TODO failed as well?
 	default:
 		log.Tracef("proposal PID-%d was not in EXECUTED or EXPIRED state but %s", jd.Id, ps)
 		return nil, nil
@@ -390,7 +411,7 @@ func NewAbrogationProposalCreatedJob(data *AbrogationProposalCreatedJobData) (*J
 	return NewJob(AbrogationProposalCreated, 0, data.IncludedInBlockNumber, data)
 }
 
-func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing abrogation proposal created job for PID-%d", jd.Id)
 	//
 	// // send created notification
