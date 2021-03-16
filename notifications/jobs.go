@@ -39,67 +39,41 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 	var nextJobs []*Job
 	for _, j := range jobs {
 		var je JobExecuter
+		var jd interface{}
 		switch j.JobType {
 		case ProposalCreated:
-			var jd ProposalCreatedJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal created job data")
-			}
-			je = &jd
+			jd = &ProposalCreatedJobData{}
 		case ProposalActivating:
-			var jd ProposalActivatingJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal activated job data")
-			}
-			je = &jd
+			jd = &ProposalActivatingJobData{}
+
 		case ProposalVotingOpen:
-			var jd ProposalVotingOpenJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal activated job data")
-			}
-			je = &jd
+			jd = ProposalVotingOpenJobData{}
+
 		case ProposalVotingEnding:
-			var jd ProposalVotingEndingJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal activated job data")
-			}
-			je = &jd
+			jd = &ProposalVotingEndingJobData{}
+
 		case ProposalOutcome:
-			var jd ProposalOutcomeJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal activated job data")
-			}
-			je = &jd
+			jd = &ProposalOutcomeJobData{}
+
 		case ProposalGracePeriod:
-			var jd ProposalGracePeriodJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal activated job data")
-			}
-			je = &jd
+			jd = &ProposalGracePeriodJobData{}
+
 		case ProposalFinalState:
-			var jd ProposalFinalStateJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal proposal activated job data")
-			}
-			je = &jd
+			jd = &ProposalFinalStateJobData{}
+
 		case AbrogationProposalCreated:
-			var jd AbrogationProposalCreatedJobData
-			err := json.Unmarshal(j.JobData, &jd)
-			if err != nil {
-				return errors.Wrap(err, "unmarshal abrogation proposal created job data")
-			}
-			je = &jd
+			jd = &AbrogationProposalCreatedJobData{}
+
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)
 		}
 
+		err := json.Unmarshal(j.JobData, jd)
+		if err != nil {
+			return errors.Wrap(err, "unmarshal job data")
+		}
+
+		je = jd.(JobExecuter)
 		n, err := je.ExecuteWithTx(ctx, tx)
 		if err != nil {
 			return errors.Wrap(err, "execute job")
