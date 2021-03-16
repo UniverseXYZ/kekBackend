@@ -94,5 +94,7 @@ storable:
     address : "0x2e93403C675Ccb9C564edf2dC6001233d0650582"
   smartYieldState:
     compound-comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
+    # compound-oracle-override: "" # kovan "0xbBdE93962Ca9fe39537eeA7380550ca6845F8db7"
     blocks-per-minute: 4
+    # startat: # kovan 23611648
 
