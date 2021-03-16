@@ -39,41 +39,33 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 	var nextJobs []*Job
 	for _, j := range jobs {
 		var je JobExecuter
-		var jd interface{}
 		switch j.JobType {
 		case ProposalCreated:
-			jd = &ProposalCreatedJobData{}
+			je = &ProposalCreatedJobData{}
 		case ProposalActivating:
-			jd = &ProposalActivatingJobData{}
-
+			je = &ProposalActivatingJobData{}
 		case ProposalVotingOpen:
-			jd = ProposalVotingOpenJobData{}
-
+			je = &ProposalVotingOpenJobData{}
 		case ProposalVotingEnding:
-			jd = &ProposalVotingEndingJobData{}
-
+			je = &ProposalVotingEndingJobData{}
 		case ProposalOutcome:
-			jd = &ProposalOutcomeJobData{}
-
+			je = &ProposalOutcomeJobData{}
 		case ProposalGracePeriod:
-			jd = &ProposalGracePeriodJobData{}
-
+			je = &ProposalGracePeriodJobData{}
 		case ProposalFinalState:
-			jd = &ProposalFinalStateJobData{}
-
+			je = &ProposalFinalStateJobData{}
 		case AbrogationProposalCreated:
-			jd = &AbrogationProposalCreatedJobData{}
+			je = &AbrogationProposalCreatedJobData{}
 
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)
 		}
 
-		err := json.Unmarshal(j.JobData, jd)
+		err := json.Unmarshal(j.JobData, je)
 		if err != nil {
 			return errors.Wrap(err, "unmarshal job data")
 		}
 
-		je = jd.(JobExecuter)
 		n, err := je.ExecuteWithTx(ctx, tx)
 		if err != nil {
 			return errors.Wrap(err, "execute job")
