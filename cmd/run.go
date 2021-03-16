@@ -82,6 +82,7 @@ var runCmd = &cobra.Command{
 				SmartYield: smartYield.Config{},
 				SmartYieldState: smartYieldState.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+					OracleOverride:     viper.GetString("storable.smartYieldState.compound-oracle-override"),
 					BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),
 				},
 				SmartYieldPrice: smartYieldPrices.Config{
