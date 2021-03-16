@@ -9,15 +9,16 @@ import (
 )
 
 const (
-	ProposalCreated      = "proposal-created"
-	ProposalActivating   = "proposal-activated"
-	ProposalVotingOpen   = "proposal-voting-open"
-	ProposalVotingEnding = "proposal-voting-ending"
-	ProposalOutcome      = "proposal-outcome"
-	ProposalAccepted     = "proposal-accepted"
-	ProposalFailed       = "proposal-failed"
-	ProposalGracePeriod  = "proposal-grace"
-	ProposalFinalState   = "proposal-final-state"
+	ProposalCreated           = "proposal-created"
+	ProposalActivating        = "proposal-activated"
+	ProposalVotingOpen        = "proposal-voting-open"
+	ProposalVotingEnding      = "proposal-voting-ending"
+	ProposalOutcome           = "proposal-outcome"
+	ProposalAccepted          = "proposal-accepted"
+	ProposalFailed            = "proposal-failed"
+	ProposalGracePeriod       = "proposal-grace"
+	ProposalFinalState        = "proposal-final-state"
+	AbrogationProposalCreated = "abrogation-proposal-created"
 )
 
 const (
@@ -46,6 +47,7 @@ type ProposalFinalStateJobData ProposalJobData
 // queued proposal
 
 // abrogated proposal
+type AbrogationProposalCreatedJobData AbrogationProposalJobData
 
 type ProposalJobData struct {
 	Id                    int64
@@ -56,6 +58,13 @@ type ProposalJobData struct {
 	ActiveDuration        int64
 	QueueDuration         int64
 	GraceDuration         int64
+	IncludedInBlockNumber int64
+}
+
+type AbrogationProposalJobData struct {
+	Id                    int64
+	Proposer              string
+	CreateTime            int64
 	IncludedInBlockNumber int64
 }
 
@@ -373,6 +382,40 @@ func (jd *ProposalFinalStateJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 		return nil, errors.Wrap(err, "save proposal in grace period notification to db")
 	}
 
+	return nil, nil
+}
+
+// new abrogation proposal
+func NewAbrogationProposalCreatedJob(data *AbrogationProposalCreatedJobData) (*Job, error) {
+	return NewJob(AbrogationProposalCreated, 0, data.IncludedInBlockNumber, data)
+}
+
+func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) (*Job, error) {
+	log.Tracef("executing abrogation proposal created job for PID-%d", jd.Id)
+	//
+	// // send created notification
+	// err := saveNotification(
+	// 	ctx, tx,
+	// 	"system",
+	// 	ProposalCreated,
+	// 	jd.CreateTime,
+	// 	jd.CreateTime+jd.WarmUpDuration-300,
+	// 	fmt.Sprintf("Proposal PID-%d created by %s", jd.Id, jd.Proposer),
+	// 	nil,
+	// 	jd.IncludedInBlockNumber,
+	// )
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "save create proposal notification to db")
+	// }
+	//
+	// // schedule job for next notification
+	// njd := ProposalActivatingJobData(*jd)
+	// next, err := NewProposalActivatingJob(&njd)
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "create create proposal next job")
+	// }
+	//
+	// return next, nil
 	return nil, nil
 }
 

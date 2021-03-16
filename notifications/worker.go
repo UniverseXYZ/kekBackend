@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"time"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 )
@@ -31,7 +30,6 @@ func (w *Worker) Run(ctx context.Context) {
 				if err != nil {
 					log.Fatalf("failed to get jobs: %s", err)
 				}
-				spew.Dump(jobs)
 
 				err = ExecuteJobsWithTx(ctx, tx, jobs...)
 				if err != nil {

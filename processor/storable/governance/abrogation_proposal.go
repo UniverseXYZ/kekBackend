@@ -1,10 +1,13 @@
 package governance
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -62,6 +65,8 @@ func (g *GovStorable) handleAbrogationProposal(logs []web3types.Log, tx *sql.Tx)
 		return nil
 	}
 
+	var jobs []*notifications.Job
+
 	stmt, err := tx.Prepare(pq.CopyIn("governance_abrogation_proposals", "proposal_id", "creator", "create_time", "description", "tx_hash", "tx_index", "log_index", "logged_by", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
@@ -72,6 +77,19 @@ func (g *GovStorable) handleAbrogationProposal(logs []web3types.Log, tx *sql.Tx)
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
+
+		jd := notifications.AbrogationProposalCreatedJobData{
+			Id:                    cp.ProposalID.Int64(),
+			Proposer:              cp.Caller.String(),
+			CreateTime:            cp.CreateTime,
+			IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+		}
+		j, err := notifications.NewAbrogationProposalCreatedJob(&jd)
+		if err != nil {
+			return errors.Wrap(err, "could not create notification job")
+		}
+
+		jobs = append(jobs, j)
 	}
 
 	_, err = stmt.Exec()
@@ -82,6 +100,12 @@ func (g *GovStorable) handleAbrogationProposal(logs []web3types.Log, tx *sql.Tx)
 	err = stmt.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close statement")
+	}
+
+	ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+	err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+	if err != nil {
+		return errors.Wrap(err, "could not execute notification jobs")
 	}
 
 	return nil
