@@ -115,3 +115,25 @@ func DeleteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 	}
 	return nil
 }
+
+func SoftDeleteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
+	var ids []int64
+	for _, j := range jobs {
+		ids = append(ids, j.Id)
+	}
+
+	del := `
+		UPDATE
+			"notification_jobs"
+		SET 
+		    "deleted" = TRUE
+		WHERE
+			id = ANY($1)
+		;
+	`
+	_, err := tx.ExecContext(ctx, del, pq.Array(ids))
+	if err != nil {
+		return errors.Wrap(err, "delete notification jobs")
+	}
+	return nil
+}

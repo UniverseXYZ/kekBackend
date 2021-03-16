@@ -38,7 +38,7 @@ func (w *Worker) Run(ctx context.Context) {
 					log.Fatalf("failed to execute jobs: %s", err)
 				}
 
-				err = DeleteJobsWithTx(ctx, tx, jobs...)
+				err = SoftDeleteJobsWithTx(ctx, tx, jobs...)
 				if err != nil {
 					log.Fatalf("failed to cleanup jobs: %s", err)
 				}
@@ -69,6 +69,7 @@ func (w *Worker) jobs(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 			"notification_jobs"
 		WHERE
 			"execute_on" < EXTRACT(EPOCH FROM NOW())::bigint
+			AND deleted = FALSE
 		LIMIT 1000
 		;
 	`

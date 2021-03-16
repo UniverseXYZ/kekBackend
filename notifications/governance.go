@@ -320,6 +320,7 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 		return nil, errors.Wrap(err, "save proposal in grace period notification to db")
 	}
 
+	// TODO ? maybe we should schedule this from the get go
 	// schedule job for next notification
 	njd := ProposalFinalStateJobData(*jd)
 	next, err := NewProposalFinalStateJob(&njd)
