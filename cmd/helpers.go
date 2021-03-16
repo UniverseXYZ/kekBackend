@@ -143,6 +143,7 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "BuyerAddress of the governance contract")
 	cmd.Flags().String("storable.yieldFarming.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "BuyerAddress of the yield farming contract")
 	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b", "Address of compound comptroller")
+	cmd.Flags().String("storable.smartYieldState.compound-oracle-override", "", "Address to use instead of comptroller.oracle()")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
 	cmd.Flags().Int64("storable.smartYieldPrice.startAt", 0, "How many blocks per minute on the blockchain we're scraping")
 }

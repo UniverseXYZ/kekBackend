@@ -95,6 +95,9 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 			}
 
 			oracleAddress = utils.Topic2Address(data)
+			if s.config.OracleOverride != "" {
+				oracleAddress = s.config.OracleOverride
+			}
 
 			return nil
 		})
