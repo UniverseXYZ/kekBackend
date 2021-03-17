@@ -52,10 +52,12 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			je = &ProposalOutcomeJobData{}
 		case ProposalGracePeriod:
 			je = &ProposalGracePeriodJobData{}
-		case ProposalFinalState:
-			je = &ProposalFinalStateJobData{}
+		case ProposalExpired:
+			je = &ProposalExpiredJobData{}
 		case AbrogationProposalCreated:
 			je = &AbrogationProposalCreatedJobData{}
+		case ProposalAbrogated:
+			je = &ProposalAbrogatedJobData{}
 
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)

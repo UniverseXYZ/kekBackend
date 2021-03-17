@@ -17,8 +17,9 @@ const (
 	ProposalAccepted          = "proposal-accepted"
 	ProposalFailed            = "proposal-failed"
 	ProposalGracePeriod       = "proposal-grace"
-	ProposalFinalState        = "proposal-final-state"
+	ProposalExpired           = "proposal-expired"
 	AbrogationProposalCreated = "abrogation-proposal-created"
+	ProposalAbrogated         = "proposal-abrogated"
 )
 
 const (
@@ -40,7 +41,7 @@ type ProposalVotingOpenJobData ProposalJobData
 type ProposalVotingEndingJobData ProposalJobData
 type ProposalOutcomeJobData ProposalJobData
 type ProposalGracePeriodJobData ProposalJobData
-type ProposalFinalStateJobData ProposalJobData
+type ProposalExpiredJobData ProposalJobData
 
 // canceled proposal
 
@@ -48,6 +49,7 @@ type ProposalFinalStateJobData ProposalJobData
 
 // abrogated proposal
 type AbrogationProposalCreatedJobData AbrogationProposalJobData
+type ProposalAbrogatedJobData ProposalJobData
 
 type ProposalJobData struct {
 	Id                    int64
@@ -99,8 +101,8 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 	}
 
 	// failasafe notificatio for when all ends
-	nnjd := ProposalFinalStateJobData(*jd)
-	failsafe, err := NewProposalFinalStateJob(&nnjd)
+	nnjd := ProposalExpiredJobData(*jd)
+	failsafe, err := NewProposalExpiredJob(&nnjd)
 	if err != nil {
 		return nil, errors.Wrap(err, "create create proposal next job")
 	}
@@ -349,8 +351,8 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 
 	// TODO ? maybe we should schedule this from the get go
 	// schedule job for next notification
-	njd := ProposalFinalStateJobData(*jd)
-	next, err := NewProposalFinalStateJob(&njd)
+	njd := ProposalExpiredJobData(*jd)
+	next, err := NewProposalExpiredJob(&njd)
 	if err != nil {
 		return nil, errors.Wrap(err, "create proposal voting open next job")
 	}
@@ -360,42 +362,33 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 	}, nil
 }
 
-// proposal execution result
-func NewProposalFinalStateJob(data *ProposalFinalStateJobData) (*Job, error) {
+// proposal expired - scheduled from the start as a fallback
+func NewProposalExpiredJob(data *ProposalExpiredJobData) (*Job, error) {
 	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + data.GraceDuration + 300 // delay to make sure we are free of reorgs
-	return NewJob(ProposalFinalState, x, data.IncludedInBlockNumber, data)
+	return NewJob(ProposalExpired, x, data.IncludedInBlockNumber, data)
 }
 
-func (jd *ProposalFinalStateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
-	log.Tracef("executing proposal entering grace period job for PID-%d", jd.Id)
+func (jd *ProposalExpiredJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
+	log.Tracef("executing proposal expired job for PID-%d", jd.Id)
 
 	ps, err := proposalState(ctx, tx, jd.Id)
 	if err != nil {
 		return nil, err
 	}
-
-	var msg string
-	switch ps {
-	case ProposalStateExecuted:
-		msg = fmt.Sprintf("Proposal PID-%d has been executed sucessfully", jd.Id)
-	case ProposalStateExpired:
-		msg = fmt.Sprintf("Proposal PID-%d has not been executed and it expired", jd.Id)
-		// TODO abrogated as well?
-		// TODO failed as well?
-	default:
-		log.Tracef("proposal PID-%d was not in EXECUTED or EXPIRED state but %s", jd.Id, ps)
+	if ps != ProposalStateExpired {
+		log.Tracef("proposal PID-%d was not in EXPIRED state but %s", jd.Id, ps)
 		return nil, nil
 	}
 
-	// send proposal in grace period notification
+	// send proposal expired notification
 	err = saveNotification(
 		ctx, tx,
 		"system",
-		ProposalFinalState,
+		ProposalExpired,
 		// TODO ? decide timings
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration+60*60*24,
-		msg,
+		fmt.Sprintf("Proposal PID-%d has expired", jd.Id),
 		nil,
 		jd.IncludedInBlockNumber,
 	)
@@ -413,41 +406,128 @@ func NewAbrogationProposalCreatedJob(data *AbrogationProposalCreatedJobData) (*J
 
 func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
 	log.Tracef("executing abrogation proposal created job for PID-%d", jd.Id)
-	//
-	// // send created notification
-	// err := saveNotification(
-	// 	ctx, tx,
-	// 	"system",
-	// 	ProposalCreated,
-	// 	jd.CreateTime,
-	// 	jd.CreateTime+jd.WarmUpDuration-300,
-	// 	fmt.Sprintf("Proposal PID-%d created by %s", jd.Id, jd.Proposer),
-	// 	nil,
-	// 	jd.IncludedInBlockNumber,
-	// )
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "save create proposal notification to db")
-	// }
-	//
-	// // schedule job for next notification
-	// njd := ProposalActivatingJobData(*jd)
-	// next, err := NewProposalActivatingJob(&njd)
-	// if err != nil {
-	// 	return nil, errors.Wrap(err, "create create proposal next job")
-	// }
-	//
-	// return next, nil
+
+	// get the original proposal
+	pjd, err := proposalAsJobData(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, errors.Wrap(err, "proposal as job data")
+	}
+	// TODO should this be  fatal?
+	if pjd == nil {
+		log.Tracef("proposal PID-%d was not found but we have an abrogated event", jd.Id)
+		return nil, nil
+	}
+	pjd.IncludedInBlockNumber = jd.IncludedInBlockNumber
+
+	// send abrogation proposal created notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		AbrogationProposalCreated,
+		jd.CreateTime,
+		jd.CreateTime+300, // TODO see about timings
+		fmt.Sprintf("Abrogation proposal for PID-%d created by %s", jd.Id, jd.Proposer),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save create abrogation proposal notification to db")
+	}
+
+	// schedule job for next notification
+	njd := ProposalAbrogatedJobData(*pjd)
+	next, err := NewProposalAbrogatedJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create abrogation proposal next job")
+	}
+
+	return []*Job{
+		next,
+	}, nil
+}
+
+func NewProposalAbrogatedJob(data *ProposalAbrogatedJobData) (*Job, error) {
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + 300 // delay for safety against reorgs
+	return NewJob(ProposalAbrogated, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
+	log.Tracef("executing proposal abrogated for PID-%d", jd.Id)
+
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+	if ps != ProposalAbrogated {
+		log.Tracef("proposal PID-%d was not in ABROGATED state but %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	// send proposal abrogated notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalAbrogated,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+60*60*24, // TODO see about timings
+		fmt.Sprintf("Proposal PID-%d has been abrogated", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal abrogated notification to db")
+	}
+
 	return nil, nil
 }
 
 func proposalState(ctx context.Context, tx *sql.Tx, Id int64) (string, error) {
 	var ps string
-	err := tx.QueryRowContext(ctx, "select * from proposal_state($1)", Id).Scan(&ps)
+	sel := `SELECT * FROM proposal_state($1);`
+	err := tx.QueryRowContext(ctx, sel, Id).Scan(&ps)
 	if err != nil && err != sql.ErrNoRows {
 		return ps, errors.Wrap(err, "get proposal state")
 	}
 
 	return ps, nil
+}
+
+func proposalAsJobData(ctx context.Context, tx *sql.Tx, id int64) (*ProposalJobData, error) {
+	var pjd ProposalJobData
+
+	query := `
+		SELECT
+			"proposal_id",
+			"proposer",
+			"title",
+			"create_time",
+			"warm_up_duration",
+			"active_duration",
+			"queue_duration",
+			"grace_period_duration",
+		    "included_in_block"
+		FROM
+			"governance_proposals"
+		WHERE
+			"proposal_id" = $1
+	;
+	`
+
+	err := tx.QueryRowContext(ctx, query, id).Scan(
+		&pjd.Id, &pjd.Proposer, &pjd.Title,
+		&pjd.CreateTime, &pjd.WarmUpDuration, &pjd.ActiveDuration, &pjd.QueueDuration, &pjd.GraceDuration,
+		&pjd.IncludedInBlockNumber,
+	)
+
+	if err != nil && err != sql.ErrNoRows {
+		return nil, errors.Wrapf(err, "get proposal as job data %d", id)
+	}
+
+	if err == sql.ErrNoRows {
+		return nil, nil
+	}
+
+	return &pjd, nil
 }
 
 func saveNotification(ctx context.Context, tx *sql.Tx, target string, typ string, starts int64, expires int64, msg string, metadata map[string]interface{}, block int64) error {
