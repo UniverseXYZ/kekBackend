@@ -11,12 +11,14 @@ import (
 const (
 	ProposalCreated           = "proposal-created"
 	ProposalActivating        = "proposal-activated"
+	ProposalCanceled          = "proposal-canceled"
 	ProposalVotingOpen        = "proposal-voting-open"
 	ProposalVotingEnding      = "proposal-voting-ending"
 	ProposalOutcome           = "proposal-outcome"
 	ProposalAccepted          = "proposal-accepted"
 	ProposalFailed            = "proposal-failed"
 	ProposalGracePeriod       = "proposal-grace"
+	ProposalExecuted          = "proposal-executed"
 	ProposalExpired           = "proposal-expired"
 	AbrogationProposalCreated = "abrogation-proposal-created"
 	ProposalAbrogated         = "proposal-abrogated"
@@ -25,29 +27,26 @@ const (
 const (
 	ProposalStateWarmUp      = "WARMUP"
 	ProposalStateActive      = "ACTIVE"
+	ProposalStateCanceled    = "CANCELED"
 	ProposalStateAccepted    = "ACCEPTED"
 	ProposalStateFailed      = "FAILED"
 	ProposalStateQueued      = "QUEUED"
 	ProposalStateGracePeriod = "GRACE"
 	ProposalStateExecuted    = "EXECUTED"
+	ProposalStateAbrogated   = "ABROGATED"
 	ProposalStateExpired     = "EXPIRED"
-	ProposalStateCanceled    = "CANCELED"
 )
 
 // new proposal
 type ProposalCreatedJobData ProposalJobData
 type ProposalActivatingJobData ProposalJobData
+type ProposalCanceledJobData ProposalEventsJobData
 type ProposalVotingOpenJobData ProposalJobData
 type ProposalVotingEndingJobData ProposalJobData
 type ProposalOutcomeJobData ProposalJobData
 type ProposalGracePeriodJobData ProposalJobData
 type ProposalExpiredJobData ProposalJobData
-
-// canceled proposal
-
-// queued proposal
-
-// abrogated proposal
+type ProposalExecutedJobData ProposalEventsJobData
 type AbrogationProposalCreatedJobData AbrogationProposalJobData
 type ProposalAbrogatedJobData ProposalJobData
 
@@ -66,6 +65,12 @@ type ProposalJobData struct {
 type AbrogationProposalJobData struct {
 	Id                    int64
 	Proposer              string
+	CreateTime            int64
+	IncludedInBlockNumber int64
+}
+
+type ProposalEventsJobData struct {
+	Id                    int64
 	CreateTime            int64
 	IncludedInBlockNumber int64
 }
@@ -452,18 +457,18 @@ func NewProposalAbrogatedJob(data *ProposalAbrogatedJobData) (*Job, error) {
 }
 
 func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
-	log.Tracef("executing proposal abrogated for PID-%d", jd.Id)
+	log.Tracef("executing abrogated proposal job for PID-%d", jd.Id)
 
 	ps, err := proposalState(ctx, tx, jd.Id)
 	if err != nil {
 		return nil, err
 	}
-	if ps != ProposalAbrogated {
+	if ps != ProposalStateAbrogated {
 		log.Tracef("proposal PID-%d was not in ABROGATED state but %s", jd.Id, ps)
 		return nil, nil
 	}
 
-	// send proposal abrogated notification
+	// send abrogation proposal created notification
 	err = saveNotification(
 		ctx, tx,
 		"system",
@@ -475,7 +480,79 @@ func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.T
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
+		return nil, errors.Wrap(err, "save create abrogation proposal notification to db")
+	}
+	return nil, nil
+}
+
+// events
+// proposal canceled
+func NewProposalCanceledJob(data *ProposalCanceledJobData) (*Job, error) {
+	x := data.CreateTime + 300 // delay for safety against reorgs
+	return NewJob(ProposalCanceled, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalCanceledJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
+	log.Tracef("executing proposal abrogated for PID-%d", jd.Id)
+
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+	if ps != ProposalStateCanceled {
+		log.Tracef("proposal PID-%d was not in CANCELED state but %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	// send proposal canceled notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalCanceled,
+		jd.CreateTime,
+		jd.CreateTime+60*60*24, // TODO see about timings
+		fmt.Sprintf("Proposal PID-%d has been canceled", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
 		return nil, errors.Wrap(err, "save proposal abrogated notification to db")
+	}
+
+	return nil, nil
+}
+
+// proposal executed
+func NewProposalExecutedJob(data *ProposalExecutedJobData) (*Job, error) {
+	x := data.CreateTime + 300 // delay for safety against reorgs
+	return NewJob(ProposalExecuted, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalExecutedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
+	log.Tracef("executing proposal executed for PID-%d", jd.Id)
+
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+	if ps != ProposalStateExecuted {
+		log.Tracef("proposal PID-%d was not in EXECUTED state but %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	// send proposal executed notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalExecuted,
+		jd.CreateTime,
+		jd.CreateTime+60*60*24, // TODO see about timings
+		fmt.Sprintf("Proposal PID-%d has been executed", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal executed notification to db")
 	}
 
 	return nil, nil

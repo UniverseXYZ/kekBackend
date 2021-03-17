@@ -44,6 +44,8 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			je = &ProposalCreatedJobData{}
 		case ProposalActivating:
 			je = &ProposalActivatingJobData{}
+		case ProposalCanceled:
+			je = &ProposalCanceledJobData{}
 		case ProposalVotingOpen:
 			je = &ProposalVotingOpenJobData{}
 		case ProposalVotingEnding:
@@ -54,6 +56,8 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			je = &ProposalGracePeriodJobData{}
 		case ProposalExpired:
 			je = &ProposalExpiredJobData{}
+		case ProposalExecuted:
+			je = &ProposalExecutedJobData{}
 		case AbrogationProposalCreated:
 			je = &AbrogationProposalCreatedJobData{}
 		case ProposalAbrogated:
