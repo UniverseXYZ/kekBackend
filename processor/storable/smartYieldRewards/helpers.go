@@ -5,8 +5,10 @@ import (
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/contracts"
 	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
@@ -109,15 +111,43 @@ func (s *Storable) decodeNewPool(log web3types.Log) error {
 	if !utils.LogIsEvent(log, s.factoryPoolABI, PoolCreated) {
 		return nil
 	}
+	var p types.SYRewardPool
 
-	if state.RewardPoolByAddress(log.Topics[1]) != nil {
+	data, err := hex.DecodeString(utils.Trim0x(log.Data))
+	if err != nil {
+		return errors.Wrap(err, "could not decode log data")
+	}
+	var decoded = make(map[string]interface{})
+
+	err = s.factoryPoolABI.UnpackIntoMap(decoded, PoolCreated, data)
+	if err != nil {
+		return errors.Wrap(err, "could not unpack log data")
+	}
+
+	address := utils.NormalizeAddress(decoded["pool"].(string))
+
+	if state.RewardPoolByAddress(address) != nil {
 		return nil
 	}
 
-	var p types.SYRewardPool
-	var err error
+	pool, err := contracts.NewYieldFarmContinuous(common.HexToAddress(address), s.ethConn)
+	if err != nil {
+		return errors.Wrap(err, "could not init pool factory contract")
+	}
 
-	p.PoolAddress = utils.Topic2Address(log.Topics[1])
+	rewardAddress, err := pool.RewardToken(nil)
+	if err != nil {
+		return errors.Wrap(err, "could not get reward token address from contract call")
+	}
+
+	tokenAddress, err := pool.PoolToken(nil)
+	if err != nil {
+		return errors.Wrap(err, "could not get token address from contract call")
+	}
+
+	p.PoolAddress = address
+	p.RewardTokenAddress = rewardAddress.String()
+	p.PoolTokenAddress = tokenAddress.String()
 
 	p.StartAtBlock, err = strconv.ParseInt(log.BlockNumber, 0, 64)
 	if err != nil {

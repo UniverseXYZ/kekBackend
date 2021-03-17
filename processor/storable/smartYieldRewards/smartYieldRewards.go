@@ -6,6 +6,7 @@ import (
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -21,6 +22,7 @@ type Storable struct {
 	raw            *types.RawData
 	syRewardABI    abi.ABI
 	factoryPoolABI abi.ABI
+	ethConn        *ethclient.Client
 
 	processed struct {
 		stakingActions []StakingAction
@@ -30,12 +32,13 @@ type Storable struct {
 	}
 }
 
-func NewStorable(config Config, raw *types.RawData, syRewardABI abi.ABI, factoryABI abi.ABI) *Storable {
+func NewStorable(config Config, raw *types.RawData, syRewardABI abi.ABI, factoryABI abi.ABI, ethConn *ethclient.Client) *Storable {
 	return &Storable{
 		config:         config,
 		raw:            raw,
 		syRewardABI:    syRewardABI,
 		factoryPoolABI: factoryABI,
+		ethConn:        ethConn,
 	}
 }
 
