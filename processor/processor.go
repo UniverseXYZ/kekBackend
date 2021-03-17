@@ -4,11 +4,12 @@ import (
 	"database/sql"
 
 	"github.com/alethio/web3-go/ethrpc"
-	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/barnbridge/barnbridge-backend/state"
 
 	"github.com/barnbridge/barnbridge-backend/metrics"
 	"github.com/barnbridge/barnbridge-backend/processor/storable"
@@ -16,9 +17,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldRewards"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 	"github.com/barnbridge/barnbridge-backend/types"
 )
@@ -120,17 +119,17 @@ func (p *Processor) registerStorables() error {
 
 		p.storables = append(p.storables, smartYield.NewStorable(p.config.SmartYield, p.Raw, p.abis))
 
-		syState, err := smartYieldState.New(p.config.SmartYieldState, p.Raw, p.abis, p.ethBatch)
-		if err != nil {
-			return errors.Wrap(err, "could not initialize SmartYieldState storable")
-		}
-		p.storables = append(p.storables, syState)
+		/*	syState, err := smartYieldState.New(p.config.SmartYieldState, p.Raw, p.abis, p.ethBatch)
+			if err != nil {
+				return errors.Wrap(err, "could not initialize SmartYieldState storable")
+			}
+			p.storables = append(p.storables, syState)
 
-		syPrices, err := smartYieldPrices.New(p.config.SmartYieldPrice, p.Raw, p.abis, p.ethBatch)
-		if err != nil {
-			return errors.Wrap(err, "could not initialize SmartYieldPrice storable")
-		}
-		p.storables = append(p.storables, syPrices)
+			syPrices, err := smartYieldPrices.New(p.config.SmartYieldPrice, p.Raw, p.abis, p.ethBatch)
+			if err != nil {
+				return errors.Wrap(err, "could not initialize SmartYieldPrice storable")
+			}
+			p.storables = append(p.storables, syPrices)*/
 	}
 
 	{

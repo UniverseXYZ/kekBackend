@@ -124,7 +124,7 @@ func (s *Storable) decodeNewPool(log web3types.Log) error {
 		return errors.Wrap(err, "could not unpack log data")
 	}
 
-	address := utils.NormalizeAddress(decoded["pool"].(string))
+	address := decoded["pool"].(common.Address).String()
 
 	if state.RewardPoolByAddress(address) != nil {
 		return nil
@@ -145,9 +145,9 @@ func (s *Storable) decodeNewPool(log web3types.Log) error {
 		return errors.Wrap(err, "could not get token address from contract call")
 	}
 
-	p.PoolAddress = address
-	p.RewardTokenAddress = rewardAddress.String()
-	p.PoolTokenAddress = tokenAddress.String()
+	p.PoolAddress = utils.NormalizeAddress(address)
+	p.RewardTokenAddress = utils.NormalizeAddress(rewardAddress.String())
+	p.PoolTokenAddress = utils.NormalizeAddress(tokenAddress.String())
 
 	p.StartAtBlock, err = strconv.ParseInt(log.BlockNumber, 0, 64)
 	if err != nil {

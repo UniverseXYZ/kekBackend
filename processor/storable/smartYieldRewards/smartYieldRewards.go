@@ -50,7 +50,7 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 			if state.RewardPoolByAddress(log.Address) != nil {
 				rewardLogs = append(rewardLogs, log)
 			}
-			if utils.NormalizeAddress(log.Address) == s.config.PoolFactoryAddress {
+			if utils.NormalizeAddress(log.Address) == utils.NormalizeAddress(s.config.PoolFactoryAddress) {
 				err := s.decodeNewPool(log)
 				if err != nil {
 					return errors.Wrap(err, "could not get new pool")
