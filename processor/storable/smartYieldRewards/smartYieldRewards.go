@@ -11,14 +11,16 @@ import (
 
 	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 var log = logrus.WithField("module", "storable(smart yield rewards)")
 
 type Storable struct {
-	config      Config
-	raw         *types.RawData
-	syRewardABI abi.ABI
+	config         Config
+	raw            *types.RawData
+	syRewardABI    abi.ABI
+	factoryPoolABI abi.ABI
 
 	processed struct {
 		stakingActions []StakingAction
@@ -28,11 +30,12 @@ type Storable struct {
 	}
 }
 
-func NewStorable(config Config, raw *types.RawData, syRewardABI abi.ABI) *Storable {
+func NewStorable(config Config, raw *types.RawData, syRewardABI abi.ABI, factoryABI abi.ABI) *Storable {
 	return &Storable{
-		config:      config,
-		raw:         raw,
-		syRewardABI: syRewardABI,
+		config:         config,
+		raw:            raw,
+		syRewardABI:    syRewardABI,
+		factoryPoolABI: factoryABI,
 	}
 }
 
@@ -43,6 +46,12 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 		for _, log := range data.Logs {
 			if state.RewardPoolByAddress(log.Address) != nil {
 				rewardLogs = append(rewardLogs, log)
+			}
+			if utils.NormalizeAddress(log.Address) == s.config.PoolFactoryAddress {
+				err := s.decodeNewPool(log)
+				if err != nil {
+					return errors.Wrap(err, "could not get new pool")
+				}
 			}
 		}
 	}

@@ -2,10 +2,12 @@ package smartYieldRewards
 
 import (
 	"encoding/hex"
+	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/pkg/errors"
 
+	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -101,4 +103,31 @@ func (s *Storable) decodeStakingEvent(log web3types.Log, action string) (*Stakin
 	}
 
 	return &a, nil
+}
+
+func (s *Storable) decodeNewPool(log web3types.Log) error {
+	if !utils.LogIsEvent(log, s.factoryPoolABI, PoolCreated) {
+		return nil
+	}
+
+	if state.RewardPoolByAddress(log.Topics[1]) != nil {
+		return nil
+	}
+
+	var p types.SYRewardPool
+	var err error
+
+	p.PoolAddress = utils.Topic2Address(log.Topics[1])
+
+	p.StartAtBlock, err = strconv.ParseInt(log.BlockNumber, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	state.AddNewPoolToState(p)
+	err = state.AddNewPoolToDB(p)
+	if err != nil {
+		return err
+	}
+	return nil
 }

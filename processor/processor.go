@@ -137,7 +137,11 @@ func (p *Processor) registerStorables() error {
 		if _, exist := p.abis["syreward"]; !exist {
 			return errors.New("could not find smart yield rewards abi")
 		}
-		p.storables = append(p.storables, smartYieldRewards.NewStorable(p.config.SmartYieldRewards, p.Raw, p.abis["syreward"]))
+
+		if _, exist := p.abis["poolfactory"]; !exist {
+			return errors.New("could not find pool factory abi")
+		}
+		p.storables = append(p.storables, smartYieldRewards.NewStorable(p.config.SmartYieldRewards, p.Raw, p.abis["syreward"], p.abis["poolfactory"]))
 	}
 
 	return nil
