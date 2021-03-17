@@ -25,27 +25,29 @@ func (a *API) handleNotifications(c *gin.Context) {
 	offset := (page - 1) * limit
 
 	query := `
-				select 
-					   target,
-					   "type",
-					   starts_on,
-					   expires_on,
-					   "message",
-					   "metadata"
-				from notifications
-				where (target = 'system' %s) %s
-				order by starts_on desc
-				offset $1 limit $2`
+		SELECT
+			"target",
+			"type",
+			"starts_on",
+			"expires_on",
+			"message",
+			"metadata"
+		FROM
+			"notifications"
+		WHERE
+			  $3 < "starts_on"
+		  AND "starts_on" < EXTRACT(EPOCH FROM NOW())::bigint
+		  AND EXTRACT(EPOCH FROM NOW())::bigint < "expires_on"
+		  AND (
+					  "target" = 'system' %s
+				  )
+		ORDER BY
+			"starts_on"
+		OFFSET $1 LIMIT $2
+		;
+	`
 
 	var parameters = []interface{}{offset, limit}
-
-	target := strings.ToLower(c.DefaultQuery("target", "system"))
-	var targetFilter string
-
-	if target != "system" {
-		parameters = append(parameters, target)
-		targetFilter = fmt.Sprintf("or target = $%d", len(parameters))
-	}
 
 	timestamp, err := getQueryTimestamp(c)
 	if err != nil {
@@ -53,20 +55,24 @@ func (a *API) handleNotifications(c *gin.Context) {
 		return
 	}
 
-	var timestampFilter string
+	parameters = append(parameters, timestamp)
 
-	if timestamp > 0 {
-		parameters = append(parameters, timestamp)
-		timestampFilter = fmt.Sprintf("and starts_on < $%d and expires_on > $%d ", len(parameters), len(parameters))
+	target := strings.ToLower(c.DefaultQuery("target", ""))
+	var targetFilter string
+
+	if target == "" {
+		parameters = append(parameters, target)
+		targetFilter = fmt.Sprintf(`OR target = $%d`, len(parameters))
 	}
 
-	query = fmt.Sprintf(query, targetFilter, timestampFilter)
+	query = fmt.Sprintf(query, targetFilter)
 
 	rows, err := a.db.Query(query, parameters...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
 	}
+	defer rows.Close()
 
 	var notifications []types.Notification
 	for rows.Next() {
@@ -80,5 +86,4 @@ func (a *API) handleNotifications(c *gin.Context) {
 	}
 
 	OK(c, notifications)
-
 }
