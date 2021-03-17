@@ -7,6 +7,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -167,7 +168,7 @@ func (p *Processor) Store(db *sql.DB, m *metrics.Provider) error {
 			return err
 		}
 		log.WithField("block", number).Warn("detected reorged block")
-		_, err = db.Exec("select delete_block($1)", number)
+		_, err = db.Exec("select delete_block($1, $2)", number, pq.Array(dbTables))
 		if err != nil {
 			log.Error(err)
 			return err
