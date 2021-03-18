@@ -56,7 +56,7 @@ type ProposalJobData struct {
 	Id                    int64  `json:"proposalId"`
 	Proposer              string `json:"proposer"`
 	Title                 string `json:"title"`
-	CreateTime            int64  `json:"create_time"`
+	CreateTime            int64  `json:"createTime"`
 	WarmUpDuration        int64  `json:"warmUpDuration"`
 	ActiveDuration        int64  `json:"activeDuration"`
 	QueueDuration         int64  `json:"queueDuration"`
