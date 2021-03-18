@@ -9,6 +9,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
 	"github.com/barnbridge/barnbridge-backend/state"
 
 	"github.com/barnbridge/barnbridge-backend/metrics"
@@ -119,17 +121,17 @@ func (p *Processor) registerStorables() error {
 
 		p.storables = append(p.storables, smartYield.NewStorable(p.config.SmartYield, p.Raw, p.abis))
 
-		/*	syState, err := smartYieldState.New(p.config.SmartYieldState, p.Raw, p.abis, p.ethBatch)
-			if err != nil {
-				return errors.Wrap(err, "could not initialize SmartYieldState storable")
-			}
-			p.storables = append(p.storables, syState)
+		syState, err := smartYieldState.New(p.config.SmartYieldState, p.Raw, p.abis, p.ethBatch)
+		if err != nil {
+			return errors.Wrap(err, "could not initialize SmartYieldState storable")
+		}
+		p.storables = append(p.storables, syState)
 
-			syPrices, err := smartYieldPrices.New(p.config.SmartYieldPrice, p.Raw, p.abis, p.ethBatch)
-			if err != nil {
-				return errors.Wrap(err, "could not initialize SmartYieldPrice storable")
-			}
-			p.storables = append(p.storables, syPrices)*/
+		syPrices, err := smartYieldPrices.New(p.config.SmartYieldPrice, p.Raw, p.abis, p.ethBatch)
+		if err != nil {
+			return errors.Wrap(err, "could not initialize SmartYieldPrice storable")
+		}
+		p.storables = append(p.storables, syPrices)
 	}
 
 	{
