@@ -87,6 +87,19 @@ func downCreateFunctionsStakedAmountPortfolioValue(tx *sql.Tx) error {
 		drop function if exists staked_amount_at_ts_by_reward_pool;
 		drop function if exists jtoken_price_scaled_at_ts;
 		drop function if exists junior_staked_value_at_ts;
+
+		create or replace function junior_portfolio_value_at_ts(addr text, ts bigint) returns double precision
+			language plpgsql as
+		$$
+		declare
+			value double precision;
+		begin
+			select into value coalesce(junior_locked_balance_at_ts(addr, ts), 0) + 
+							  coalesce(junior_active_balance_at_ts(addr, ts), 0);
+			
+			return value;
+		end;
+		$$;
 	`)
 	return err
 }
