@@ -125,10 +125,12 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return errors.Wrap(err, "could not close statement")
 	}
 
-	ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
-	err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
-	if err != nil {
-		return errors.Wrap(err, "could not execute notification jobs")
+	if g.config.Notifications {
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
+		}
 	}
 
 	return nil
