@@ -156,6 +156,10 @@ func New(config Config) *Core {
 func (c *Core) Run() {
 	blockChan := make(chan int64)
 
+	if c.config.Processor.SmartYieldState.OracleOverride != "" {
+		log.Infof("setting %s as compound oracle override", c.config.Processor.SmartYieldState.OracleOverride)
+	}
+
 	go func() {
 		for b := range c.bbtracker.Subscribe() {
 			c.Metrics().RecordLatestBlock(b)

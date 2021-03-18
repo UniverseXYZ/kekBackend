@@ -16,5 +16,12 @@
       "startAtBlock": 23865225
     }
   ],
-  "rewardPools": []
+  "rewardPools": [
+    {
+      "poolAddress": "0x112082A889EC68B1dC38E09514FC1AF001DBA1D9",
+      "poolTokenAddress": "0x2327c862E8770E10f63EEF470686fFD2684A0092",
+      "rewardTokenAddress": "0x521EE0CeDbed2a5A130B9218551fe492C5c402e4",
+      "startAtBlock": 23948089
+    }
+  ]
 }

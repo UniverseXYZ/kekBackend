@@ -11,6 +11,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldRewards"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 
@@ -79,10 +80,14 @@ var scrapeCmd = &cobra.Command{
 				SmartYield: smartYield.Config{},
 				SmartYieldState: smartYieldState.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+					OracleOverride:     viper.GetString("storable.smartYieldState.compound-oracle-override"),
 					BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),
 				},
 				SmartYieldPrice: smartYieldPrices.Config{
 					ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+				},
+				SmartYieldRewards: smartYieldRewards.Config{
+					PoolFactoryAddress: viper.GetString("storable.smartYieldRewards.pool-factory-address"),
 				},
 			},
 		})
