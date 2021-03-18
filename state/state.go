@@ -12,8 +12,9 @@ import (
 type State struct {
 	db *sql.DB
 
-	syPools     []types.SYPool
-	rewardPools []types.SYRewardPool
+	syPools           []types.SYPool
+	rewardPools       []types.SYRewardPool
+	monitoredAccounts []string
 }
 
 var instance *State
@@ -37,6 +38,11 @@ func Refresh() error {
 	err = loadAllRewardPools()
 	if err != nil {
 		return errors.Wrap(err, "could not load SmartYield Reward pools")
+	}
+
+	err = loadAllAccounts()
+	if err != nil {
+		return errors.Wrap(err, "could not load monitored accounts ")
 	}
 
 	return nil
@@ -95,6 +101,28 @@ func loadAllRewardPools() error {
 	}
 
 	instance.rewardPools = pools
+
+	return nil
+}
+
+func loadAllAccounts() error {
+	rows, err := instance.db.Query(`select address from monitored_accounts`)
+	if err != nil {
+		return errors.Wrap(err, "could not query database for monitored accounts")
+	}
+
+	var accounts []string
+	for rows.Next() {
+		var a string
+		err := rows.Scan(&a)
+		if err != nil {
+			return errors.Wrap(err, "could no scan monitored accounts from database")
+		}
+
+		accounts = append(accounts, a)
+	}
+
+	instance.monitoredAccounts = accounts
 
 	return nil
 }

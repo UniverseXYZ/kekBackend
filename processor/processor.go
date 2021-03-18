@@ -16,6 +16,7 @@ import (
 
 	"github.com/barnbridge/barnbridge-backend/metrics"
 	"github.com/barnbridge/barnbridge-backend/processor/storable"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/accountERC20Transfers"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
@@ -144,6 +145,14 @@ func (p *Processor) registerStorables() error {
 			return errors.New("could not find pool factory abi")
 		}
 		p.storables = append(p.storables, smartYieldRewards.NewStorable(p.config.SmartYieldRewards, p.Raw, p.abis["syreward"], p.abis["poolfactory"], p.ethConn))
+	}
+
+	{
+		if _, exists := p.abis["erc20"]; !exists {
+			return errors.New("could not find erc20 abi")
+		}
+
+		p.storables = append(p.storables, accountERC20Transfers.NewStorable(p.config.AccountErc20Transfers, p.Raw, p.abis["erc20"], p.ethConn))
 	}
 
 	return nil
