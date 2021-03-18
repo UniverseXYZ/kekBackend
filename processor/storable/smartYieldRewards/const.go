@@ -6,3 +6,5 @@ const (
 	JuniorStake   ActionType = "JUNIOR_STAKE"
 	JuniorUnstake ActionType = "JUNIOR_UNSTAKE"
 )
+
+const PoolCreated = "PoolCreated"
