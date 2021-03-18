@@ -7,12 +7,9 @@ import (
 func (s *Storable) decodeLogs(logs []web3types.Log) error {
 	for _, log := range logs {
 		t, err := s.decodeTransfer(log)
-
 		if err != nil {
 			return err
-		}
-
-		if t != nil {
+		} else if t != nil {
 			s.processed.transfers = append(s.processed.transfers, *t)
 		}
 	}

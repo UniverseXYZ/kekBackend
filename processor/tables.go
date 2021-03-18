@@ -1,6 +1,7 @@
 package processor
 
 var dbTables = []string{
+	"account_erc20_transfers",
 	"barn_delegate_actions",
 	"barn_delegate_changes",
 	"barn_locks",
@@ -29,6 +30,4 @@ var dbTables = []string{
 	"smart_yield_token_sell",
 	"smart_yield_transaction_history",
 	"yield_farming_actions",
-	"notifications",
-	"notification_jobs",
 }

@@ -41,14 +41,13 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	var logs []web3types.Log
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
-			if utils.LogIsEvent(log, s.erc20ABI, "Transfer") &&
-				state.AddressExist(log) {
-				logs = append(logs, log)
+			if utils.LogIsEvent(log, s.erc20ABI, "Transfer") && state.IsMonitoredAccount(log) {
 				err := s.checkTokenExists(tx, utils.NormalizeAddress(log.Address))
-
 				if err != nil {
-					return err
+					continue
 				}
+
+				logs = append(logs, log)
 			}
 		}
 	}

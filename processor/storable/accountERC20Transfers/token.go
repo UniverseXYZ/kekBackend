@@ -20,10 +20,10 @@ func (s *Storable) checkTokenExists(tx *sql.Tx, tokenAddress string) error {
 	err := tx.QueryRow(`select count(*) from erc20_tokens where token_address = $1`, tokenAddress).Scan(&count)
 	if err != nil {
 		return err
-	}
-	if count > 0 {
+	} else if count > 0 {
 		return nil
 	}
+
 	token, err := s.getToken(tokenAddress)
 	if err != nil {
 		return err
@@ -52,6 +52,7 @@ func (s *Storable) getToken(tokenAddress string) (*Token, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Token{
 		Address:  tokenAddress,
 		Symbol:   symbol,
