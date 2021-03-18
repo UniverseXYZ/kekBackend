@@ -2,20 +2,23 @@ package api
 
 import (
 	"database/sql"
-	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
+
+	"github.com/barnbridge/barnbridge-backend/state"
+	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
 type rewardPoolSA struct {
-	UserAddress     string `json:"userAddress"`
-	TransactionType string `json:"transactionType"`
-	Amount          string `json:"amount"`
-	BlockTimestamp  int64  `json:"blockTimestamp"`
-	BlockNumber     int64  `json:"blockNumber"`
-	TxHash          string `json:"transactionHash"`
+	UserAddress     string          `json:"userAddress"`
+	TransactionType string          `json:"transactionType"`
+	Amount          decimal.Decimal `json:"amount"`
+	BlockTimestamp  int64           `json:"blockTimestamp"`
+	BlockNumber     int64           `json:"blockNumber"`
+	TxHash          string          `json:"transactionHash"`
 }
 
 func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
@@ -25,12 +28,15 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 		return
 	}
 
-	userAddress := strings.ToLower(c.DefaultQuery("userAddress", "all"))
+	rewardPool := state.RewardPoolByAddress(poolAddress)
+	if rewardPool == nil {
+		BadRequest(c, errors.New("invalid reward pool address"))
+		return
+	}
 
-	transactionType := strings.ToUpper(c.DefaultQuery("transactionType", "all"))
-
-	if !checkRewardPoolTxType(transactionType) && transactionType != "ALL" {
-		Error(c, errors.New("transaction type does not exist"))
+	smartYield := state.PoolBySmartYieldAddress(rewardPool.PoolTokenAddress)
+	if smartYield == nil {
+		Error(c, errors.New("could not find smart yield pool"))
 		return
 	}
 
@@ -47,43 +53,51 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	var parameters []interface{}
-	parameters = append(parameters, poolAddress, limit, offset)
+	filters := make(map[string]interface{})
+	filters["pool_address"] = poolAddress
 
-	query := `select 
-    						user_address,
-						    amount,
-						    action_type,
-						    block_timestamp,
-						    included_in_block,
-						    tx_hash
-						from smart_yield_rewards_staking_actions 
-						where pool_address = $1 %s %s 
-						order by included_in_block desc ,
-						         tx_index desc, 
-						         log_index desc
-						limit $2 offset  $3 `
-
-	var userFilter, txTypeFilter string
-
+	userAddress := c.DefaultQuery("userAddress", "all")
 	if userAddress != "all" {
-		parameters = append(parameters, userAddress)
-		userFilter = fmt.Sprintf("and user_address = $%d", len(parameters))
+		filters["user_address"] = utils.NormalizeAddress(userAddress)
 	}
 
+	transactionType := strings.ToUpper(c.DefaultQuery("transactionType", "all"))
 	if transactionType != "ALL" {
-		parameters = append(parameters, transactionType)
-		txTypeFilter = fmt.Sprintf("and action_type = $%d", len(parameters))
+		if !checkRewardPoolTxType(transactionType) {
+			Error(c, errors.New("transaction type does not exist"))
+			return
+		}
+
+		filters["action_type"] = transactionType
 	}
 
-	query = fmt.Sprintf(query, userFilter, txTypeFilter)
+	query, params := buildQueryWithFilter(`
+		select
+			user_address,
+			amount,
+			action_type,
+			block_timestamp,
+			included_in_block,
+			tx_hash
+		from smart_yield_rewards_staking_actions
+		where %s
+		order by included_in_block desc ,
+				 tx_index desc,
+				 log_index desc
+		%s %s
+	`,
+		filters,
+		&limit,
+		&offset,
+	)
 
-	rows, err := a.db.Query(query, parameters...)
-
+	rows, err := a.db.Query(query, params...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
 	}
+
+	tenPowDec := decimal.NewFromInt(10).Pow(decimal.NewFromInt(smartYield.UnderlyingDecimals))
 
 	var transactions []rewardPoolSA
 	for rows.Next() {
@@ -94,7 +108,28 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 			return
 		}
 
+		t.Amount = t.Amount.DivRound(tenPowDec, int32(smartYield.UnderlyingDecimals))
+
 		transactions = append(transactions, t)
+	}
+
+	query, params = buildQueryWithFilter(`
+		select
+			count(*)
+		from smart_yield_rewards_staking_actions
+		where %s
+		%s %s
+	`,
+		filters,
+		nil,
+		nil,
+	)
+
+	var count int64
+	err = a.db.QueryRow(query, params...).Scan(&count)
+	if err != nil {
+		Error(c, err)
+		return
 	}
 
 	block, err := a.getHighestBlock()
@@ -102,7 +137,6 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 		Error(c, err)
 		return
 	}
-	count := len(transactions)
 
 	OK(c, transactions, map[string]interface{}{
 		"block": block,
