@@ -14,11 +14,11 @@ type JobExecuter interface {
 }
 
 type Job struct {
-	Id              int64
-	JobType         string
-	ExecuteOn       int64
-	JobData         json.RawMessage
-	IncludedInBlock int64
+	Id              int64           `json:"id"`
+	JobType         string          `json:"jobType"`
+	ExecuteOn       int64           `json:"executeOn"`
+	JobData         json.RawMessage `json:"jobData"`
+	IncludedInBlock int64           `json:"includedInBlock"`
 }
 
 func NewJob(typ string, executeOn int64, block int64, data interface{}) (*Job, error) {
