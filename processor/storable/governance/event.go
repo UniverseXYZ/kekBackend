@@ -64,6 +64,19 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			}
 
 			events = append(events, e)
+
+			jd := notifications.ProposalQueuedJobData{
+				Id:                    proposalID.Int64(),
+				CreateTime:            g.Preprocessed.BlockTimestamp,
+				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+			}
+			j, err := notifications.NewProposalQueuedJob(&jd)
+			if err != nil {
+				return errors.Wrap(err, "could not create notification job")
+			}
+
+			jobs = append(jobs, j)
+
 			continue
 		}
 

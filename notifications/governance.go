@@ -10,13 +10,14 @@ import (
 
 const (
 	ProposalCreated           = "proposal-created"
-	ProposalActivating        = "proposal-activated"
+	ProposalActivating        = "proposal-activating-soon"
 	ProposalCanceled          = "proposal-canceled"
 	ProposalVotingOpen        = "proposal-voting-open"
-	ProposalVotingEnding      = "proposal-voting-ending"
+	ProposalVotingEnding      = "proposal-voting-ending-soon"
 	ProposalOutcome           = "proposal-outcome"
 	ProposalAccepted          = "proposal-accepted"
 	ProposalFailed            = "proposal-failed"
+	ProposalQueued            = "proposal-queued"
 	ProposalGracePeriod       = "proposal-grace"
 	ProposalExecuted          = "proposal-executed"
 	ProposalExpired           = "proposal-expired"
@@ -46,33 +47,34 @@ type ProposalVotingEndingJobData ProposalJobData
 type ProposalOutcomeJobData ProposalJobData
 type ProposalGracePeriodJobData ProposalJobData
 type ProposalExpiredJobData ProposalJobData
+type ProposalQueuedJobData ProposalEventsJobData
 type ProposalExecutedJobData ProposalEventsJobData
 type AbrogationProposalCreatedJobData AbrogationProposalJobData
 type ProposalAbrogatedJobData ProposalJobData
 
 type ProposalJobData struct {
-	Id                    int64
-	Proposer              string
-	Title                 string
-	CreateTime            int64
-	WarmUpDuration        int64
-	ActiveDuration        int64
-	QueueDuration         int64
-	GraceDuration         int64
-	IncludedInBlockNumber int64
+	Id                    int64  `json:"proposalId"`
+	Proposer              string `json:"proposer"`
+	Title                 string `json:"title"`
+	CreateTime            int64  `json:"create_time"`
+	WarmUpDuration        int64  `json:"warmUpDuration"`
+	ActiveDuration        int64  `json:"activeDuration"`
+	QueueDuration         int64  `json:"queueDuration"`
+	GraceDuration         int64  `json:"graceDuration"`
+	IncludedInBlockNumber int64  `json:"includedInBlockNumber"`
 }
 
 type AbrogationProposalJobData struct {
-	Id                    int64
-	Proposer              string
-	CreateTime            int64
-	IncludedInBlockNumber int64
+	Id                    int64  `json:"proposalId"`
+	Proposer              string `json:"proposer"`
+	CreateTime            int64  `json:"createTime"`
+	IncludedInBlockNumber int64  `json:"includedInBlockNumber"`
 }
 
 type ProposalEventsJobData struct {
-	Id                    int64
-	CreateTime            int64
-	IncludedInBlockNumber int64
+	Id                    int64 `json:"proposalId"`
+	CreateTime            int64 `json:"createTime"`
+	IncludedInBlockNumber int64 `json:"includedInBlockNumber"`
 }
 
 // proposal created
@@ -91,7 +93,7 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		jd.CreateTime,
 		jd.CreateTime+jd.WarmUpDuration-300,
 		fmt.Sprintf("Proposal PID-%d created by %s", jd.Id, jd.Proposer),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -105,16 +107,8 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		return nil, errors.Wrap(err, "create create proposal next job")
 	}
 
-	// failasafe notificatio for when all ends
-	nnjd := ProposalExpiredJobData(*jd)
-	failsafe, err := NewProposalExpiredJob(&nnjd)
-	if err != nil {
-		return nil, errors.Wrap(err, "create create proposal next job")
-	}
-
 	return []*Job{
 		next,
-		failsafe,
 	}, nil
 }
 
@@ -145,7 +139,7 @@ func (jd *ProposalActivatingJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 		jd.CreateTime+jd.WarmUpDuration-300,
 		jd.CreateTime+jd.WarmUpDuration,
 		fmt.Sprintf("Proposal PID-%d voting starts in 5 minutes", jd.Id),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -191,7 +185,7 @@ func (jd *ProposalVotingOpenJobData) ExecuteWithTx(ctx context.Context, tx *sql.
 		jd.CreateTime+jd.WarmUpDuration,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration-300,
 		fmt.Sprintf("Proposal PID-%d voting period started, cast your vote now", jd.Id),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -237,7 +231,7 @@ func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sq
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration-300,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
 		fmt.Sprintf("Voting period for proposal PID-%d is ending soon, cast your vote now", jd.Id),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -258,7 +252,7 @@ func (jd *ProposalVotingEndingJobData) ExecuteWithTx(ctx context.Context, tx *sq
 
 // outcome of proposal voting period
 func NewProposalOutcomeJob(data *ProposalOutcomeJobData) (*Job, error) {
-	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + 300 // delay to make sure we are free of reorgs
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + 180 // delay to make sure we are free of reorgs
 	return NewJob(ProposalOutcome, x, data.IncludedInBlockNumber, data)
 }
 
@@ -280,8 +274,8 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
-			fmt.Sprintf("Proposal PID-%d has been accepted and is queued for execution", jd.Id),
-			nil,
+			fmt.Sprintf("Proposal PID-%d has been accepted and is awaiting queuing for execution", jd.Id),
+			jobDataMetadata((*ProposalJobData)(jd)),
 			jd.IncludedInBlockNumber,
 		)
 		if err != nil {
@@ -296,28 +290,19 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
-			fmt.Sprintf("Proposal PID-%d failed to achive voting quorum", jd.Id),
-			nil,
+			fmt.Sprintf("Proposal PID-%d failed to pass", jd.Id),
+			jobDataMetadata((*ProposalJobData)(jd)),
 			jd.IncludedInBlockNumber,
 		)
 		if err != nil {
 			return nil, errors.Wrap(err, "save proposal failed notification to db")
 		}
 	} else {
-		log.Errorf("unknown proposal state after ending: PID-%d: %s", jd.Id, ps)
+		log.Tracef("proposal PID-%d state after ending: %s", jd.Id, ps)
 		return nil, nil
 	}
 
-	// schedule job for next notification
-	njd := ProposalGracePeriodJobData(*jd)
-	next, err := NewProposalGracePeriodJob(&njd)
-	if err != nil {
-		return nil, errors.Wrap(err, "create proposal voting outcome next job")
-	}
-
-	return []*Job{
-		next,
-	}, nil
+	return nil, nil
 }
 
 // proposal entering the grace period
@@ -347,7 +332,7 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration,
 		fmt.Sprintf("Proposal PID-%d can now be executed", jd.Id),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -369,7 +354,7 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 
 // proposal expired - scheduled from the start as a fallback
 func NewProposalExpiredJob(data *ProposalExpiredJobData) (*Job, error) {
-	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + data.GraceDuration + 300 // delay to make sure we are free of reorgs
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + data.GraceDuration + 180 // delay to make sure we are free of reorgs
 	return NewJob(ProposalExpired, x, data.IncludedInBlockNumber, data)
 }
 
@@ -394,7 +379,7 @@ func (jd *ProposalExpiredJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration+60*60*24,
 		fmt.Sprintf("Proposal PID-%d has expired", jd.Id),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -419,9 +404,11 @@ func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, t
 	}
 	// TODO should this be  fatal?
 	if pjd == nil {
-		log.Tracef("proposal PID-%d was not found but we have an abrogated event", jd.Id)
+		log.Errorf("proposal PID-%d was not found but we have an abrogated event", jd.Id)
 		return nil, nil
 	}
+	// setting these to abrogation proposal details in case we need to recall them later
+	pjd.Proposer = jd.Proposer
 	pjd.IncludedInBlockNumber = jd.IncludedInBlockNumber
 
 	// send abrogation proposal created notification
@@ -430,7 +417,7 @@ func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, t
 		"system",
 		AbrogationProposalCreated,
 		jd.CreateTime,
-		jd.CreateTime+300, // TODO see about timings
+		pjd.CreateTime+pjd.WarmUpDuration+pjd.ActiveDuration+pjd.QueueDuration, // TODO see about timings
 		fmt.Sprintf("Abrogation proposal for PID-%d created by %s", jd.Id, jd.Proposer),
 		nil,
 		jd.IncludedInBlockNumber,
@@ -440,6 +427,7 @@ func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, t
 	}
 
 	// schedule job for next notification
+	// NOTE we are replacing the abrogation proposal with the original proposal + some overwritten fields
 	njd := ProposalAbrogatedJobData(*pjd)
 	next, err := NewProposalAbrogatedJob(&njd)
 	if err != nil {
@@ -452,7 +440,7 @@ func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, t
 }
 
 func NewProposalAbrogatedJob(data *ProposalAbrogatedJobData) (*Job, error) {
-	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + 300 // delay for safety against reorgs
+	x := data.CreateTime + data.WarmUpDuration + data.ActiveDuration + data.QueueDuration + 180 // delay for safety against reorgs
 	return NewJob(ProposalAbrogated, x, data.IncludedInBlockNumber, data)
 }
 
@@ -476,7 +464,7 @@ func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.T
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+60*60*24, // TODO see about timings
 		fmt.Sprintf("Proposal PID-%d has been abrogated", jd.Id),
-		nil,
+		jobDataMetadata((*ProposalJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -486,14 +474,15 @@ func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.T
 }
 
 // events
+
 // proposal canceled
 func NewProposalCanceledJob(data *ProposalCanceledJobData) (*Job, error) {
-	x := data.CreateTime + 300 // delay for safety against reorgs
+	x := data.CreateTime + 180 // delay for safety against reorgs
 	return NewJob(ProposalCanceled, x, data.IncludedInBlockNumber, data)
 }
 
 func (jd *ProposalCanceledJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
-	log.Tracef("executing proposal abrogated for PID-%d", jd.Id)
+	log.Tracef("executing proposal canceled for PID-%d", jd.Id)
 
 	ps, err := proposalState(ctx, tx, jd.Id)
 	if err != nil {
@@ -516,15 +505,71 @@ func (jd *ProposalCanceledJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "save proposal abrogated notification to db")
+		return nil, errors.Wrap(err, "save proposal canceled notification to db")
 	}
 
 	return nil, nil
 }
 
+// proposal queued
+func NewProposalQueuedJob(data *ProposalQueuedJobData) (*Job, error) {
+	x := data.CreateTime
+	return NewJob(ProposalQueued, x, data.IncludedInBlockNumber, data)
+}
+
+func (jd *ProposalQueuedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
+	log.Tracef("executing proposal queued for PID-%d", jd.Id)
+
+	ps, err := proposalState(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, err
+	}
+	if ps != ProposalStateQueued {
+		log.Tracef("proposal PID-%d was not in QUEUED state but %s", jd.Id, ps)
+		return nil, nil
+	}
+
+	pjd, err := proposalAsJobData(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, errors.Wrap(err, "proposal as job data")
+	}
+	// TODO should this be  fatal?
+	if pjd == nil {
+		log.Errorf("proposal PID-%d was not found but we have a queued event", jd.Id)
+		return nil, nil
+	}
+	pjd.IncludedInBlockNumber = jd.IncludedInBlockNumber
+
+	// send proposal queued notification
+	err = saveNotification(
+		ctx, tx,
+		"system",
+		ProposalQueued,
+		jd.CreateTime,
+		pjd.CreateTime+pjd.WarmUpDuration+pjd.ActiveDuration+pjd.QueueDuration,
+		fmt.Sprintf("Proposal PID-%d has been queued for execution", jd.Id),
+		nil,
+		jd.IncludedInBlockNumber,
+	)
+	if err != nil {
+		return nil, errors.Wrap(err, "save proposal queued notification to db")
+	}
+
+	// schedule job for next notification
+	njd := ProposalGracePeriodJobData(*pjd)
+	next, err := NewProposalGracePeriodJob(&njd)
+	if err != nil {
+		return nil, errors.Wrap(err, "create proposal queued next job")
+	}
+
+	return []*Job{
+		next,
+	}, nil
+}
+
 // proposal executed
 func NewProposalExecutedJob(data *ProposalExecutedJobData) (*Job, error) {
-	x := data.CreateTime + 300 // delay for safety against reorgs
+	x := data.CreateTime + 180 // delay for safety against reorgs
 	return NewJob(ProposalExecuted, x, data.IncludedInBlockNumber, data)
 }
 
@@ -619,4 +664,11 @@ func saveNotification(ctx context.Context, tx *sql.Tx, target string, typ string
 	)
 
 	return notif.ToDBWithTx(ctx, tx)
+}
+
+func jobDataMetadata(jd *ProposalJobData) map[string]interface{} {
+	m := make(map[string]interface{})
+	m["proposalId"] = jd.Id
+	m["proposer"] = jd.Proposer
+	return m
 }
