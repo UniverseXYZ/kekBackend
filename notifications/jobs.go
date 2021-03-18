@@ -52,6 +52,8 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			je = &ProposalVotingEndingJobData{}
 		case ProposalOutcome:
 			je = &ProposalOutcomeJobData{}
+		case ProposalQueued:
+			je = &ProposalQueuedJobData{}
 		case ProposalGracePeriod:
 			je = &ProposalGracePeriodJobData{}
 		case ProposalExpired:

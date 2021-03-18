@@ -45,9 +45,9 @@ type ProposalCanceledJobData ProposalEventsJobData
 type ProposalVotingOpenJobData ProposalJobData
 type ProposalVotingEndingJobData ProposalJobData
 type ProposalOutcomeJobData ProposalJobData
+type ProposalQueuedJobData ProposalEventsJobData
 type ProposalGracePeriodJobData ProposalJobData
 type ProposalExpiredJobData ProposalJobData
-type ProposalQueuedJobData ProposalEventsJobData
 type ProposalExecutedJobData ProposalEventsJobData
 type AbrogationProposalCreatedJobData AbrogationProposalJobData
 type ProposalAbrogatedJobData ProposalJobData
@@ -339,7 +339,6 @@ func (jd *ProposalGracePeriodJobData) ExecuteWithTx(ctx context.Context, tx *sql
 		return nil, errors.Wrap(err, "save proposal in grace period notification to db")
 	}
 
-	// TODO ? maybe we should schedule this from the get go
 	// schedule job for next notification
 	njd := ProposalExpiredJobData(*jd)
 	next, err := NewProposalExpiredJob(&njd)
@@ -468,8 +467,9 @@ func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.T
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
-		return nil, errors.Wrap(err, "save create abrogation proposal notification to db")
+		return nil, errors.Wrap(err, "save abrogated proposal notification to db")
 	}
+
 	return nil, nil
 }
 
