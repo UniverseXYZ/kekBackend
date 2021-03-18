@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 )
 
 type rewardPoolSA struct {
@@ -27,6 +28,11 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 	userAddress := strings.ToLower(c.DefaultQuery("userAddress", "all"))
 
 	transactionType := strings.ToUpper(c.DefaultQuery("transactionType", "all"))
+
+	if !checkRewardPoolTxType(transactionType) && transactionType != "ALL" {
+		Error(c, errors.New("transaction type does not exist"))
+		return
+	}
 
 	limit, err := getQueryLimit(c)
 	if err != nil {
@@ -53,7 +59,10 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 						    tx_hash
 						from smart_yield_rewards_staking_actions 
 						where pool_address = $1 %s %s 
-						limit $2 offset  $3`
+						order by included_in_block desc ,
+						         tx_index desc, 
+						         log_index desc
+						limit $2 offset  $3 `
 
 	var userFilter, txTypeFilter string
 
@@ -88,5 +97,26 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 		transactions = append(transactions, t)
 	}
 
-	OK(c, transactions)
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+	count := len(transactions)
+
+	OK(c, transactions, map[string]interface{}{
+		"block": block,
+		"count": count,
+	})
+}
+
+func checkRewardPoolTxType(action string) bool {
+	txType := [2]string{"JUNIOR_STAKE", "JUNIOR_UNSTAKE"}
+	for _, tx := range txType {
+		if action == tx {
+			return true
+		}
+	}
+
+	return false
 }
