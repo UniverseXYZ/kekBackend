@@ -11,7 +11,6 @@ type SYPortfolioValuePoint struct {
 	Timestamp   time.Time `json:"timestamp"`
 	SeniorValue *float64  `json:"seniorValue,omitempty"`
 	JuniorValue *float64  `json:"juniorValue,omitempty"`
-	StakedValue *float64  `json:"stakedValue"`
 }
 
 func (a *API) handleSYUserPortfolioValue(c *gin.Context) {
@@ -24,8 +23,7 @@ func (a *API) handleSYUserPortfolioValue(c *gin.Context) {
 	rows, err := a.db.Query(`
 		select ts,
 			   junior_portfolio_value_at_ts($1, ts),
-			   senior_portfolio_value_at_ts($1, ts),
-		       staked_value_at_ts((select pool_address from smart_yield_reward_pools ),$1,ts)
+			   senior_portfolio_value_at_ts($1, ts)
 		from generate_series(( select extract(epoch from now() - interval '30 days')::bigint ),
 							 ( select extract(epoch from now()) )::bigint, 12 * 60 * 60) as ts
 	`, user)
@@ -38,9 +36,9 @@ func (a *API) handleSYUserPortfolioValue(c *gin.Context) {
 
 	for rows.Next() {
 		var ts int64
-		var junior, senior, staked float64
+		var junior, senior float64
 
-		err := rows.Scan(&ts, &junior, &senior, &staked)
+		err := rows.Scan(&ts, &junior, &senior)
 		if err != nil {
 			Error(c, err)
 			return
@@ -50,7 +48,6 @@ func (a *API) handleSYUserPortfolioValue(c *gin.Context) {
 			Timestamp:   time.Unix(ts, 0),
 			SeniorValue: &senior,
 			JuniorValue: &junior,
-			StakedValue: &staked,
 		})
 	}
 

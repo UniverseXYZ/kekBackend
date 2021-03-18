@@ -3,7 +3,7 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "pool_",
+        "name": "cumulator_",
         "type": "address"
       },
       {
@@ -34,6 +34,19 @@
         "internalType": "uint256",
         "name": "yieldForInterval",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cumulator",
+    "outputs": [
+      {
+        "internalType": "contract IYieldOraclelizable",
+        "name": "",
+        "type": "address"
       }
     ],
     "stateMutability": "view",
@@ -79,19 +92,6 @@
         "internalType": "uint256",
         "name": "",
         "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "pool",
-    "outputs": [
-      {
-        "internalType": "contract IYieldOraclelizable",
-        "name": "",
-        "type": "address"
       }
     ],
     "stateMutability": "view",

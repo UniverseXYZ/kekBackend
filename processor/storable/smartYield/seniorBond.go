@@ -160,7 +160,7 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 	}
 
 	for _, a := range s.processed.seniorActions.seniorBondRedeems {
-		_, err = stmt.Exec(a.SYAddress, a.OwnerAddress, state.PoolBySmartYieldAddress(a.SYAddress).JuniorBondAddress, a.SeniorBondID.String(), a.Fee.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
+		_, err = stmt.Exec(a.SYAddress, a.OwnerAddress, state.PoolBySmartYieldAddress(a.SYAddress).SeniorBondAddress, a.SeniorBondID.String(), a.Fee.String(), a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
 		}
@@ -177,8 +177,6 @@ func (s *Storable) storeSeniorRedeemTrades(tx *sql.Tx) error {
 	}
 
 	for _, a := range s.processed.seniorActions.seniorBondRedeems {
-		// todo: amount should be `underlying_in + gain - fee`
-
 		var underlyingIn, gain decimal.Decimal
 		err := tx.QueryRow(`select underlying_in, gain from smart_yield_senior_buy where senior_bond_id = $1`, a.SeniorBondID.Int64()).Scan(&underlyingIn, &gain)
 		if err != nil {

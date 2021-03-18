@@ -36,6 +36,7 @@ type SYPoolState struct {
 	AvgSeniorMaturityDays float64         `json:"avgSeniorMaturityDays"`
 	NumberOfSeniors       int64           `json:"numberOfSeniors"`
 	NumberOfJuniors       int64           `json:"numberOfJuniors"`
+	NumberOfJuniorsLocked int64           `json:"numberOfJuniorsLocked"`
 	JuniorLiquidityLocked decimal.Decimal `json:"juniorLiquidityLocked"`
 }
 

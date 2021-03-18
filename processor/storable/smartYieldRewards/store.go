@@ -57,7 +57,7 @@ func (s *Storable) storeStakingEvents(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_rewards_staking_action", "user_address", "amount", "balance_after", "action_type", "pool_address", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_rewards_staking_actions", "user_address", "amount", "balance_after", "action_type", "pool_address", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}

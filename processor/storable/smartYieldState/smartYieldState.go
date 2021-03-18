@@ -11,6 +11,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 
 	"github.com/barnbridge/barnbridge-backend/state"
@@ -19,8 +20,8 @@ import (
 
 type Config struct {
 	ComptrollerAddress string
+	OracleOverride     string
 	BlocksPerMinute    int64
-	StartAt            int64
 }
 
 type Storable struct {
@@ -29,6 +30,8 @@ type Storable struct {
 
 	abis map[string]abi.ABI
 	eth  *ethrpc.ETH
+
+	logger *logrus.Entry
 
 	Preprocessed struct {
 		BlockTimestamp time.Time
@@ -42,6 +45,7 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 		raw:    raw,
 		abis:   abis,
 		eth:    eth,
+		logger: logrus.WithField("module", "storable(smartYieldState)"),
 	}
 
 	var err error
@@ -61,9 +65,11 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, eth *ethrpc
 }
 
 func (s Storable) ToDB(tx *sql.Tx) error {
-	if s.Preprocessed.BlockNumber < s.config.StartAt {
-		return nil
-	}
+	s.logger.Debug("executing")
+	start := time.Now()
+	defer func() {
+		s.logger.WithField("duration", time.Since(start)).Debug("done")
+	}()
 
 	var wg = &errgroup.Group{}
 
@@ -71,6 +77,11 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	var mu = &sync.Mutex{}
 
 	for _, p := range state.Pools() {
+		if s.Preprocessed.BlockNumber < p.StartAtBlock {
+			s.logger.WithField("pool", p.SmartYieldAddress).Info("skipping pool due to StartAtBlock property")
+			continue
+		}
+
 		p := p
 
 		results[p.SmartYieldAddress] = &State{
@@ -93,12 +104,14 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
-	for _, p := range state.Pools() {
-		// 	(seniorLiq - (abondAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
-		r := results[p.SmartYieldAddress]
+	for key, r := range results {
+		p := state.PoolBySmartYieldAddress(key)
 
-		if r.OriginatorNetApy == 0 || r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
-			results[p.SmartYieldAddress].JuniorAPY = 0
+		if r.OriginatorNetApy == 0 {
+			results[key].JuniorAPY = 0
+			continue
+		} else if r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
+			results[key].JuniorAPY = r.OriginatorNetApy
 			continue
 		}
 
@@ -111,14 +124,21 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 
 		var abondAPY float64
 		if !abondPrincipal.Equal(decimal.NewFromInt(0)) {
-			abondAPY, _ = abondGain.Div(abondPrincipal).Div(abondMaturesAt.Sub(abondIssuedAt)).Mul(decimal.NewFromInt(365 * 24 * 60 * 60)).Float64()
+			abondAPY, _ = abondGain.Div(abondPrincipal).
+				Div(abondMaturesAt.Sub(abondIssuedAt)).
+				Mul(decimal.NewFromInt(365 * 24 * 60 * 60)).
+				Float64()
 		}
 
 		a := decimal.NewFromFloat(abondAPY / r.OriginatorNetApy).Mul(seniorLiq)
 
-		juniorApy := seniorLiq.Sub(a).Add(r.JuniorLiquidity).Mul(decimal.NewFromFloat(r.OriginatorNetApy)).Div(r.JuniorLiquidity)
-		results[p.SmartYieldAddress].JuniorAPY, _ = juniorApy.Float64()
-		results[p.SmartYieldAddress].AbondAPY = abondAPY
+		// 	(seniorLiq - (abondAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
+		juniorApy := seniorLiq.Sub(a).
+			Add(r.JuniorLiquidity).
+			Mul(decimal.NewFromFloat(r.OriginatorNetApy)).
+			Div(r.JuniorLiquidity)
+		results[key].JuniorAPY, _ = juniorApy.Float64()
+		results[key].AbondAPY = abondAPY
 	}
 
 	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_state", "included_in_block", "block_timestamp", "pool_address", "senior_liquidity", "junior_liquidity", "jtoken_price", "abond_principal", "abond_gain", "abond_issued_at", "abond_matures_at", "abond_apy", "senior_apy", "junior_apy", "originator_apy", "originator_net_apy"))
@@ -126,9 +146,7 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		return err
 	}
 
-	for _, p := range state.Pools() {
-		r := results[p.SmartYieldAddress]
-
+	for _, r := range results {
 		_, err = stmt.Exec(s.Preprocessed.BlockNumber, s.Preprocessed.BlockTimestamp, r.PoolAddress, r.TotalLiquidity.Sub(r.JuniorLiquidity), r.JuniorLiquidity, r.JTokenPrice, r.Abond.Principal.String(), r.Abond.Gain.String(), decimal.NewFromBigInt(r.Abond.IssuedAt, -18).IntPart(), decimal.NewFromBigInt(r.Abond.MaturesAt, -18).IntPart(), r.AbondAPY, r.SeniorAPY, r.JuniorAPY, r.OriginatorApy, r.OriginatorNetApy)
 		if err != nil {
 			return err
