@@ -197,9 +197,34 @@ func (a *API) handlePools(c *gin.Context) {
 }
 
 func (a *API) handleRewardPools(c *gin.Context) {
+	protocols := strings.ToLower(c.DefaultQuery("protocolId", "all"))
+
+	query := `select 
+				       r.pool_address,
+				       r.pool_token_address,
+				       r.reward_token_address,
+				       p.underlying_decimals,
+				       p.protocol_id,
+				       p.underlying_symbol
+				from smart_yield_reward_pools as r
+				inner join smart_yield_pools as p
+				on p.sy_address = r.pool_token_address where 1 = 1 %s `
+
+	var parameters []interface{}
+	var protocolFilter string
+
+	if protocols != "all" {
+		protocolsArray := strings.Split(protocols, ",")
+
+		protocolFilter = fmt.Sprintf("and protocol_id = ANY($1)")
+		parameters = append(parameters, pq.Array(protocolsArray))
+	}
+
+	query = fmt.Sprintf(query, protocolFilter)
+
 	var pools []types.SYRewardPool
 
-	rows, err := a.db.Query(`select pool_address,pool_token_address,reward_token_address from smart_yield_reward_pools`)
+	rows, err := a.db.Query(query, parameters...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -207,7 +232,7 @@ func (a *API) handleRewardPools(c *gin.Context) {
 
 	for rows.Next() {
 		var p types.SYRewardPool
-		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress)
+		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress, &p.PoolTokenDecimals, &p.ProtocolID, &p.UnderlyingSymbol)
 		if err != nil {
 			Error(c, err)
 			return
