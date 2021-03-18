@@ -4,21 +4,24 @@ import (
 	"database/sql"
 
 	"github.com/alethio/web3-go/ethrpc"
-	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
+	"github.com/barnbridge/barnbridge-backend/state"
+
 	"github.com/barnbridge/barnbridge-backend/metrics"
 	"github.com/barnbridge/barnbridge-backend/processor/storable"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/accountERC20Transfers"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldRewards"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
 	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
 	"github.com/barnbridge/barnbridge-backend/types"
 )
@@ -137,7 +140,19 @@ func (p *Processor) registerStorables() error {
 		if _, exist := p.abis["syreward"]; !exist {
 			return errors.New("could not find smart yield rewards abi")
 		}
-		p.storables = append(p.storables, smartYieldRewards.NewStorable(p.config.SmartYieldRewards, p.Raw, p.abis["syreward"]))
+
+		if _, exist := p.abis["poolfactory"]; !exist {
+			return errors.New("could not find pool factory abi")
+		}
+		p.storables = append(p.storables, smartYieldRewards.NewStorable(p.config.SmartYieldRewards, p.Raw, p.abis["syreward"], p.abis["poolfactory"], p.ethConn))
+	}
+
+	{
+		if _, exists := p.abis["erc20"]; !exists {
+			return errors.New("could not find erc20 abi")
+		}
+
+		p.storables = append(p.storables, accountERC20Transfers.NewStorable(p.config.AccountErc20Transfers, p.Raw, p.abis["erc20"], p.ethConn))
 	}
 
 	return nil
@@ -167,7 +182,7 @@ func (p *Processor) Store(db *sql.DB, m *metrics.Provider) error {
 			return err
 		}
 		log.WithField("block", number).Warn("detected reorged block")
-		_, err = db.Exec("select delete_block($1)", number)
+		_, err = db.Exec("select delete_block($1, $2)", number, pq.Array(dbTables))
 		if err != nil {
 			log.Error(err)
 			return err

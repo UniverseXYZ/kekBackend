@@ -146,6 +146,7 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.smartYieldState.compound-oracle-override", "", "Address to use instead of comptroller.oracle()")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
 	cmd.Flags().Int64("storable.smartYieldPrice.startAt", 0, "How many blocks per minute on the blockchain we're scraping")
+	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "0xBDf81f99Ec4487114D51d8bA6EBfF97F99aF27e2", "Address of rewards pool factory")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
@@ -156,4 +157,5 @@ func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
 	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
 	viper.BindPFlag("storable.smartYieldPrice.startAt", cmd.Flag("storable.smartYieldPrice.startAt"))
+	viper.BindPFlag("storable.smartYieldRewards.pool-factory-address", cmd.Flag("storable.smartYieldRewards.pool-factory-address"))
 }
