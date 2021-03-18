@@ -25,6 +25,10 @@ func Init(db *sql.DB) error {
 
 	instance = &State{db: db}
 
+	return Refresh()
+}
+
+func Refresh() error {
 	err := loadAllSYPools()
 	if err != nil {
 		return errors.Wrap(err, "could not load SmartYield pools")
@@ -39,7 +43,7 @@ func Init(db *sql.DB) error {
 }
 
 func loadAllSYPools() error {
-	rows, err := instance.db.Query(`select protocol_id, controller_address, model_address, provider_address, sy_address, oracle_address, junior_bond_address, senior_bond_address, receipt_token_address, underlying_address, underlying_symbol, underlying_decimals from smart_yield_pools;`)
+	rows, err := instance.db.Query(`select protocol_id, controller_address, model_address, provider_address, sy_address, oracle_address, junior_bond_address, senior_bond_address, receipt_token_address, underlying_address, underlying_symbol, underlying_decimals, start_at_block from smart_yield_pools;`)
 	if err != nil {
 		return errors.Wrap(err, "could not query database for SmartYield pools")
 	}
@@ -47,7 +51,7 @@ func loadAllSYPools() error {
 	var pools []types.SYPool
 	for rows.Next() {
 		var p types.SYPool
-		err := rows.Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.ReceiptTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals)
+		err := rows.Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.ReceiptTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals, &p.StartAtBlock)
 		if err != nil {
 			return errors.Wrap(err, "could not scan pools from database")
 		}
@@ -71,7 +75,7 @@ func loadAllSYPools() error {
 }
 
 func loadAllRewardPools() error {
-	rows, err := instance.db.Query(`select pool_address,pool_token_address,reward_token_address from smart_yield_reward_pools;`)
+	rows, err := instance.db.Query(`select pool_address,pool_token_address,reward_token_address, start_at_block from smart_yield_reward_pools;`)
 	if err != nil {
 		return errors.Wrap(err, "could not query database for SmartYield Reward pools")
 	}
@@ -79,7 +83,7 @@ func loadAllRewardPools() error {
 	var pools []types.SYRewardPool
 	for rows.Next() {
 		var p types.SYRewardPool
-		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress)
+		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress, &p.StartAtBlock)
 		if err != nil {
 			return errors.Wrap(err, "could not scan reward pools from database")
 		}

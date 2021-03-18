@@ -1,0 +1,27 @@
+{
+  "smartYield": [
+    {
+      "protocolId": "compound/v2",
+      "controllerAddress": "0x1538D9DE7D6d65E21F8684b0267f0D1EF903a536",
+      "modelAddress": "0x3c8a7f8043cF80C53A7571f18F7Da5f9CC5AC2c6",
+      "providerAddress": "0xF1e21873897D4A58A6672C4a9e3D2d750958eFDE",
+      "smartYieldAddress": "0x2327c862E8770E10f63EEF470686fFD2684A0092",
+      "oracleAddress": "0x95D79e6045b8A08a017c78135422A4010052D1d1",
+      "juniorBondAddress": "0x12F55D133CE4b5b0f6674399CcA61F1B2Ed92321",
+      "seniorBondAddress": "0x687a4fb8B8DdB73Bb4011525A74E15eE8AB96905",
+      "receiptTokenAddress": "0x4a92e71227d294f041bd82dd8f78591b75140d63",
+      "underlyingAddress": "0xb7a4f3e9097c08da09517b5ab877f7a917224ede",
+      "underlyingSymbol": "USDC",
+      "underlyingDecimals": 6,
+      "startAtBlock": 23865225
+    }
+  ],
+  "rewardPools": [
+    {
+      "poolAddress": "0x112082A889EC68B1dC38E09514FC1AF001DBA1D9",
+      "poolTokenAddress": "0x2327c862E8770E10f63EEF470686fFD2684A0092",
+      "rewardTokenAddress": "0x521EE0CeDbed2a5A130B9218551fe492C5c402e4",
+      "startAtBlock": 23948089
+    }
+  ]
+}

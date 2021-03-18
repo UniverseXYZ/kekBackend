@@ -22,14 +22,15 @@ type Storable struct {
 	abis   map[string]abi.ABI
 
 	processed struct {
-		tokenActions     TokenTrades
-		seniorActions    SeniorTrades
-		juniorActions    JuniorTrades
-		jTokenTransfers  []types.Transfer
-		ERC721Transfers  []ERC721Transfer
-		compoundProvider CompoundProvider
-		blockNumber      int64
-		blockTimestamp   int64
+		tokenActions       TokenTrades
+		seniorActions      SeniorTrades
+		juniorActions      JuniorTrades
+		jTokenTransfers    []types.Transfer
+		ERC721Transfers    []ERC721Transfer
+		compoundProvider   CompoundProvider
+		compoundController CompoundController
+		blockNumber        int64
+		blockTimestamp     int64
 	}
 }
 
@@ -44,6 +45,7 @@ func NewStorable(config Config, raw *types.RawData, abis map[string]abi.ABI) *St
 func (s *Storable) ToDB(tx *sql.Tx) error {
 	var smartYieldLogs []web3types.Log
 	var compoundProviderLogs []web3types.Log
+	var compoundControllerLogs []web3types.Log
 
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {
@@ -85,6 +87,11 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 				compoundProviderLogs = append(compoundProviderLogs, log)
 				continue
 			}
+
+			if state.PoolByControllerAddress(log.Address) != nil {
+				compoundControllerLogs = append(compoundControllerLogs, log)
+				continue
+			}
 		}
 	}
 
@@ -94,6 +101,11 @@ func (s *Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	err = s.decodeCompoundProviderEvents(compoundProviderLogs)
+	if err != nil {
+		return err
+	}
+
+	err = s.decodeCompoundControllerEvents(compoundControllerLogs)
 	if err != nil {
 		return err
 	}
