@@ -44,8 +44,8 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	filters := make(map[string]interface{})
-	filters["owner_address"] = user
+	filters := new(Filters)
+	filters.Add("owner_address", user)
 
 	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 	if originator != "all" {
@@ -54,7 +54,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 			return
 		}
 
-		filters["( select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address )"] = originator
+		filters.Add("( select p.protocol_id from smart_yield_pools as p where p.sy_address = r.sy_address )", originator)
 	}
 
 	token := strings.ToLower(c.DefaultQuery("token", "all"))
@@ -64,7 +64,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 			return
 		}
 
-		filters["( select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address )"] = token
+		filters.Add("( select p.underlying_address from smart_yield_pools as p where p.sy_address = r.sy_address )", token)
 	}
 
 	query, params := buildQueryWithFilter(`

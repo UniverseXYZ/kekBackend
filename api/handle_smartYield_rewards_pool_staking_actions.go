@@ -53,12 +53,12 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	filters := make(map[string]interface{})
-	filters["pool_address"] = poolAddress
+	filters := new(Filters)
+	filters.Add("pool_address", poolAddress)
 
 	userAddress := c.DefaultQuery("userAddress", "all")
 	if userAddress != "all" {
-		filters["user_address"] = utils.NormalizeAddress(userAddress)
+		filters.Add("user_address", utils.NormalizeAddress(userAddress))
 	}
 
 	transactionType := strings.ToUpper(c.DefaultQuery("transactionType", "all"))
@@ -68,7 +68,7 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 			return
 		}
 
-		filters["action_type"] = transactionType
+		filters.Add("action_type", transactionType)
 	}
 
 	query, params := buildQueryWithFilter(`
