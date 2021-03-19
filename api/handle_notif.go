@@ -26,6 +26,7 @@ func (a *API) handleNotifications(c *gin.Context) {
 
 	query := `
 		SELECT
+		    "id",
 			"target",
 			"type",
 			"starts_on",
@@ -77,7 +78,7 @@ func (a *API) handleNotifications(c *gin.Context) {
 	var notifications []types.Notification
 	for rows.Next() {
 		var n types.Notification
-		err := rows.Scan(&n.Target, &n.NotificationType, &n.StartsOn, &n.ExpiresOn, &n.Message, &n.Metadata)
+		err := rows.Scan(&n.Id, &n.Target, &n.NotificationType, &n.StartsOn, &n.ExpiresOn, &n.Message, &n.Metadata)
 		if err != nil {
 			Error(c, err)
 			return

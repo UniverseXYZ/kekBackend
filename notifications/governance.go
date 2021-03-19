@@ -271,7 +271,7 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			ctx, tx,
 			"system",
 			ProposalAccepted,
-			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
 			fmt.Sprintf("Proposal PID-%d has been accepted and is awaiting queuing for execution", jd.Id),
@@ -287,7 +287,7 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			ctx, tx,
 			"system",
 			ProposalFailed,
-			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration,
+			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
 			fmt.Sprintf("Proposal PID-%d failed to pass", jd.Id),
@@ -375,7 +375,7 @@ func (jd *ProposalExpiredJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		"system",
 		ProposalExpired,
 		// TODO ? decide timings
-		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration+180,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+jd.GraceDuration+60*60*24,
 		fmt.Sprintf("Proposal PID-%d has expired", jd.Id),
 		jobDataMetadata((*ProposalJobData)(jd)),
@@ -418,7 +418,7 @@ func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, t
 		jd.CreateTime,
 		pjd.CreateTime+pjd.WarmUpDuration+pjd.ActiveDuration+pjd.QueueDuration, // TODO see about timings
 		fmt.Sprintf("Abrogation proposal for PID-%d created by %s", jd.Id, jd.Proposer),
-		nil,
+		jobDataMetadata(pjd),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -460,7 +460,7 @@ func (jd *ProposalAbrogatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.T
 		ctx, tx,
 		"system",
 		ProposalAbrogated,
-		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
+		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+180,
 		jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration+60*60*24, // TODO see about timings
 		fmt.Sprintf("Proposal PID-%d has been abrogated", jd.Id),
 		jobDataMetadata((*ProposalJobData)(jd)),
@@ -498,10 +498,10 @@ func (jd *ProposalCanceledJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx
 		ctx, tx,
 		"system",
 		ProposalCanceled,
-		jd.CreateTime,
+		jd.CreateTime+180,
 		jd.CreateTime+60*60*24, // TODO see about timings
 		fmt.Sprintf("Proposal PID-%d has been canceled", jd.Id),
-		nil,
+		eventJobDataMetadata((*ProposalEventsJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -548,7 +548,7 @@ func (jd *ProposalQueuedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) 
 		jd.CreateTime,
 		pjd.CreateTime+pjd.WarmUpDuration+pjd.ActiveDuration+pjd.QueueDuration,
 		fmt.Sprintf("Proposal PID-%d has been queued for execution", jd.Id),
-		nil,
+		eventJobDataMetadata((*ProposalEventsJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -590,10 +590,10 @@ func (jd *ProposalExecutedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx
 		ctx, tx,
 		"system",
 		ProposalExecuted,
-		jd.CreateTime,
+		jd.CreateTime+180,
 		jd.CreateTime+60*60*24, // TODO see about timings
 		fmt.Sprintf("Proposal PID-%d has been executed", jd.Id),
-		nil,
+		eventJobDataMetadata((*ProposalEventsJobData)(jd)),
 		jd.IncludedInBlockNumber,
 	)
 	if err != nil {
@@ -670,5 +670,11 @@ func jobDataMetadata(jd *ProposalJobData) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["proposalId"] = jd.Id
 	m["proposer"] = jd.Proposer
+	return m
+}
+
+func eventJobDataMetadata(jd *ProposalEventsJobData) map[string]interface{} {
+	m := make(map[string]interface{})
+	m["proposalId"] = jd.Id
 	return m
 }
