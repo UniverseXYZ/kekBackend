@@ -1,20 +1,44 @@
 package api
 
-import "fmt"
+import (
+	"fmt"
 
-func buildQueryWithFilter(query string, filters map[string]interface{}, limit *int64, offset *int64) (string, []interface{}) {
+	"github.com/lib/pq"
+)
+
+type Filters []QueryFilter
+
+func (f *Filters) Add(key string, value interface{}) *Filters {
+	*f = append(*f, QueryFilter{key, value})
+
+	return f
+}
+
+type QueryFilter struct {
+	Key   string
+	Value interface{}
+}
+
+func buildQueryWithFilter(query string, filters *Filters, limit *int64, offset *int64) (string, []interface{}) {
 	var where string
 	var offsetFilter, limitFilter string
 	var params []interface{}
 
-	for k, v := range filters {
+	for _, filter := range *filters {
 		if where != "" {
 			where += " and "
 		}
 
-		params = append(params, v)
+		switch filter.Value.(type) {
+		case []string:
+			params = append(params, pq.Array(filter.Value))
 
-		where += fmt.Sprintf("%s = $%d", k, len(params))
+			where += fmt.Sprintf("%s = ANY($%d)", filter.Key, len(params))
+		default:
+			params = append(params, filter.Value)
+
+			where += fmt.Sprintf("%s = $%d", filter.Key, len(params))
+		}
 	}
 
 	if offset != nil {
