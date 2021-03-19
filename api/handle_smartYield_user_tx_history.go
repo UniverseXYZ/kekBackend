@@ -33,8 +33,8 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	filters := make(map[string]interface{})
-	filters["user_address"] = user
+	filters := new(Filters)
+	filters.Add("user_address", user)
 
 	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 	if originator != "all" {
@@ -43,7 +43,7 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 			return
 		}
 
-		filters["protocol_id"] = originator
+		filters.Add("protocol_id", originator)
 	}
 
 	token := strings.ToLower(c.DefaultQuery("token", "all"))
@@ -53,7 +53,7 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 			return
 		}
 
-		filters["underlying_token_address"] = token
+		filters.Add("underlying_token_address", token)
 	}
 
 	txType := strings.ToUpper(c.DefaultQuery("transactionType", "all"))
@@ -63,7 +63,7 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 			return
 		}
 
-		filters["transaction_type"] = txType
+		filters.Add("transaction_type", txType)
 	}
 
 	query, params := buildQueryWithFilter(`
@@ -152,7 +152,7 @@ func IsSupportedOriginator(originator string) bool {
 
 func IsSupportedTxType(t string) bool {
 	switch smartYield.TxType(strings.ToUpper(t)) {
-	case smartYield.JuniorDeposit, smartYield.JuniorInstantWithdraw, smartYield.JuniorRegularWithdraw, smartYield.JuniorRedeem, smartYield.SeniorDeposit, smartYield.SeniorRedeem, smartYield.JtokenSend, smartYield.JtokenReceive, smartYield.JbondSend, smartYield.JbondReceive, smartYield.SbondSend, smartYield.SbondReceive:
+	case smartYield.JuniorDeposit, smartYield.JuniorInstantWithdraw, smartYield.JuniorRegularWithdraw, smartYield.JuniorRedeem, smartYield.SeniorDeposit, smartYield.SeniorRedeem, smartYield.JtokenSend, smartYield.JtokenReceive, smartYield.JbondSend, smartYield.JbondReceive, smartYield.SbondSend, smartYield.SbondReceive, smartYield.JuniorStake, smartYield.JuniorUnstake:
 		return true
 	}
 

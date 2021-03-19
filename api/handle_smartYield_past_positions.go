@@ -46,8 +46,8 @@ func (a *API) handleJuniorPastPositions(c *gin.Context) {
 
 	offset := (page - 1) * limit
 
-	filters := make(map[string]interface{})
-	filters["user_address"] = user
+	filters := new(Filters)
+	filters.Add("user_address", user)
 
 	originator := strings.ToLower(c.DefaultQuery("originator", "all"))
 	if originator != "all" {
@@ -56,7 +56,7 @@ func (a *API) handleJuniorPastPositions(c *gin.Context) {
 			return
 		}
 
-		filters["protocol_id"] = originator
+		filters.Add("protocol_id", originator)
 	}
 
 	token := strings.ToLower(c.DefaultQuery("token", "all"))
@@ -66,7 +66,7 @@ func (a *API) handleJuniorPastPositions(c *gin.Context) {
 			return
 		}
 
-		filters["underlying_token_address"] = token
+		filters.Add("underlying_token_address", token)
 	}
 
 	query, params := buildQueryWithFilter(`
