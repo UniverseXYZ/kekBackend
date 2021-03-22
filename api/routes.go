@@ -45,6 +45,6 @@ func (a *API) setRoutes() {
 	smartYield.GET("/rewards/pools", a.handleRewardPools)
 	smartYield.GET("/rewards/pools/:poolAddress/transactions", a.handleRewardPoolsStakingActions)
 
-	notifications := a.engine.Group("/api/notifications")
-	notifications.GET("/", a.handleNotifications)
+	// notifications := a.engine.Group("/api/notifications")
+	governance.GET("/notifs", a.handleNotifications)
 }
