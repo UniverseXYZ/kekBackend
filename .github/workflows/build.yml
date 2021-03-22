@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - dev
+      - dev # remove when done
   pull_request:
     branches:
       - master
@@ -29,14 +29,30 @@ jobs:
         status: STARTED
         color: warning
 
+    - name: Get branch name (merge)
+      if: github.event_name != 'pull_request'
+      shell: bash
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+
+    - name: Get branch name (pull request)
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+
     - name: Set version
       id: vars
 #      run: echo "::set-output name=version::$(echo ${GITHUB_SHA} | cut -c1-7)"
       shell: bash
       run: |
-        branchName=${GITHUB_REF##*/}
+        branchName=${{ env.BRANCH_NAME }}
         if [ $branchName = 'master' ]; then prefix=''; else prefix=$(echo "${branchName}-"); fi
-        echo "::set-output name=version::$(echo $prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"
+        echo "IMAGE_TAG=$(echo $prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"  >> $GITHUB_ENV
+
+    - name: Echo Version
+      env:
+        IMAGE_TAG: ${{ env.IMAGE_TAG }}
+      run: |
+        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -53,14 +69,14 @@ jobs:
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: barnbridge-backend
-        IMAGE_TAG: ${{ steps.vars.outputs.version }}
+#        IMAGE_TAG: ${{ steps.vars.outputs.version }}
       run: |
         docker build \
           -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}    \
           ${GITHUB_WORKSPACE}
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${IMAGE_TAG}
 
-    - name: Echo IMAGE_TAG
+    - name: Echo $GITHUB_ENV
       env:
         IMAGE_TAG: ${{ steps.vars.outputs.version }}
       run: |
