@@ -25,7 +25,7 @@ jobs:
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
         channel: infra-ci-barnbridge
-        status: STARTED
+        status: ":pepegalight: STARTED"
         color: warning
 
     - name: Get branch name (merge)
