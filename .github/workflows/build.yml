@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - master
-      - dev
   pull_request:
     branches:
       - master
@@ -59,8 +58,6 @@ jobs:
       uses: aws-actions/amazon-ecr-login@v1
 
     - name: Echo image tag
-#      env:
-#        IMAGE_TAG: ${{ steps.vars.outputs.version }}
       run: |
         echo "Version to set in deployment manifests: ${IMAGE_TAG}"
 
