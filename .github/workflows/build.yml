@@ -35,8 +35,8 @@ jobs:
       shell: bash
       run: |
         branchName=${GITHUB_REF#refs/heads/}
-        if [ $branchName = 'dev' ]; then prefix='dev-'; else prefix=''; fi
-        echo "::set-output name=version::$(echo prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"
+        if [ $branchName = 'master' ]; then prefix=''; else prefix=$(echo $branchName); fi
+        echo "::set-output name=version::$(echo $prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
