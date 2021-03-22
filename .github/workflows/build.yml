@@ -79,7 +79,7 @@ jobs:
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel: infra-ci-barnbridge
-        status: SUCCESS
+        status: ${{ env.IMAGE_TAG }}
         color: good
 
     - name: Notify Slack failure
