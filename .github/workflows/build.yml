@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - master
+      - dev
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,12 +26,26 @@ jobs:
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
         channel: infra-ci-barnbridge
-        status: STARTED
+        status: ":pepegalight: STARTED"
         color: warning
+
+    - name: Get branch name (merge)
+      if: github.event_name != 'pull_request'
+      shell: bash
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_REF#refs/heads/} | tr / -)" >> $GITHUB_ENV
+
+    - name: Get branch name (pull request)
+      if: github.event_name == 'pull_request'
+      shell: bash
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF}/${GITHUB_REF#refs/pull/} | tr / -)" >> $GITHUB_ENV
 
     - name: Set version
       id: vars
-      run: echo "::set-output name=version::$(echo ${GITHUB_SHA} | cut -c1-7)"
+      shell: bash
+      run: |
+        branchName=${{ env.BRANCH_NAME }}
+        if [ $branchName = 'master' ]; then prefix=''; else prefix=$(echo "${branchName}-"); fi
+        echo "IMAGE_TAG=$(echo $prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"  >> $GITHUB_ENV
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -42,22 +58,19 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Echo image tag
+      run: |
+        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
+
     - name: Build, tag and push the image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: barnbridge-backend
-        IMAGE_TAG: ${{ steps.vars.outputs.version }}
       run: |
         docker build \
           -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}    \
           ${GITHUB_WORKSPACE}
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${IMAGE_TAG}
-
-    - name: Echo IMAGE_TAG
-      env:
-        IMAGE_TAG: ${{ steps.vars.outputs.version }}
-      run: |
-        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
 
     - name: Notify Slack success
       if: success()
@@ -67,7 +80,7 @@ jobs:
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel: infra-ci-barnbridge
-        status: SUCCESS
+        status: ":white_check_mark: ${{ env.IMAGE_TAG }}"
         color: good
 
     - name: Notify Slack failure
@@ -78,7 +91,7 @@ jobs:
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel: infra-ci-barnbridge
-        status: FAILED
+        status: ":octagonal_sign: FAILED"
         color: danger
 
     - name: Logout from Amazon ECR
