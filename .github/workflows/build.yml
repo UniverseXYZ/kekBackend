@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - dev # remove when done
+      - dev
   pull_request:
     branches:
       - master
@@ -37,22 +37,15 @@ jobs:
     - name: Get branch name (pull request)
       if: github.event_name == 'pull_request'
       shell: bash
-      run: echo "BRANCH_NAME=$(echo mr/${GITHUB_REF#refs/pull/}/${GITHUB_HEAD_REF} | tr / -)" >> $GITHUB_ENV
+      run: echo "BRANCH_NAME=$(echo ${GITHUB_HEAD_REF}/${GITHUB_REF#refs/pull/} | tr / -)" >> $GITHUB_ENV
 
     - name: Set version
       id: vars
-#      run: echo "::set-output name=version::$(echo ${GITHUB_SHA} | cut -c1-7)"
       shell: bash
       run: |
         branchName=${{ env.BRANCH_NAME }}
         if [ $branchName = 'master' ]; then prefix=''; else prefix=$(echo "${branchName}-"); fi
         echo "IMAGE_TAG=$(echo $prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"  >> $GITHUB_ENV
-
-    - name: Echo Version
-      env:
-        IMAGE_TAG: ${{ env.IMAGE_TAG }}
-      run: |
-        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
 
     - name: Configure AWS credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -65,22 +58,21 @@ jobs:
       id: login-ecr
       uses: aws-actions/amazon-ecr-login@v1
 
+    - name: Echo image tag
+#      env:
+#        IMAGE_TAG: ${{ steps.vars.outputs.version }}
+      run: |
+        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
+
     - name: Build, tag and push the image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ECR_REPOSITORY: barnbridge-backend
-#        IMAGE_TAG: ${{ steps.vars.outputs.version }}
       run: |
         docker build \
           -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}    \
           ${GITHUB_WORKSPACE}
         docker push $ECR_REGISTRY/$ECR_REPOSITORY:${IMAGE_TAG}
-
-    - name: Echo $GITHUB_ENV
-      env:
-        IMAGE_TAG: ${{ steps.vars.outputs.version }}
-      run: |
-        echo "Version to set in deployment manifests: ${IMAGE_TAG}"
 
     - name: Notify Slack success
       if: success()
