@@ -62,7 +62,7 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		       coalesce(( select bond_staked_at_ts(to_timestamp(create_time+warm_up_duration)) ), 0) as bond_staked,
 			   ( select * from proposal_state(proposal_id) ) as proposal_state
 		from governance_proposals
-		where proposal_ID = $1
+		where proposal_id = $1
 	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &forVotes, &againstVotes, &bondStaked, &state)
 
 	if err != nil && err != sql.ErrNoRows {
@@ -136,7 +136,7 @@ func (a *API) AllProposalHandler(c *gin.Context) {
 	}
 
 	query := `
-		select proposal_ID,
+		select proposal_id,
 			   proposer,
 			   description,
 			   title,

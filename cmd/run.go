@@ -76,6 +76,7 @@ var runCmd = &cobra.Command{
 				},
 				Governance: governance.Config{
 					GovernanceAddress: viper.GetString("storable.governance.address"),
+					Notifications:     viper.GetBool("storable.governance.notifications"),
 				},
 				YieldFarming: yieldFarming.Config{
 					Address: viper.GetString("storable.yieldFarming.address"),

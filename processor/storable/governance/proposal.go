@@ -1,10 +1,13 @@
 package governance
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -70,6 +73,8 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		return nil
 	}
 
+	var jobs []*notifications.Job
+
 	stmt, err := tx.Prepare(pq.CopyIn("governance_proposals", "proposal_id", "proposer", "description", "title", "create_time", "targets", "values", "signatures", "calldatas", "warm_up_duration", "active_duration", "queue_duration", "grace_period_duration", "acceptance_threshold", "min_quorum", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
@@ -90,6 +95,24 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
+
+		jd := notifications.ProposalCreatedJobData{
+			Id:                    p.Id.Int64(),
+			Proposer:              p.Proposer.String(),
+			Title:                 p.Title,
+			CreateTime:            p.CreateTime.Int64(),
+			WarmUpDuration:        p.WarmUpDuration.Int64(),
+			ActiveDuration:        p.ActiveDuration.Int64(),
+			QueueDuration:         p.QueueDuration.Int64(),
+			GraceDuration:         p.GracePeriodDuration.Int64(),
+			IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+		}
+		j, err := notifications.NewProposalCreatedJob(&jd)
+		if err != nil {
+			return errors.Wrap(err, "could not create notification job")
+		}
+
+		jobs = append(jobs, j)
 	}
 
 	_, err = stmt.Exec()
@@ -100,6 +123,14 @@ func (g *GovStorable) handleProposals(logs []web3types.Log, tx *sql.Tx) error {
 	err = stmt.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close statement")
+	}
+
+	if g.config.Notifications {
+		ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
+		}
 	}
 
 	return nil
