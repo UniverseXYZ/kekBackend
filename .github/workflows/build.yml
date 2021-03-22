@@ -34,7 +34,7 @@ jobs:
 #      run: echo "::set-output name=version::$(echo ${GITHUB_SHA} | cut -c1-7)"
       shell: bash
       run: |
-        branchName=${GITHUB_REF#refs/heads/}
+        branchName=${GITHUB_REF##*/}
         if [ $branchName = 'master' ]; then prefix=''; else prefix=$(echo "${branchName}-"); fi
         echo "::set-output name=version::$(echo $prefix)$(echo ${GITHUB_SHA} | cut -c1-7)"
 
