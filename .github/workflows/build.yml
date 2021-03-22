@@ -79,7 +79,7 @@ jobs:
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel: infra-ci-barnbridge
-        status: ":white-check-mark: ${{ env.IMAGE_TAG }}"
+        status: ":white_check_mark: ${{ env.IMAGE_TAG }}"
         color: good
 
     - name: Notify Slack failure
