@@ -90,7 +90,7 @@ jobs:
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
         channel: infra-ci-barnbridge
-        status: FAILED
+        status: ":octagonal_sign: FAILED"
         color: danger
 
     - name: Logout from Amazon ECR
