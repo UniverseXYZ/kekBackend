@@ -81,7 +81,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 		from smart_yield_senior_redeem as r
 				 inner join smart_yield_senior_buy as b
 							on r.senior_bond_address = b.senior_bond_address and r.senior_bond_id = b.senior_bond_id
-		where %s
+		%s
 		order by r.included_in_block desc, r.tx_index desc, r.log_index desc
 		%s %s
 	`,
@@ -126,7 +126,7 @@ func (a *API) handleSeniorRedeems(c *gin.Context) {
 		from smart_yield_senior_redeem as r
 				 inner join smart_yield_senior_buy as b
 							on r.senior_bond_address = b.senior_bond_address and r.senior_bond_id = b.senior_bond_id
-		where %s
+		%s
 		%s %s;
 	`,
 		filters,

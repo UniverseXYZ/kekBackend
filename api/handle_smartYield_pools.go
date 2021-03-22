@@ -95,7 +95,6 @@ func (a *API) handlePools(c *gin.Context) {
 	underlyingSymbol := strings.ToUpper(c.DefaultQuery("underlyingSymbol", "all"))
 
 	filters := new(Filters)
-	filters.Add("1", "1")
 	if protocols != "all" {
 		protocolsArray := strings.Split(protocols, ",")
 		filters.Add("protocol_id", protocolsArray)
@@ -118,7 +117,7 @@ func (a *API) handlePools(c *gin.Context) {
 			   underlying_symbol,
 			   underlying_decimals
 		from smart_yield_pools p
-		where %s
+		%s
 		%s %s`,
 		filters,
 		nil,
@@ -191,7 +190,6 @@ func (a *API) handleRewardPools(c *gin.Context) {
 	underlyingSymbol := strings.ToUpper(c.DefaultQuery("underlyingSymbol", "all"))
 
 	filters := new(Filters)
-	filters.Add("1", "1")
 	if protocols != "all" {
 		protocolsArray := strings.Split(protocols, ",")
 		filters.Add("p.protocol_id", protocolsArray)
@@ -210,12 +208,11 @@ func (a *API) handleRewardPools(c *gin.Context) {
 				       p.underlying_symbol
 				from smart_yield_reward_pools as r
 				inner join smart_yield_pools as p
-				on p.sy_address = r.pool_token_address where %s 
+				on p.sy_address = r.pool_token_address %s 
 				%s %s`,
 		filters,
 		nil,
 		nil)
-
 	var pools []types.SYRewardPool
 	rows, err := a.db.Query(query, params...)
 
