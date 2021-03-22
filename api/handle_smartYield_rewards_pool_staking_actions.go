@@ -80,7 +80,7 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 			included_in_block,
 			tx_hash
 		from smart_yield_rewards_staking_actions
-		where %s
+		%s
 		order by included_in_block desc ,
 				 tx_index desc,
 				 log_index desc
@@ -117,7 +117,7 @@ func (a *API) handleRewardPoolsStakingActions(c *gin.Context) {
 		select
 			count(*)
 		from smart_yield_rewards_staking_actions
-		where %s
+		%s
 		%s %s
 	`,
 		filters,

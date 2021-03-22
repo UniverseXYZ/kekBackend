@@ -23,21 +23,25 @@ func buildQueryWithFilter(query string, filters *Filters, limit *int64, offset *
 	var where string
 	var offsetFilter, limitFilter string
 	var params []interface{}
+	if len(*filters) > 0 {
 
-	for _, filter := range *filters {
-		if where != "" {
-			where += " and "
-		}
+		for _, filter := range *filters {
+			if where != "" {
+				where += " and "
+			} else {
+				where += "where "
+			}
 
-		switch filter.Value.(type) {
-		case []string:
-			params = append(params, pq.Array(filter.Value))
+			switch filter.Value.(type) {
+			case []string:
+				params = append(params, pq.Array(filter.Value))
 
-			where += fmt.Sprintf("%s = ANY($%d)", filter.Key, len(params))
-		default:
-			params = append(params, filter.Value)
+				where += fmt.Sprintf("%s = ANY($%d)", filter.Key, len(params))
+			default:
+				params = append(params, filter.Value)
 
-			where += fmt.Sprintf("%s = $%d", filter.Key, len(params))
+				where += fmt.Sprintf("%s = $%d", filter.Key, len(params))
+			}
 		}
 	}
 
