@@ -3,6 +3,7 @@ package smartYieldState
 import (
 	"math"
 	"math/big"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
@@ -41,6 +42,14 @@ func (s Storable) getCompoundAPY(wg *errgroup.Group, p types.SYPool, mu *sync.Mu
 		subWG.Go(func() error {
 			rate, err := s.callSimpleFunction(s.abis["compoundcontroller"], p.ControllerAddress, "spotDailyDistributionRateProvider")
 			if err != nil {
+				if strings.Contains(err.Error(), "Reverted") {
+					mu.Lock()
+					results[p.SmartYieldAddress].OriginatorNetApy = 0
+					mu.Unlock()
+
+					return nil
+				}
+
 				return errors.Wrap(err, "could not call CompoundController.spotDailyDistributionRateProvider")
 			}
 
