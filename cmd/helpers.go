@@ -131,8 +131,7 @@ func addFeatureFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("feature.lag.enabled", false, "Enable/disable the lag behind feature (used to avoid reorgs)")
 	cmd.Flags().Int64("feature.lag.value", 10, "The amount of blocks to lag behind the tip of the chain")
 	cmd.Flags().Bool("feature.automigrate.enabled", true, "Enable/disable the automatic migrations feature")
-	cmd.Flags().Bool("feature.slack.enabled", true, "Enable/disable slack notification feature")
-	cmd.Flags().String("feature.slack.webhook", "", "Webhook url for slack notification")
+	cmd.Flags().String("feature.slack.webhook", "", "Webhook url for slack notification (leave empty to disable)")
 }
 
 func bindViperToFeatureFlags(cmd *cobra.Command) {
@@ -140,7 +139,6 @@ func bindViperToFeatureFlags(cmd *cobra.Command) {
 	viper.BindPFlag("feature.lag.enabled", cmd.Flag("feature.lag.enabled"))
 	viper.BindPFlag("feature.lag.value", cmd.Flag("feature.lag.value"))
 	viper.BindPFlag("feature.automigrate.enabled", cmd.Flag("feature.automigrate.enabled"))
-	viper.BindPFlag("feature.slack.enabled", cmd.Flag("feature.slack.enabled"))
 	viper.BindPFlag("feature.slack.webhook", cmd.Flag("feature.slack.webhook"))
 }
 
