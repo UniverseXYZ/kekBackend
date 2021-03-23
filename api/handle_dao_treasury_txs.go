@@ -79,8 +79,8 @@ func (a *API) handleTreasuryTxs(c *gin.Context) {
 				   t.tx_hash,
 				   e20t.symbol,
 				   e20t.decimals,
-				   get_account_label(t.account) as accountLabel,
-				   get_account_label(t.counterparty) as counterLabel
+				   coalesce((select label from labels where address=t.account), '') as accountLabel,
+				   coalesce((select label from labels where address=t.counterparty), '') as counterpartyLabel
 			from account_erc20_transfers as t
 					 inner join erc20_tokens e20t
 								on t.token_address = e20t.token_address

@@ -12,19 +12,6 @@ func init() {
 
 func upCreateTreasuryFunctions(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-			create or replace function get_account_label(addr text) returns text
-				language plpgsql as
-			$$
-			declare
-				labelText text;
-			begin
-				select into labelText (select label from labels where address = addr);
-				if labelText IS NULL then
-					return '';
-				end if;
-				return labelText;
-			end;
-			$$;
 			
 			create or replace function get_treasury_tokens(addr text) returns table (token_address text,symbol text, decimals bigint)
 				language plpgsql
@@ -55,7 +42,6 @@ func upCreateTreasuryFunctions(tx *sql.Tx) error {
 
 func downCreateTreasuryFunctions(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-		drop function if exists get_account_label;
 		drop function if exists get_treasury_tokens;
 	`)
 	return err
