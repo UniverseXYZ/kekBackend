@@ -68,6 +68,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			jd := notifications.ProposalQueuedJobData{
 				Id:                    proposalID.Int64(),
 				CreateTime:            g.Preprocessed.BlockTimestamp,
+				Caller:                e.Caller.String(),
 				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
 			}
 			j, err := notifications.NewProposalQueuedJob(&jd)
@@ -106,6 +107,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			jd := notifications.ProposalExecutedJobData{
 				Id:                    proposalID.Int64(),
 				CreateTime:            g.Preprocessed.BlockTimestamp,
+				Caller:                e.Caller.String(),
 				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
 			}
 			j, err := notifications.NewProposalExecutedJob(&jd)
@@ -144,6 +146,7 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			jd := notifications.ProposalCanceledJobData{
 				Id:                    proposalID.Int64(),
 				CreateTime:            g.Preprocessed.BlockTimestamp,
+				Caller:                e.Caller.String(),
 				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
 			}
 			j, err := notifications.NewProposalCanceledJob(&jd)
@@ -192,7 +195,8 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 	}
 
 	if g.config.Notifications {
-		ctx, _ := context.WithTimeout(context.Background(), time.Second*2)
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
 		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
 		if err != nil && err != context.DeadlineExceeded {
 			return errors.Wrap(err, "could not execute notification jobs")
