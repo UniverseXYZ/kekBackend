@@ -13,6 +13,11 @@ import (
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
+const (
+	AmountIn  = "AMOUNT_IN"
+	AmountOut = "AMOUNT_OUT"
+)
+
 func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
 	var t types.Transfer
 	t.TokenAddress = utils.NormalizeAddress(log.Address)
@@ -73,5 +78,34 @@ func (s *Storable) storeTransfers(tx *sql.Tx) error {
 	if err != nil {
 		return err
 	}
+
+	stmt, err = tx.Prepare(pq.CopyIn("treasury_transfers", "token_address", "address", "action_type", "value", "tx_hash", "tx_index", "log_index", "included_in_block", "block_timestamp"))
+	if err != nil {
+		return err
+	}
+
+	for _, t := range s.processed.transfers {
+		_, err = stmt.Exec(t.TokenAddress, t.From, AmountOut, t.Value.String(), t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
+		if err != nil {
+			return err
+		}
+
+		_, err = stmt.Exec(t.TokenAddress, t.To, AmountIn, t.Value.String(), t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
+		if err != nil {
+			return err
+		}
+
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
