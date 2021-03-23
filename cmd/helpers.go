@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/barnbridge/barnbridge-backend/slack"
+
 	"github.com/barnbridge/barnbridge-backend/core"
 	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
 	"github.com/barnbridge/barnbridge-backend/processor"
@@ -129,6 +131,7 @@ func addFeatureFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("feature.lag.enabled", false, "Enable/disable the lag behind feature (used to avoid reorgs)")
 	cmd.Flags().Int64("feature.lag.value", 10, "The amount of blocks to lag behind the tip of the chain")
 	cmd.Flags().Bool("feature.automigrate.enabled", true, "Enable/disable the automatic migrations feature")
+	cmd.Flags().String("feature.slack.webhook", "", "Webhook url for slack notification (leave empty to disable)")
 }
 
 func bindViperToFeatureFlags(cmd *cobra.Command) {
@@ -136,6 +139,7 @@ func bindViperToFeatureFlags(cmd *cobra.Command) {
 	viper.BindPFlag("feature.lag.enabled", cmd.Flag("feature.lag.enabled"))
 	viper.BindPFlag("feature.lag.value", cmd.Flag("feature.lag.value"))
 	viper.BindPFlag("feature.automigrate.enabled", cmd.Flag("feature.automigrate.enabled"))
+	viper.BindPFlag("feature.slack.webhook", cmd.Flag("feature.slack.webhook"))
 }
 
 func addEthFlags(cmd *cobra.Command) {
@@ -181,6 +185,10 @@ func requireNotEmptyFlags(requiredFlags []string) {
 }
 
 func initCore() *core.Core {
+	slack.Init(slack.Config{
+		Webhook: viper.GetString("feature.slack.webhook"),
+	})
+
 	return core.New(core.Config{
 		BestBlockTracker: bestblock.Config{
 			NodeURL:      viper.GetString("eth.client.http"),
