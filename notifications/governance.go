@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/barnbridge/barnbridge-backend/utils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 )
 
@@ -491,7 +490,6 @@ func (jd *AbrogationProposalCreatedJobData) ExecuteWithTx(ctx context.Context, t
 
 	} else {
 		log.Errorf("something went wrong creating abrogation proposal created notifications: now %d: end of queue time: %d", time.Now().Unix(), pjd.CreateTime+pjd.WarmUpDuration+pjd.ActiveDuration+pjd.QueueDuration)
-		spew.Dump(pjd)
 	}
 
 	// schedule job for next notification
@@ -628,7 +626,6 @@ func (jd *ProposalQueuedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) 
 		}
 	} else {
 		log.Errorf("something went wrong creating queued proposal  notifications: now %d: end of queue: %d", time.Now().Unix(), pjd.CreateTime+pjd.WarmUpDuration+pjd.ActiveDuration+pjd.QueueDuration)
-		spew.Dump(pjd)
 	}
 
 	// schedule job for next notification
