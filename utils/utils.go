@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"math/big"
 	"strings"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/hako/durafmt"
 )
 
 func CleanUpHex(s string) string {
@@ -71,4 +73,8 @@ func LogIsEvent(log web3types.Log, abi abi.ABI, event string) bool {
 
 func NormalizeAddress(addr string) string {
 	return "0x" + Trim0x(strings.ToLower(addr))
+}
+
+func HumanDuration(seconds int64) string {
+	return durafmt.Parse(time.Duration(seconds) * time.Second).String()
 }
