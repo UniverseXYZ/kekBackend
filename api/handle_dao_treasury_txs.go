@@ -27,7 +27,13 @@ type TreasuryTx struct {
 	BlockNumber     int64  `json:"blockNumber"`
 }
 
-func (a *API) handleDaoTxs(c *gin.Context) {
+type Token struct {
+	TokenAddress  string `json:"tokenAddress"`
+	TokenSymbol   string `json:"tokenSymbol"`
+	TokenDecimals int64  `json:"tokenDecimals"`
+}
+
+func (a *API) handleTreasuryTxs(c *gin.Context) {
 	treasuryAddress := strings.ToLower(c.DefaultQuery("address", ""))
 	if treasuryAddress == "" {
 		BadRequest(c, errors.New("Address could not be null"))
@@ -125,4 +131,32 @@ func (a *API) handleDaoTxs(c *gin.Context) {
 	}
 
 	OK(c, transactions, map[string]interface{}{"count": count, "block": block})
+}
+
+func (a *API) handleTreasuryTokens(c *gin.Context) {
+	treasuryAddress := strings.ToLower(c.DefaultQuery("address", ""))
+	if treasuryAddress == "" {
+		BadRequest(c, errors.New("Address could not be null"))
+		return
+	}
+
+	rows, err := a.db.Query(`select * from  get_treasury_tokens($1)`, treasuryAddress)
+	if err != nil && err != sql.ErrNoRows {
+		Error(c, err)
+		return
+	}
+	var tokens []Token
+
+	for rows.Next() {
+		var t Token
+		err := rows.Scan(&t.TokenAddress, &t.TokenSymbol, &t.TokenDecimals)
+		if err != nil {
+			Error(c, err)
+			return
+		}
+
+		tokens = append(tokens, t)
+	}
+
+	OK(c, tokens)
 }
