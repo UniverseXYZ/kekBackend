@@ -2,8 +2,11 @@ package integrity
 
 import (
 	"database/sql"
+	"fmt"
 	"sort"
 	"time"
+
+	"github.com/barnbridge/barnbridge-backend/slack"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
@@ -17,8 +20,7 @@ type Checker struct {
 	tracker *bestblock.Tracker
 	tm      *taskmanager.Manager
 	logger  *logrus.Entry
-
-	lag int64
+	lag     int64
 }
 
 func NewChecker(db *sql.DB, tracker *bestblock.Tracker, tm *taskmanager.Manager, lag int64) *Checker {
@@ -39,6 +41,11 @@ func (c *Checker) Run() {
 		case <-t.C:
 			err := c.lifecycle()
 			if err != nil {
+				err1 := slack.SendNotification(fmt.Sprintf("[integrity-checker] got error: %s", err))
+				if err1 != nil {
+					c.logger.Error(err1)
+				}
+
 				c.logger.Error(err)
 			}
 		}
@@ -51,7 +58,6 @@ func (c *Checker) lifecycle() error {
 	defer func() {
 		c.logger.WithField("duration", time.Since(start)).Trace("done")
 	}()
-
 	best := c.tracker.BestBlock()
 	checkpoint, err := c.getLastCheckpoint()
 	if err != nil {
