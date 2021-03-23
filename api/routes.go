@@ -31,6 +31,7 @@ func (a *API) setRoutes() {
 	governance.GET("/abrogation-proposals", a.AllAbrogationProposals)
 	governance.GET("/abrogation-proposals/:proposalID", a.AbrogationProposalDetailsHandler)
 	governance.GET("/abrogation-proposals/:proposalID/votes", a.AbrogationVotesHandler)
+	governance.GET("/treasury/transactions", a.handleDaoTxs)
 
 	smartYield := a.engine.Group("/api/smartyield")
 	smartYield.GET("/pools", a.handlePools)

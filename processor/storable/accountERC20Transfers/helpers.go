@@ -14,8 +14,8 @@ import (
 )
 
 const (
-	AmountIn  = "AMOUNT_IN"
-	AmountOut = "AMOUNT_OUT"
+	AmountIn  = "IN"
+	AmountOut = "OUT"
 )
 
 func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
@@ -57,44 +57,20 @@ func (s *Storable) storeTransfers(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("account_erc20_transfers", "token_address", "sender", "receiver", "value", "tx_hash", "tx_index", "log_index", "included_in_block", "block_timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("account_erc20_transfers", "token_address", "account", "counterparty", "amount", "tx_direction", "tx_hash", "tx_index", "log_index", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return err
 	}
 
 	for _, t := range s.processed.transfers {
-		_, err = stmt.Exec(t.TokenAddress, t.From, t.To, t.Value.String(), t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
+		_, err = stmt.Exec(t.TokenAddress, t.From, t.To, t.Value.String(), AmountOut, t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
 		if err != nil {
 			return err
 		}
-	}
-
-	_, err = stmt.Exec()
-	if err != nil {
-		return err
-	}
-
-	err = stmt.Close()
-	if err != nil {
-		return err
-	}
-
-	stmt, err = tx.Prepare(pq.CopyIn("treasury_transfers", "token_address", "address", "action_type", "value", "tx_hash", "tx_index", "log_index", "included_in_block", "block_timestamp"))
-	if err != nil {
-		return err
-	}
-
-	for _, t := range s.processed.transfers {
-		_, err = stmt.Exec(t.TokenAddress, t.From, AmountOut, t.Value.String(), t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
+		_, err = stmt.Exec(t.TokenAddress, t.To, t.From, t.Value.String(), AmountIn, t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
 		if err != nil {
 			return err
 		}
-
-		_, err = stmt.Exec(t.TokenAddress, t.To, AmountIn, t.Value.String(), t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
-		if err != nil {
-			return err
-		}
-
 	}
 
 	_, err = stmt.Exec()
