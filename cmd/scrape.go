@@ -75,7 +75,7 @@ var scrapeCmd = &cobra.Command{
 					GovernanceAddress: viper.GetString("storable.governance.address"),
 				},
 				YieldFarming: yieldFarming.Config{
-					Address: viper.GetString("storable.yield.address"),
+					Address: viper.GetString("storable.yieldFarming.address"),
 				},
 				SmartYield: smartYield.Config{},
 				SmartYieldState: smartYieldState.Config{
