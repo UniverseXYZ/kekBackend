@@ -144,7 +144,6 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("storable.governance.notifications", false, "Emit notifications for governance")
 	cmd.Flags().String("storable.yieldFarming.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "BuyerAddress of the yield farming contract")
 	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b", "Address of compound comptroller")
-	cmd.Flags().String("storable.smartYieldState.compound-oracle-override", "", "Address to use instead of comptroller.oracle()")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
 	cmd.Flags().Int64("storable.smartYieldPrice.startAt", 0, "How many blocks per minute on the blockchain we're scraping")
 	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "0xBDf81f99Ec4487114D51d8bA6EBfF97F99aF27e2", "Address of rewards pool factory")

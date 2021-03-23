@@ -20,7 +20,6 @@ import (
 
 type Config struct {
 	ComptrollerAddress string
-	OracleOverride     string
 	BlocksPerMinute    int64
 }
 
