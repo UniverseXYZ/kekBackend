@@ -143,7 +143,7 @@ func New(config Config) *Core {
 		log.Fatal(err)
 	}
 
-	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag, c.config.Features.SlackNotify)
+	c.integrityChecker = integrity.NewChecker(c.db, c.bbtracker, c.taskmanager, lag)
 
 	err = state.Init(c.db)
 	if err != nil {

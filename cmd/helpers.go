@@ -4,6 +4,22 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/barnbridge/barnbridge-backend/slack"
+
+	"github.com/barnbridge/barnbridge-backend/core"
+	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
+	"github.com/barnbridge/barnbridge-backend/processor"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldRewards"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
+	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
+	"github.com/barnbridge/barnbridge-backend/scraper"
+	"github.com/barnbridge/barnbridge-backend/taskmanager"
+
 	"github.com/gin-gonic/gin"
 	formatter "github.com/kwix/logrus-module-formatter"
 	"github.com/sirupsen/logrus"
@@ -142,14 +158,13 @@ func bindViperToEthFlags(cmd *cobra.Command) {
 }
 
 func addStorableFlags(cmd *cobra.Command) {
-	cmd.Flags().String("storable.bond.address", "0x0391D2021f89DC339F60Fff84546EA23E337750f", "Address of the bond token")
-	cmd.Flags().String("storable.barn.address", "0x19cFBFd65021af353aB8A7126Caf51920163f0D2", "Address of the barn contract")
-	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Address of the governance contract")
-	cmd.Flags().String("storable.yieldFarming.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "Address of the yield farming contract")
-	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b", "Address of compound comptroller")
+	cmd.Flags().String("storable.bond.address", "", "Address of the bond token")
+	cmd.Flags().String("storable.barn.address", "", "Address of the barn contract")
+	cmd.Flags().String("storable.governance.address", "", "Address of the governance contract")
+	cmd.Flags().String("storable.yieldFarming.address", "", "Address of the yield farming staking contract")
+	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "", "Address of compound comptroller")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
-	cmd.Flags().Int64("storable.smartYieldPrice.startAt", 0, "How many blocks per minute on the blockchain we're scraping")
-	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "0xBDf81f99Ec4487114D51d8bA6EBfF97F99aF27e2", "Address of rewards pool factory")
+	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "", "Address of rewards pool factory")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
@@ -159,6 +174,73 @@ func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
 	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
 	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
-	viper.BindPFlag("storable.smartYieldPrice.startAt", cmd.Flag("storable.smartYieldPrice.startAt"))
 	viper.BindPFlag("storable.smartYieldRewards.pool-factory-address", cmd.Flag("storable.smartYieldRewards.pool-factory-address"))
+}
+
+func requireNotEmptyFlags(requiredFlags []string) {
+	for _, f := range requiredFlags {
+		if viper.GetString(f) == "" {
+			log.WithField("flag", f).Fatal("required flag has empty value")
+		}
+	}
+}
+
+func initCore() *core.Core {
+	slack.Init(slack.Config{
+		Webhook: viper.GetString("feature.slack.webhook"),
+	})
+
+	return core.New(core.Config{
+		BestBlockTracker: bestblock.Config{
+			NodeURL:      viper.GetString("eth.client.http"),
+			NodeURLWS:    viper.GetString("eth.client.ws"),
+			PollInterval: viper.GetDuration("eth.client.poll-interval"),
+		},
+		TaskManager: taskmanager.Config{
+			RedisServer:     viper.GetString("redis.server"),
+			RedisPassword:   viper.GetString("REDIS_PASSWORD"),
+			TodoList:        viper.GetString("redis.list"),
+			BackfillEnabled: viper.GetBool("feature.backfill.enabled"),
+		},
+		Scraper: scraper.Config{
+			NodeURL:      viper.GetString("eth.client.http"),
+			EnableUncles: false,
+		},
+		PostgresConnectionString: viper.GetString("db.connection-string"),
+		Features: core.Features{
+			Backfill: viper.GetBool("feature.backfill.enabled"),
+			Lag: core.FeatureLag{
+				Enabled: viper.GetBool("feature.lag.enabled"),
+				Value:   viper.GetInt64("feature.lag.value"),
+			},
+			Automigrate: viper.GetBool("feature.automigrate.enabled"),
+			Uncles:      viper.GetBool("feature.uncles.enabled"),
+		},
+		AbiPath: viper.GetString("abi-path"),
+		Processor: processor.Config{
+			Bond: bond.Config{
+				BondAddress: viper.GetString("storable.bond.address"),
+			},
+			Barn: barn.Config{
+				BarnAddress: viper.GetString("storable.barn.address"),
+			},
+			Governance: governance.Config{
+				GovernanceAddress: viper.GetString("storable.governance.address"),
+			},
+			YieldFarming: yieldFarming.Config{
+				Address: viper.GetString("storable.yieldFarming.address"),
+			},
+			SmartYield: smartYield.Config{},
+			SmartYieldState: smartYieldState.Config{
+				ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+				BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),
+			},
+			SmartYieldPrice: smartYieldPrices.Config{
+				ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
+			},
+			SmartYieldRewards: smartYieldRewards.Config{
+				PoolFactoryAddress: viper.GetString("storable.smartYieldRewards.pool-factory-address"),
+			},
+		},
+	})
 }

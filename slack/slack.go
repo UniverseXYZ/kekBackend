@@ -1,4 +1,4 @@
-package utils
+package slack
 
 import (
 	"bytes"
@@ -6,21 +6,33 @@ import (
 	"errors"
 	"net/http"
 	"time"
-
-	"github.com/barnbridge/barnbridge-backend/types"
 )
+
+type Notifier struct {
+	config Config
+}
+
+var instance *Notifier
+
+func Init(config Config) {
+	if instance != nil {
+		return
+	}
+
+	instance = &Notifier{config: config}
+}
 
 type SlackRequestBody struct {
 	Text string `json:"text"`
 }
 
-func SendSlackNotification(msg string, slackNotif types.SlackNotif) error {
-	if !slackNotif.Enabled {
+func SendNotification(msg string) error {
+	if instance == nil || instance.config.Webhook == "" {
 		return nil
 	}
 
 	slackBody, _ := json.Marshal(SlackRequestBody{Text: msg})
-	req, err := http.NewRequest(http.MethodPost, slackNotif.Webhook, bytes.NewBuffer(slackBody))
+	req, err := http.NewRequest(http.MethodPost, instance.config.Webhook, bytes.NewBuffer(slackBody))
 	if err != nil {
 		return err
 	}
@@ -36,7 +48,8 @@ func SendSlackNotification(msg string, slackNotif types.SlackNotif) error {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(resp.Body)
 	if buf.String() != "ok" {
-		return errors.New("Non-ok response returned from Slack")
+		return errors.New("non-ok response returned from Slack")
 	}
+
 	return nil
 }

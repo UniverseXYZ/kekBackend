@@ -5,7 +5,6 @@ import (
 	"github.com/barnbridge/barnbridge-backend/processor"
 	"github.com/barnbridge/barnbridge-backend/scraper"
 	"github.com/barnbridge/barnbridge-backend/taskmanager"
-	"github.com/barnbridge/barnbridge-backend/types"
 )
 
 type Features struct {
@@ -13,7 +12,6 @@ type Features struct {
 	Lag         FeatureLag
 	Automigrate bool
 	Uncles      bool
-	SlackNotify types.SlackNotif
 }
 
 type FeatureLag struct {
