@@ -8,8 +8,8 @@ import (
 )
 
 // extractBlockNumber returns the block number as int64 by extracting it from the raw data
-func (fb *Processor) extractBlockNumber() (int64, error) {
-	number, err := strconv.ParseInt(fb.Raw.Block.Number, 0, 64)
+func (p *Processor) extractBlockNumber() (int64, error) {
+	number, err := strconv.ParseInt(p.Raw.Block.Number, 0, 64)
 	if err != nil {
 		log.Error(err)
 		return 0, err
@@ -19,13 +19,13 @@ func (fb *Processor) extractBlockNumber() (int64, error) {
 }
 
 // extractBlockHash returns the block hash as string by extracting it from the raw data
-func (fb *Processor) extractBlockHash() string {
-	return utils.Trim0x(fb.Raw.Block.Hash)
+func (p *Processor) extractBlockHash() string {
+	return utils.Trim0x(p.Raw.Block.Hash)
 }
 
 // checkBlockExists verifies if the current block matches any other block in the database by hash
-func (fb *Processor) checkBlockExists(db *sql.DB) (bool, error) {
-	hash := fb.extractBlockHash()
+func (p *Processor) checkBlockExists(db *sql.DB) (bool, error) {
+	hash := p.extractBlockHash()
 
 	var count int
 	err := db.QueryRow(`select count(*) from blocks where block_hash = $1`, hash).Scan(&count)
@@ -44,8 +44,8 @@ func (fb *Processor) checkBlockExists(db *sql.DB) (bool, error) {
 // checkBlockReorged verifies if the current block matches any block in the database on number
 // this is meant to be used in order to detect if the database contains a blocks with the same number
 // but different hash if the checkBlockExists function returns false
-func (fb *Processor) checkBlockReorged(db *sql.DB) (bool, error) {
-	number, err := fb.extractBlockNumber()
+func (p *Processor) checkBlockReorged(db *sql.DB) (bool, error) {
+	number, err := p.extractBlockNumber()
 	if err != nil {
 		return false, err
 	}

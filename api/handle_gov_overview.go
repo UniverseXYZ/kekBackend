@@ -65,7 +65,7 @@ func (a *API) BondOverview(c *gin.Context) {
 		return
 	}
 
-	err = a.db.QueryRow(`select count(*) from barn_users;`).Scan(&overview.BarnUsers)
+	err = a.db.QueryRow(`select count(*) from voters where bond_staked + voting_power > 0`).Scan(&overview.BarnUsers)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return

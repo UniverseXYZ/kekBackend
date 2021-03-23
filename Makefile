@@ -8,3 +8,11 @@ run:
 
 gen:
 	go generate ./...
+
+reset:
+	./barnbridge-backend reset --force
+	./barnbridge-backend migrate
+
+clean-run: build reset
+	./barnbridge-backend sync-sy-pools
+	./barnbridge-backend scrape --vv

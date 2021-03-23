@@ -145,12 +145,20 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.bond.address", "0x0391D2021f89DC339F60Fff84546EA23E337750f", "Address of the bond token")
 	cmd.Flags().String("storable.barn.address", "0x19cFBFd65021af353aB8A7126Caf51920163f0D2", "Address of the barn contract")
 	cmd.Flags().String("storable.governance.address", "0x8EAcaEdD6D3BaCBC8A09C0787c5567f86eE96d02", "Address of the governance contract")
-	cmd.Flags().String("storable.yield.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "Address of the yield farming contract")
+	cmd.Flags().String("storable.yieldFarming.address", "0x2e93403C675Ccb9C564edf2dC6001233d0650582", "Address of the yield farming contract")
+	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b", "Address of compound comptroller")
+	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
+	cmd.Flags().Int64("storable.smartYieldPrice.startAt", 0, "How many blocks per minute on the blockchain we're scraping")
+	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "0xBDf81f99Ec4487114D51d8bA6EBfF97F99aF27e2", "Address of rewards pool factory")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.bond.address", cmd.Flag("storable.bond.address"))
 	viper.BindPFlag("storable.barn.address", cmd.Flag("storable.barn.address"))
 	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
-	viper.BindPFlag("storable.yield.address", cmd.Flag("storable.yield.address"))
+	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
+	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
+	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
+	viper.BindPFlag("storable.smartYieldPrice.startAt", cmd.Flag("storable.smartYieldPrice.startAt"))
+	viper.BindPFlag("storable.smartYieldRewards.pool-factory-address", cmd.Flag("storable.smartYieldRewards.pool-factory-address"))
 }

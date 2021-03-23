@@ -78,7 +78,7 @@ func upReplaceFunctionProposalState(tx *sql.Tx) error {
 																		   from governance_abrogation_proposals
 																		   where proposal_id = id ))) / 2;
 		
-				if coalesce(( select power from abrogation_proposal_votes(id) ), 0) >= abrogationProposalQuorum then
+				if coalesce(( select sum(power) from abrogation_proposal_votes(id) where support = true ), 0) >= abrogationProposalQuorum then
 					return 'ABROGATED';
 				end if;
 			end if;
