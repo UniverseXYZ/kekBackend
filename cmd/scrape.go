@@ -32,6 +32,14 @@ var scrapeCmd = &cobra.Command{
 	PreRun: scrapeCmdPreRun,
 	Run: func(cmd *cobra.Command, args []string) {
 		buildDBConnectionString()
+		requireNotEmptyFlags([]string{
+			"storable.bond.address",
+			"storable.barn.address",
+			"storable.governance.address",
+			"storable.yieldFarming.address",
+			"storable.smartYieldState.compound-comptroller",
+			"storable.smartYieldRewards.pool-factory-address",
+		})
 
 		stopChan := make(chan os.Signal, 1)
 		signal.Notify(stopChan, syscall.SIGINT)
@@ -75,7 +83,7 @@ var scrapeCmd = &cobra.Command{
 					GovernanceAddress: viper.GetString("storable.governance.address"),
 				},
 				YieldFarming: yieldFarming.Config{
-					Address: viper.GetString("storable.yield.address"),
+					Address: viper.GetString("storable.yieldFarming.address"),
 				},
 				SmartYield: smartYield.Config{},
 				SmartYieldState: smartYieldState.Config{
