@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"strings"
 
-	"github.com/davecgh/go-spew/spew"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
@@ -54,7 +53,7 @@ func (a *API) handleDaoTxs(c *gin.Context) {
 	tokenAddress := strings.ToLower(c.DefaultQuery("tokenAddress", "all"))
 
 	if tokenAddress != "all" {
-		filters.Add("token_address", tokenAddress)
+		filters.Add("t.token_address", tokenAddress)
 	}
 
 	txDirection := strings.ToUpper(c.DefaultQuery("transactionDirection", "all"))
@@ -71,15 +70,18 @@ func (a *API) handleDaoTxs(c *gin.Context) {
 				   t.tx_direction,
 				   t.block_timestamp,
 				   t.included_in_block,
+				   t.tx_hash,
 				   e20t.symbol,
 				   e20t.decimals,
+				   get_account_label(t.account) as accountLabel,
+				   get_account_label(t.counterparty) as counterLabel
 			from account_erc20_transfers as t
 					 inner join erc20_tokens e20t
-								on t.token_address = e20t.token_address;
-			where %s
+								on t.token_address = e20t.token_address
+			where %s 
+			order by included_in_block desc,t.tx_index desc,t.log_index desc
 			%s %s;`, filters, &limit, &offset)
 
-	spew.Dump(query)
 	rows, err := a.db.Query(query, params...)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -91,14 +93,36 @@ func (a *API) handleDaoTxs(c *gin.Context) {
 	for rows.Next() {
 		var t TreasuryTx
 
-		err := rows.Scan(&t.TokenAddress, &t.AccountAddress, &t.CounterpartyAddress, &t.Amount, &t.TransactionDirection, &t.BlockTimestamp, &t.BlockNumber, &t.TokenSymbol, &t.TokenDecimals, &t.AccountLabel, &t.CounterpartyLabel)
+		err := rows.Scan(&t.TokenAddress, &t.AccountAddress, &t.CounterpartyAddress, &t.Amount, &t.TransactionDirection, &t.BlockTimestamp, &t.BlockNumber, &t.TransactionHash, &t.TokenSymbol, &t.TokenDecimals, &t.AccountLabel, &t.CounterpartyLabel)
 		if err != nil {
 			Error(c, err)
 			return
 		}
-
+		t.Amount = t.Amount.DivRound(decimal.NewFromInt(10).Pow(decimal.NewFromInt(t.TokenDecimals)), int32(t.TokenDecimals))
 		transactions = append(transactions, t)
 	}
 
-	OK(c, transactions)
+	query, params = buildQueryWithFilter(`
+			 select count(*) 
+			 from account_erc20_transfers t
+			 where %s 
+			 %s %s`,
+		filters,
+		nil,
+		nil)
+
+	var count int64
+	err = a.db.QueryRow(query, params...).Scan(&count)
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	block, err := a.getHighestBlock()
+	if err != nil {
+		Error(c, err)
+		return
+	}
+
+	OK(c, transactions, map[string]interface{}{"count": count, "block": block})
 }

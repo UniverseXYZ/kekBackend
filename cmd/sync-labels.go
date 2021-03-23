@@ -58,7 +58,7 @@ var syncLabelsCmd = &cobra.Command{
 				log.Fatal(err)
 			}
 		}
-
+		_, _ = db.Exec(`insert into monitored_accounts (address) values ($1)`, "0x112082a889ec68b1dc38e09514fc1af001dba1d9")
 		log.Println("done")
 	},
 }

@@ -18,6 +18,20 @@ func upAlterColumnsTableAccountErc20Transfers(tx *sql.Tx) error {
 		alter table account_erc20_transfers rename column "value" to amount;
 
 		alter table account_erc20_transfers add column tx_direction transfer_type;
+
+		create or replace function get_account_label(addr text) returns text
+			language plpgsql as
+			$$
+			declare
+				labelText text;
+			begin
+				select into labelText (select label from labels where address = addr);
+				if labelText IS NULL then
+					return 'unknown';
+				end if;
+				return labelText;
+			end;
+			$$;
 `)
 	return err
 }
@@ -28,6 +42,7 @@ func downAlterColumnsTableAccountErc20Transfers(tx *sql.Tx) error {
 		alter table account_erc20_transfers rename column counterparty to  receiver;
 		alter table account_erc20_transfers rename column amount  to "value";
 		alter table account_erc20_transfers  drop column if exists tx_direction;
+		drop function if exists get_account_label;
 	`)
 	return err
 }
