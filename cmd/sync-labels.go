@@ -66,6 +66,6 @@ func init() {
 	RootCmd.AddCommand(syncLabelsCmd)
 	addDBFlags(syncLabelsCmd)
 
-	syncLabelsCmd.Flags().String("labels-file", "./labels.json", "Path to list of labels in json format")
+	syncLabelsCmd.Flags().String("labels-file", "./labels.kovan.json", "Path to list of labels in json format")
 	viper.BindPFlag("labels-file", syncLabelsCmd.Flag("labels-file"))
 }

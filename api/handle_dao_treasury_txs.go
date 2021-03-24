@@ -140,7 +140,15 @@ func (a *API) handleTreasuryTokens(c *gin.Context) {
 		return
 	}
 
-	rows, err := a.db.Query(`select * from  get_treasury_tokens($1)`, treasuryAddress)
+	rows, err := a.db.Query(`
+				select distinct 
+				                transfers.token_address,
+				                tokens.symbol, 
+				                tokens.decimals
+				from account_erc20_transfers transfers
+						 inner join erc20_tokens tokens 
+						     on transfers.token_address = tokens.token_address
+				where account = $1;`, treasuryAddress)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
