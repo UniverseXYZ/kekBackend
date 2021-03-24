@@ -36,3 +36,14 @@ func getQueryAddress(c *gin.Context, paramName string) (string, error) {
 
 	return utils.ValidateAccount(addr)
 }
+
+func getQueryTimestamp(c *gin.Context) (int64, error) {
+	timestamp := c.DefaultQuery("timestamp", "-1")
+
+	t, err := strconv.ParseInt(timestamp, 10, 64)
+	if err != nil {
+		return 0, errors.Wrap(err, "invalid 'timestamp' parameter")
+	}
+
+	return t, nil
+}

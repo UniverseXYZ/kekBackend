@@ -159,6 +159,7 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.bond.address", "", "Address of the bond token")
 	cmd.Flags().String("storable.barn.address", "", "Address of the barn contract")
 	cmd.Flags().String("storable.governance.address", "", "Address of the governance contract")
+	cmd.Flags().Bool("storable.governance.notifications", false, "Emit notifications for governance")
 	cmd.Flags().String("storable.yieldFarming.address", "", "Address of the yield farming staking contract")
 	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "", "Address of compound comptroller")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
@@ -224,6 +225,7 @@ func initCore() *core.Core {
 			},
 			Governance: governance.Config{
 				GovernanceAddress: viper.GetString("storable.governance.address"),
+				Notifications:     viper.GetBool("storable.governance.notifications"),
 			},
 			YieldFarming: yieldFarming.Config{
 				Address: viper.GetString("storable.yieldFarming.address"),

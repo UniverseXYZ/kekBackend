@@ -90,7 +90,7 @@ func (a *API) handleJuniorPastPositions(c *gin.Context) {
 			   tx_hash,
 			   block_timestamp
 		from smart_yield_transaction_history h
-		where %s and transaction_type = ANY(ARRAY['JUNIOR_INSTANT_WITHDRAW'::sy_tx_history_tx_type, 'JUNIOR_REDEEM'::sy_tx_history_tx_type])
+		%s and transaction_type = ANY(ARRAY['JUNIOR_INSTANT_WITHDRAW'::sy_tx_history_tx_type, 'JUNIOR_REDEEM'::sy_tx_history_tx_type])
 		order by included_in_block desc, tx_index desc, log_index desc
 		%s %s;
 	`,
@@ -134,7 +134,7 @@ func (a *API) handleJuniorPastPositions(c *gin.Context) {
 	query, params = buildQueryWithFilter(`
 		select count(*)
 		from smart_yield_transaction_history as h 
-		where %s and transaction_type = ANY(ARRAY['JUNIOR_INSTANT_WITHDRAW'::sy_tx_history_tx_type, 'JUNIOR_REDEEM'::sy_tx_history_tx_type])
+		%s and transaction_type = ANY(ARRAY['JUNIOR_INSTANT_WITHDRAW'::sy_tx_history_tx_type, 'JUNIOR_REDEEM'::sy_tx_history_tx_type])
 		%s %s;
 	`,
 		filters,
