@@ -785,5 +785,6 @@ func jobDataMetadata(jd *ProposalJobData) map[string]interface{} {
 func eventJobDataMetadata(jd *ProposalEventsJobData) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["proposalId"] = jd.Id
+	m["caller"] = jd.Caller
 	return m
 }
