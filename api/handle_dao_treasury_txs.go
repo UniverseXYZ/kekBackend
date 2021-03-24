@@ -84,8 +84,7 @@ func (a *API) handleTreasuryTxs(c *gin.Context) {
 			from account_erc20_transfers as t
 					 inner join erc20_tokens e20t
 								on t.token_address = e20t.token_address
-			where %s 
-			order by included_in_block desc,t.tx_index desc,t.log_index desc
+			%s order by included_in_block desc,t.tx_index desc,t.log_index desc
 			%s %s;`, filters, &limit, &offset)
 
 	rows, err := a.db.Query(query, params...)
@@ -111,7 +110,7 @@ func (a *API) handleTreasuryTxs(c *gin.Context) {
 	query, params = buildQueryWithFilter(`
 			 select count(*) 
 			 from account_erc20_transfers t
-			 where %s 
+			 %s 
 			 %s %s`,
 		filters,
 		nil,
