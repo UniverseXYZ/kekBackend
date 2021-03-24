@@ -37,3 +37,4 @@ barnbridge-backend
 .volumes
 /dashboard/web/assets/css/tailwind.min.css
 blocks.txt
+dev-reset.sh

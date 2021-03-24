@@ -30,4 +30,6 @@ var dbTables = []string{
 	"smart_yield_token_sell",
 	"smart_yield_transaction_history",
 	"yield_farming_actions",
+	"notifications",
+	"notification_jobs",
 }

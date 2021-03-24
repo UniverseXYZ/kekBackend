@@ -1,10 +1,13 @@
 package governance
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
@@ -14,6 +17,7 @@ import (
 
 func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 	var events []ProposalEvent
+	var jobs []*notifications.Job
 
 	for _, log := range logs {
 
@@ -60,6 +64,20 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			}
 
 			events = append(events, e)
+
+			jd := notifications.ProposalQueuedJobData{
+				Id:                    proposalID.Int64(),
+				CreateTime:            g.Preprocessed.BlockTimestamp,
+				Caller:                e.Caller.String(),
+				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+			}
+			j, err := notifications.NewProposalQueuedJob(&jd)
+			if err != nil {
+				return errors.Wrap(err, "could not create notification job")
+			}
+
+			jobs = append(jobs, j)
+
 			continue
 		}
 
@@ -85,6 +103,20 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			}
 
 			events = append(events, e)
+
+			jd := notifications.ProposalExecutedJobData{
+				Id:                    proposalID.Int64(),
+				CreateTime:            g.Preprocessed.BlockTimestamp,
+				Caller:                e.Caller.String(),
+				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+			}
+			j, err := notifications.NewProposalExecutedJob(&jd)
+			if err != nil && err != context.DeadlineExceeded {
+				return errors.Wrap(err, "could not create notification job")
+			}
+
+			jobs = append(jobs, j)
+
 			continue
 		}
 
@@ -110,9 +142,22 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 			}
 
 			events = append(events, e)
+
+			jd := notifications.ProposalCanceledJobData{
+				Id:                    proposalID.Int64(),
+				CreateTime:            g.Preprocessed.BlockTimestamp,
+				Caller:                e.Caller.String(),
+				IncludedInBlockNumber: g.Preprocessed.BlockNumber,
+			}
+			j, err := notifications.NewProposalCanceledJob(&jd)
+			if err != nil {
+				return errors.Wrap(err, "could not create notification job")
+			}
+
+			jobs = append(jobs, j)
+
 			continue
 		}
-
 	}
 
 	if len(events) == 0 {
@@ -147,6 +192,15 @@ func (g *GovStorable) handleEvents(logs []web3types.Log, tx *sql.Tx) error {
 	err = stmt.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close statement")
+	}
+
+	if g.config.Notifications {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
+		}
 	}
 
 	return nil

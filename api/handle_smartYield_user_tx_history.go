@@ -78,7 +78,7 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 			   block_timestamp,
 			   included_in_block
 		from smart_yield_transaction_history h
-		where %s
+		%s
 		order by included_in_block desc, tx_index desc, log_index desc
 		%s %s;
 	`,
@@ -117,7 +117,7 @@ func (a *API) handleSYUserTransactionHistory(c *gin.Context) {
 	query, params = buildQueryWithFilter(`
 		select count(*)
 		from smart_yield_transaction_history
-		where %s
+		%s
 		%s %s;
 	`,
 		filters,
