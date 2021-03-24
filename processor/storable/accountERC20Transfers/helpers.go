@@ -13,6 +13,11 @@ import (
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
 
+const (
+	AmountIn  = "IN"
+	AmountOut = "OUT"
+)
+
 func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
 	var t types.Transfer
 	t.TokenAddress = utils.NormalizeAddress(log.Address)
@@ -52,13 +57,17 @@ func (s *Storable) storeTransfers(tx *sql.Tx) error {
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("account_erc20_transfers", "token_address", "sender", "receiver", "value", "tx_hash", "tx_index", "log_index", "included_in_block", "block_timestamp"))
+	stmt, err := tx.Prepare(pq.CopyIn("account_erc20_transfers", "token_address", "account", "counterparty", "amount", "tx_direction", "tx_hash", "tx_index", "log_index", "included_in_block", "block_timestamp"))
 	if err != nil {
 		return err
 	}
 
 	for _, t := range s.processed.transfers {
-		_, err = stmt.Exec(t.TokenAddress, t.From, t.To, t.Value.String(), t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
+		_, err = stmt.Exec(t.TokenAddress, t.From, t.To, t.Value.String(), AmountOut, t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
+		if err != nil {
+			return err
+		}
+		_, err = stmt.Exec(t.TokenAddress, t.To, t.From, t.Value.String(), AmountIn, t.TransactionHash, t.TransactionIndex, t.LogIndex, s.processed.blockNumber, s.processed.blockTimestamp)
 		if err != nil {
 			return err
 		}
@@ -73,5 +82,6 @@ func (s *Storable) storeTransfers(tx *sql.Tx) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
