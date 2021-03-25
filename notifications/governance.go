@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/barnbridge/barnbridge-backend/utils"
-	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
@@ -813,7 +812,6 @@ func votingStatus(ctx context.Context, tx *sql.Tx, id int64) (*votes, error) {
 	if err != nil && err != sql.ErrNoRows {
 		return nil, errors.Wrap(err, "get voting power")
 	}
-	spew.Dump(v)
 	return &v, nil
 }
 
