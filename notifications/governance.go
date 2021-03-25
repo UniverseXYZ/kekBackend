@@ -7,7 +7,9 @@ import (
 	"time"
 
 	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/davecgh/go-spew/spew"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -18,7 +20,8 @@ const (
 	ProposalVotingEnding      = "proposal-voting-ending-soon"
 	ProposalOutcome           = "proposal-outcome"
 	ProposalAccepted          = "proposal-accepted"
-	ProposalFailed            = "proposal-failed"
+	ProposalFailedQuorum      = "proposal-failed-quorum"
+	ProposalFailedVotes       = "proposal-failed-votes"
 	ProposalQueued            = "proposal-queued"
 	ProposalQueueEnding       = "proposal-queue-ending-soon"
 	ProposalGracePeriod       = "proposal-grace"
@@ -273,6 +276,18 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		return nil, err
 	}
 
+	v, err := votingStatus(ctx, tx, jd.Id)
+	if err != nil {
+		return nil, errors.Wrap(err, "voting power for job")
+	}
+	if v == nil {
+		log.Errorf("votes for PID-%d were not found but we have an outcome job to execute", jd.Id)
+		return nil, nil
+	}
+
+	totalVotes := v.For.Add(v.Against)
+	againstPercent := v.Against.Div(totalVotes)
+
 	if ps == ProposalStateAccepted {
 		// send proposal accepted notification
 		err = saveNotification(
@@ -302,20 +317,36 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 
 	} else if ps == ProposalStateFailed {
 		// send proposal failed notification
-		err = saveNotification(
-			ctx, tx,
-			"system",
-			ProposalFailed,
-			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
-			// TODO ? decide timings
-			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
-			fmt.Sprintf("Proposal PID-%d failed to pass", jd.Id),
-			jobDataMetadata((*ProposalJobData)(jd), 0),
-			jd.IncludedInBlockNumber,
-		)
-		if err != nil {
-			return nil, errors.Wrap(err, "save proposal failed notification to db")
+		if totalVotes.LessThan(v.QuorumToMeet) {
+			err = saveNotification(
+				ctx, tx,
+				"system",
+				ProposalFailedQuorum,
+				jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
+				jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
+				fmt.Sprintf("Proposal PID-%d has not met quorum and has been rejected", jd.Id),
+				jobDataMetadata((*ProposalJobData)(jd), 0),
+				jd.IncludedInBlockNumber,
+			)
+			if err != nil {
+				return nil, errors.Wrap(err, "save proposal failed quorum notification to db")
+			}
+		} else {
+			err = saveNotification(
+				ctx, tx,
+				"system",
+				ProposalFailedVotes,
+				jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
+				jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
+				fmt.Sprintf("Proposal PID-%d has been rejected with %s%% votes against", jd.Id, utils.PrettyPercent(againstPercent)),
+				jobDataMetadata((*ProposalJobData)(jd), 0),
+				jd.IncludedInBlockNumber,
+			)
+			if err != nil {
+				return nil, errors.Wrap(err, "save proposal failed votesnotification to db")
+			}
 		}
+
 	} else {
 		log.Tracef("proposal PID-%d state after ending: %s", jd.Id, ps)
 		return nil, nil
@@ -713,10 +744,10 @@ func (jd *ProposalExecutedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx
 	return nil, nil
 }
 
-func proposalState(ctx context.Context, tx *sql.Tx, Id int64) (string, error) {
+func proposalState(ctx context.Context, tx *sql.Tx, id int64) (string, error) {
 	var ps string
 	sel := `SELECT * FROM proposal_state($1);`
-	err := tx.QueryRowContext(ctx, sel, Id).Scan(&ps)
+	err := tx.QueryRowContext(ctx, sel, id).Scan(&ps)
 	if err != nil && err != sql.ErrNoRows {
 		return ps, errors.Wrap(err, "get proposal state")
 	}
@@ -728,21 +759,17 @@ func proposalAsJobData(ctx context.Context, tx *sql.Tx, id int64) (*ProposalJobD
 	var pjd ProposalJobData
 
 	query := `
-		SELECT
-			"proposal_id",
-			"proposer",
-			"title",
-			"create_time",
-			"warm_up_duration",
-			"active_duration",
-			"queue_duration",
-			"grace_period_duration",
-		    "included_in_block"
-		FROM
-			"governance_proposals"
-		WHERE
-			"proposal_id" = $1
-	;
+		select "proposal_id",
+			   "proposer",
+			   "title",
+			   "create_time",
+			   "warm_up_duration",
+			   "active_duration",
+			   "queue_duration",
+			   "grace_period_duration",
+			   "included_in_block"
+		from "governance_proposals"
+		where "proposal_id" = $1;
 	`
 
 	err := tx.QueryRowContext(ctx, query, id).Scan(
@@ -760,6 +787,26 @@ func proposalAsJobData(ctx context.Context, tx *sql.Tx, id int64) (*ProposalJobD
 	}
 
 	return &pjd, nil
+}
+
+func votingStatus(ctx context.Context, tx *sql.Tx, id int64) (*votes, error) {
+	var v votes
+	sel := `
+		select 
+			   ( select gp.min_quorum / 100 * bond_staked_at_ts(to_timestamp(gp.create_time + gp.warm_up_duration))
+				 from governance_proposals as "gp"
+				 where gp.proposal_id = $1 )                             as "quorum_to_meet",
+			   sum(case when "support" = true then "power" else 0 end)  as "for_votes",
+			   sum(case when "support" = false then "power" else 0 end) as "against_votes"
+		from ( select "support", "power" from "proposal_votes"($1) ) as "pv";
+	`
+
+	err := tx.QueryRowContext(ctx, sel, id).Scan(&v.QuorumToMeet, &v.For, &v.Against)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, errors.Wrap(err, "get voting power")
+	}
+	spew.Dump(v)
+	return &v, nil
 }
 
 func saveNotification(ctx context.Context, tx *sql.Tx, target string, typ string, starts int64, expires int64, msg string, metadata map[string]interface{}, block int64) error {
@@ -790,4 +837,10 @@ func eventJobDataMetadata(jd *ProposalEventsJobData, duration int64) map[string]
 	m["caller"] = jd.Caller
 	m["displayDuration"] = duration
 	return m
+}
+
+type votes struct {
+	QuorumToMeet decimal.Decimal
+	For          decimal.Decimal
+	Against      decimal.Decimal
 }
