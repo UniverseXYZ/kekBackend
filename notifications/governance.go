@@ -286,10 +286,13 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 	}
 
 	totalVotes := v.For.Add(v.Against)
+	forPercent := v.For.Div(totalVotes)
 	againstPercent := v.Against.Div(totalVotes)
 
 	if ps == ProposalStateAccepted {
 		// send proposal accepted notification
+		m := jobDataMetadata((*ProposalJobData)(jd), jd.QueueDuration)
+		m["votedRatio"] = utils.PrettyPercent(forPercent)
 		err = saveNotification(
 			ctx, tx,
 			"system",
@@ -297,8 +300,8 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
-			fmt.Sprintf("Proposal PID-%d has been accepted and is awaiting queuing for execution", jd.Id),
-			jobDataMetadata((*ProposalJobData)(jd), 0),
+			fmt.Sprintf("Proposal PID-%d has been accepted with %s%% votes for. You have %s days to queue it for execution", jd.Id, utils.PrettyPercent(forPercent), utils.HumanDuration(jd.QueueDuration)),
+			m,
 			jd.IncludedInBlockNumber,
 		)
 		if err != nil {
@@ -332,6 +335,8 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 				return nil, errors.Wrap(err, "save proposal failed quorum notification to db")
 			}
 		} else {
+			m := jobDataMetadata((*ProposalJobData)(jd), 0)
+			m["votedRatio"] = utils.PrettyPercent(againstPercent)
 			err = saveNotification(
 				ctx, tx,
 				"system",
@@ -339,7 +344,7 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 				jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
 				jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+60*60*24,
 				fmt.Sprintf("Proposal PID-%d has been rejected with %s%% votes against", jd.Id, utils.PrettyPercent(againstPercent)),
-				jobDataMetadata((*ProposalJobData)(jd), 0),
+				m,
 				jd.IncludedInBlockNumber,
 			)
 			if err != nil {
@@ -599,7 +604,7 @@ func (jd *ProposalCanceledJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx
 		ProposalCanceled,
 		jd.CreateTime+180,
 		jd.CreateTime+60*60*24, // TODO see about timings
-		fmt.Sprintf("Proposal PID-%d has been canceled", jd.Id),
+		fmt.Sprintf("Proposal PID-%d has been cancelled by %s", jd.Id, jd.Caller),
 		eventJobDataMetadata((*ProposalEventsJobData)(jd), 0),
 		jd.IncludedInBlockNumber,
 	)
@@ -795,10 +800,10 @@ func votingStatus(ctx context.Context, tx *sql.Tx, id int64) (*votes, error) {
 		select 
 			   ( select gp.min_quorum::numeric(78) / 100 * bond_staked_at_ts(to_timestamp(gp.create_time + gp.warm_up_duration))
 				 from governance_proposals as "gp"
-				 where gp.proposal_id = $1 )                             as "quorum_to_meet",
+				 where gp.proposal_id = $1 )                            as "quorum_to_meet",
 			   sum(case when "support" = true then "power" else 0 end)  as "for_votes",
 			   sum(case when "support" = false then "power" else 0 end) as "against_votes"
-		from ( select "support", "power" from "proposal_votes"($1) ) as "pv";
+		from ( select "support", "power" from "proposal_votes"($1) ) 	as "pv";
 	`
 
 	err := tx.QueryRowContext(ctx, sel, id).Scan(&v.QuorumToMeet, &v.For, &v.Against)
