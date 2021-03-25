@@ -9,7 +9,7 @@ require (
 	github.com/gin-contrib/static v0.0.0-20190913125243-df30d4057ba1
 	github.com/gin-gonic/gin v1.4.0
 	github.com/go-redis/redis v6.15.2+incompatible
-	github.com/hako/durafmt v0.0.0-20210316092057-3a2c319c1acd // indirect
+	github.com/hako/durafmt v0.0.0-20210316092057-3a2c319c1acd
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/kwix/logrus-module-formatter v0.0.0-20190702125859-070a70371a97
 	github.com/lib/pq v1.2.0
