@@ -1,0 +1,16 @@
+{
+  "labels": [
+    {
+  		"address" : "0x4cAE362D7F227e3d306f70ce4878E245563F3069",
+  		"label" : "BarnBridge DAO & Treasury"
+  	},
+  	{
+  		"address" : "0x5040a19E59FEcC9Bdf62CEa2F71a4604408C67BF",
+  		"label" : "BarnBridge LaunchDAO"
+  	},
+	{
+  		"address" : "0xDAA037F99d168b552c0c61B7Fb64cF7819D78310",
+  		"label" : "SmartYield cUSDC provider"
+  	},
+  ]
+}
