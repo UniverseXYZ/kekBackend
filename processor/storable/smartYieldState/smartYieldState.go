@@ -106,15 +106,10 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 	for key, r := range results {
 		p := state.PoolBySmartYieldAddress(key)
 
-		if r.OriginatorNetApy == 0 {
-			results[key].JuniorAPY = 0
-			continue
-		} else if r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
+		if r.JuniorLiquidity.Equal(decimal.NewFromInt(0)) {
 			results[key].JuniorAPY = r.OriginatorNetApy
 			continue
 		}
-
-		seniorLiq := r.TotalLiquidity.Sub(r.JuniorLiquidity)
 
 		abondGain := decimal.NewFromBigInt(r.Abond.Gain, -int32(p.UnderlyingDecimals))
 		abondPrincipal := decimal.NewFromBigInt(r.Abond.Principal, -int32(p.UnderlyingDecimals))
@@ -129,13 +124,14 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 				Float64()
 		}
 
-		a := decimal.NewFromFloat(abondAPY / r.OriginatorNetApy).Mul(seniorLiq)
+		seniorLiq := r.TotalLiquidity.Sub(r.JuniorLiquidity)
 
-		// 	(seniorLiq - (abondAPY / originatorAPY * seniorLiq) + juniorLiq) * originatorAPY / juniorLiq
-		juniorApy := seniorLiq.Sub(a).
-			Add(r.JuniorLiquidity).
-			Mul(decimal.NewFromFloat(r.OriginatorNetApy)).
-			Div(r.JuniorLiquidity)
+		juniorApy := decimal.NewFromFloat(r.OriginatorNetApy).Add(
+			seniorLiq.
+				Div(r.JuniorLiquidity).
+				Mul(decimal.NewFromFloat(r.OriginatorNetApy - abondAPY)),
+		)
+
 		results[key].JuniorAPY, _ = juniorApy.Float64()
 		results[key].AbondAPY = abondAPY
 	}
