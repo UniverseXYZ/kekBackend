@@ -285,9 +285,12 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		return nil, nil
 	}
 
+	var forPercent, againstPercent decimal.Decimal
 	totalVotes := v.For.Add(v.Against)
-	forPercent := v.For.Div(totalVotes)
-	againstPercent := v.Against.Div(totalVotes)
+	if !totalVotes.IsZero() {
+		forPercent = v.For.Div(totalVotes)
+		againstPercent = v.Against.Div(totalVotes)
+	}
 
 	if ps == ProposalStateAccepted {
 		// send proposal accepted notification
@@ -801,8 +804,8 @@ func votingStatus(ctx context.Context, tx *sql.Tx, id int64) (*votes, error) {
 			   ( select gp.min_quorum::numeric(78) / 100 * bond_staked_at_ts(to_timestamp(gp.create_time + gp.warm_up_duration))
 				 from governance_proposals as "gp"
 				 where gp.proposal_id = $1 )                            as "quorum_to_meet",
-			   sum(case when "support" = true then "power" else 0 end)  as "for_votes",
-			   sum(case when "support" = false then "power" else 0 end) as "against_votes"
+			   coalesce(sum(case when "support" = true then "power" else 0 end), 0)  as "for_votes",
+			   coalesce(sum(case when "support" = false then "power" else 0 end), 0) as "against_votes"
 		from ( select "support", "power" from "proposal_votes"($1) ) 	as "pv";
 	`
 
