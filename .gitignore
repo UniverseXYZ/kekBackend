@@ -32,6 +32,7 @@ tmp/
 .gdb_history
 
 config.yml
+config-mainnet.yml
 barnbridge-backend
 .dump/
 .volumes
