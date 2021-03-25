@@ -12,9 +12,11 @@ func MonitoredAccounts() []string {
 
 func IsMonitoredAccount(log web3types.Log) bool {
 	for _, a := range instance.monitoredAccounts {
-		if utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[1]) ||
-			utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[2]) {
-			return true
+		if len(log.Topics) >= 3 {
+			if utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[1]) ||
+				utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[2]) {
+				return true
+			}
 		}
 	}
 	return false
