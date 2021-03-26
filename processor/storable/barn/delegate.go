@@ -1,10 +1,13 @@
 package barn
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
@@ -62,6 +65,8 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 		return nil
 	}
 
+	var jobs []*notifications.Job
+
 	stmt, err := tx.Prepare(pq.CopyIn("barn_delegate_actions", "tx_hash", "tx_index", "log_index", "logged_by", "sender", "receiver", "action_type", "timestamp", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
@@ -72,6 +77,22 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
+
+		if a.ActionType == DELEGATE_START {
+			jd := notifications.DelegateJobData{
+				StartTime:             b.Preprocessed.BlockTimestamp,
+				From:                  a.Sender,
+				To:                    a.Receiver,
+				IncludedInBlockNumber: b.Preprocessed.BlockNumber,
+			}
+			j, err := notifications.NewDelegateStartJob(&jd)
+			if err != nil {
+				return errors.Wrap(err, "could not create notification job")
+			}
+
+			jobs = append(jobs, j)
+		}
+
 	}
 
 	_, err = stmt.Exec()
@@ -82,6 +103,15 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 	err = stmt.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close statement")
+	}
+
+	if b.config.Notifications && len(jobs) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
+		}
 	}
 
 	return nil
