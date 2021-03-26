@@ -10,6 +10,7 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/hako/durafmt"
+	"github.com/shopspring/decimal"
 )
 
 func CleanUpHex(s string) string {
@@ -77,4 +78,8 @@ func NormalizeAddress(addr string) string {
 
 func HumanDuration(seconds int64) string {
 	return durafmt.Parse(time.Duration(seconds) * time.Second).String()
+}
+
+func PrettyPercent(d decimal.Decimal) string {
+	return d.Mul(decimal.NewFromInt(100)).StringFixed(2)
 }
