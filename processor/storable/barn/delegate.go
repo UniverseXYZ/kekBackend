@@ -10,6 +10,7 @@ import (
 	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -22,6 +23,7 @@ import (
 func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 	var delegateActions []DelegateAction
 	var delegateChanges []DelegateChange
+	var jobs []*notifications.Job
 
 	for _, l := range logs {
 		action, err := b.decodeDelegateEvent(l)
@@ -44,6 +46,24 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 		} else if decrease != nil {
 			delegateChanges = append(delegateChanges, *decrease)
 		}
+
+		if increase != nil {
+			if increase.ToNewDelegatedPower.Cmp(increase.Amount) == 0 {
+				jd := notifications.DelegateJobData{
+					StartTime:             b.Preprocessed.BlockTimestamp,
+					From:                  increase.Sender,
+					To:                    increase.Receiver,
+					Amount:                decimal.NewFromBigInt(increase.ToNewDelegatedPower, 0),
+					IncludedInBlockNumber: b.Preprocessed.BlockNumber,
+				}
+				j, err := notifications.NewDelegateStartJob(&jd)
+				if err != nil {
+					return errors.Wrap(err, "could not create notification job")
+				}
+
+				jobs = append(jobs, j)
+			}
+		}
 	}
 
 	err := b.storeDelegateActions(delegateActions, tx)
@@ -56,6 +76,15 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 		return err
 	}
 
+	if b.config.Notifications && len(jobs) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
+		}
+	}
+
 	return nil
 }
 
@@ -64,8 +93,6 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 		log.WithField("handler", "delegate actions").Debug("no events found")
 		return nil
 	}
-
-	var jobs []*notifications.Job
 
 	stmt, err := tx.Prepare(pq.CopyIn("barn_delegate_actions", "tx_hash", "tx_index", "log_index", "logged_by", "sender", "receiver", "action_type", "timestamp", "included_in_block"))
 	if err != nil {
@@ -77,22 +104,6 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 		if err != nil {
 			return errors.Wrap(err, "could not execute statement")
 		}
-
-		if a.ActionType == DELEGATE_START {
-			jd := notifications.DelegateJobData{
-				StartTime:             b.Preprocessed.BlockTimestamp,
-				From:                  a.Sender,
-				To:                    a.Receiver,
-				IncludedInBlockNumber: b.Preprocessed.BlockNumber,
-			}
-			j, err := notifications.NewDelegateStartJob(&jd)
-			if err != nil {
-				return errors.Wrap(err, "could not create notification job")
-			}
-
-			jobs = append(jobs, j)
-		}
-
 	}
 
 	_, err = stmt.Exec()
@@ -103,15 +114,6 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 	err = stmt.Close()
 	if err != nil {
 		return errors.Wrap(err, "could not close statement")
-	}
-
-	if b.config.Notifications && len(jobs) > 0 {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
-		defer cancel()
-		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
-		if err != nil && err != context.DeadlineExceeded {
-			return errors.Wrap(err, "could not execute notification jobs")
-		}
 	}
 
 	return nil

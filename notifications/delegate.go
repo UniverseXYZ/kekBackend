@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
+	"github.com/barnbridge/barnbridge-backend/utils"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 )
 
 const (
@@ -13,10 +15,11 @@ const (
 )
 
 type DelegateJobData struct {
-	StartTime             int64  `json:"startTime"`
-	From                  string `json:"from"`
-	To                    string `json:"to"`
-	IncludedInBlockNumber int64  `json:"includedInBlockNumber"`
+	StartTime             int64           `json:"startTime"`
+	From                  string          `json:"from"`
+	To                    string          `json:"to"`
+	Amount                decimal.Decimal `json:"amount"`
+	IncludedInBlockNumber int64           `json:"includedInBlockNumber"`
 }
 
 func NewDelegateStartJob(data *DelegateJobData) (*Job, error) {
@@ -32,7 +35,7 @@ func (jd *DelegateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Jo
 		DelegateStart,
 		jd.StartTime,
 		jd.StartTime*60*60*24,
-		fmt.Sprintf("$BOND has been delegate to you from %s", jd.From),
+		fmt.Sprintf("%s vBOND has been delegate to you from %s", utils.PrettyBond(jd.Amount), jd.From),
 		delegateMetadata(jd),
 		jd.IncludedInBlockNumber,
 	)
@@ -47,5 +50,6 @@ func delegateMetadata(jd *DelegateJobData) map[string]interface{} {
 	m := make(map[string]interface{})
 	m["from"] = jd.From
 	m["to"] = jd.To
+	m["amount"] = jd.Amount.String()
 	return m
 }

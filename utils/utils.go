@@ -83,3 +83,8 @@ func HumanDuration(seconds int64) string {
 func PrettyPercent(d decimal.Decimal) string {
 	return d.Mul(decimal.NewFromInt(100)).StringFixed(2)
 }
+
+func PrettyBond(d decimal.Decimal) string {
+	tenPow18 := decimal.NewFromInt(10).Pow(decimal.NewFromInt(18))
+	return d.DivRound(tenPow18, 18).StringFixed(2)
+}
