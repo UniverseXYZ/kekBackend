@@ -221,7 +221,8 @@ func initCore() *core.Core {
 				BondAddress: viper.GetString("storable.bond.address"),
 			},
 			Barn: barn.Config{
-				BarnAddress: viper.GetString("storable.barn.address"),
+				BarnAddress:   viper.GetString("storable.barn.address"),
+				Notifications: viper.GetBool("storable.barn.notifications"),
 			},
 			Governance: governance.Config{
 				GovernanceAddress: viper.GetString("storable.governance.address"),

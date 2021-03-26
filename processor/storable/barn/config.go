@@ -1,5 +1,6 @@
 package barn
 
 type Config struct {
-	BarnAddress string
+	BarnAddress   string
+	Notifications bool
 }

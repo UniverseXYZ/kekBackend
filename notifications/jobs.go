@@ -40,6 +40,8 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 	for _, j := range jobs {
 		var je JobExecuter
 		switch j.JobType {
+
+		// governance
 		case ProposalCreated:
 			je = &ProposalCreatedJobData{}
 		case ProposalActivating:
@@ -68,6 +70,10 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 			je = &AbrogationProposalCreatedJobData{}
 		case ProposalAbrogated:
 			je = &ProposalAbrogatedJobData{}
+
+		// delegate
+		case DelegateStart:
+			je = &DelegateJobData{}
 
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)

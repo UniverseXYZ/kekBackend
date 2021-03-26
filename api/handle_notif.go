@@ -61,7 +61,7 @@ func (a *API) handleNotifications(c *gin.Context) {
 	target := strings.ToLower(c.DefaultQuery("target", ""))
 	var targetFilter string
 
-	if target == "" {
+	if target != "" {
 		parameters = append(parameters, target)
 		targetFilter = fmt.Sprintf(`OR target = $%d`, len(parameters))
 	}
