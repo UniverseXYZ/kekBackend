@@ -158,6 +158,7 @@ func bindViperToEthFlags(cmd *cobra.Command) {
 func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.bond.address", "", "Address of the bond token")
 	cmd.Flags().String("storable.barn.address", "", "Address of the barn contract")
+	cmd.Flags().String("storable.barn.notifications", "", "Emit notifications for Barn interactions")
 	cmd.Flags().String("storable.governance.address", "", "Address of the governance contract")
 	cmd.Flags().Bool("storable.governance.notifications", false, "Emit notifications for governance")
 	cmd.Flags().String("storable.yieldFarming.address", "", "Address of the yield farming staking contract")
@@ -169,7 +170,9 @@ func addStorableFlags(cmd *cobra.Command) {
 func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.bond.address", cmd.Flag("storable.bond.address"))
 	viper.BindPFlag("storable.barn.address", cmd.Flag("storable.barn.address"))
+	viper.BindPFlag("storable.barn.notifications", cmd.Flag("storable.barn.notifications"))
 	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
+	viper.BindPFlag("storable.governance.notifications", cmd.Flag("storable.governance.notifications"))
 	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
 	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
 	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
