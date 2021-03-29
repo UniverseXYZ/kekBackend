@@ -92,8 +92,10 @@ storable:
     address: "0x0391D2021f89DC339F60Fff84546EA23E337750f"
   barn:
     address: "0x10e138877df69Ca44Fdc68655f86c88CDe142D7F"
+    notifications: false
   governance:
     address: "0x4cAE362D7F227e3d306f70ce4878E245563F3069"
+    notifications: false
   yieldFarming:
     address : "0xb0fa2beee3cf36a7ac7e99b885b48538ab364853"
   smartYieldState:

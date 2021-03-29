@@ -1,12 +1,16 @@
 package barn
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 
 	"github.com/barnbridge/barnbridge-backend/utils"
 )
@@ -19,6 +23,7 @@ import (
 func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 	var delegateActions []DelegateAction
 	var delegateChanges []DelegateChange
+	var jobs []*notifications.Job
 
 	for _, l := range logs {
 		action, err := b.decodeDelegateEvent(l)
@@ -41,6 +46,24 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 		} else if decrease != nil {
 			delegateChanges = append(delegateChanges, *decrease)
 		}
+
+		if increase != nil {
+			if increase.ToNewDelegatedPower.Cmp(increase.Amount) == 0 {
+				jd := notifications.DelegateJobData{
+					StartTime:             b.Preprocessed.BlockTimestamp,
+					From:                  increase.Sender,
+					To:                    increase.Receiver,
+					Amount:                decimal.NewFromBigInt(increase.ToNewDelegatedPower, 0),
+					IncludedInBlockNumber: b.Preprocessed.BlockNumber,
+				}
+				j, err := notifications.NewDelegateStartJob(&jd)
+				if err != nil {
+					return errors.Wrap(err, "could not create notification job")
+				}
+
+				jobs = append(jobs, j)
+			}
+		}
 	}
 
 	err := b.storeDelegateActions(delegateActions, tx)
@@ -51,6 +74,15 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 	err = b.storeDelegateChanges(delegateChanges, tx)
 	if err != nil {
 		return err
+	}
+
+	if b.config.Notifications && len(jobs) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
+		}
 	}
 
 	return nil
