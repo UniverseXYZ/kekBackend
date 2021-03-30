@@ -19,6 +19,7 @@ type SYPool struct {
 	UnderlyingAddress  string `json:"underlyingAddress"`
 	UnderlyingSymbol   string `json:"underlyingSymbol"`
 	UnderlyingDecimals int64  `json:"underlyingDecimals"`
+	RewardPoolAddress  string `json:"rewardPoolAddress"`
 
 	State SYPoolState `json:"state"`
 }
