@@ -302,7 +302,7 @@ func (jd *ProposalOutcomeJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+180,
 			// TODO ? decide timings
 			jd.CreateTime+jd.WarmUpDuration+jd.ActiveDuration+jd.QueueDuration,
-			fmt.Sprintf("Proposal PID-%d has been accepted with %s%% votes for. You have %s days to queue it for execution", jd.Id, utils.PrettyPercent(forPercent), utils.HumanDuration(jd.QueueDuration)),
+			fmt.Sprintf("Proposal PID-%d has been accepted with %s%% votes for. You have %s to queue it for execution", jd.Id, utils.PrettyPercent(forPercent), utils.HumanDuration(jd.QueueDuration)),
 			m,
 			jd.IncludedInBlockNumber,
 		)
