@@ -77,8 +77,24 @@ func (s Storable) ToDB(tx *sql.Tx) error {
 		s.logger.WithField("duration", time.Since(start)).Debug("done")
 	}()
 
+	if len(state.Pools()) == 0 {
+		return nil
+	}
+
 	var wg = &errgroup.Group{}
 	var mu = &sync.Mutex{}
+
+	minBlock := state.Pools()[0].StartAtBlock
+	for _, p := range state.Pools() {
+		if p.StartAtBlock < minBlock {
+			minBlock = p.StartAtBlock
+		}
+	}
+
+	if s.Processed.BlockNumber < minBlock {
+		s.logger.Info("skipping block because there's no pool to scrape for")
+		return nil
+	}
 
 	var compoundOracleAddress string
 	wg.Go(func() error {
