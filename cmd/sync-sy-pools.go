@@ -17,6 +17,7 @@ var syncSyPoolsCmd = &cobra.Command{
 	Short: "Sync SmartYield pools in the database with the ones in the json file",
 	PreRun: func(cmd *cobra.Command, args []string) {
 		bindViperToDBFlags(cmd)
+		viper.BindPFlag("file", cmd.Flag("file"))
 	},
 	Run: func(cmd *cobra.Command, args []string) {
 		buildDBConnectionString()
@@ -32,8 +33,7 @@ var syncSyPoolsCmd = &cobra.Command{
 		}
 
 		var pools struct {
-			SmartYield []types.SYPool       `json:"smartYield"`
-			Rewards    []types.SYRewardPool `json:"rewardPools"`
+			SmartYield []types.SYPool `json:"smartYield"`
 		}
 
 		err = json.Unmarshal(data, &pools)
@@ -44,11 +44,6 @@ var syncSyPoolsCmd = &cobra.Command{
 		log.Info("removing current pools from database")
 
 		_, err = db.Exec(`delete from smart_yield_pools;`)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		_, err = db.Exec(`delete from smart_yield_reward_pools;`)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -78,20 +73,6 @@ var syncSyPoolsCmd = &cobra.Command{
 			}
 		}
 
-		log.WithField("count", len(pools.Rewards)).Info("adding Reward pools from file to database")
-
-		for _, p := range pools.Rewards {
-			_, err = db.Exec("insert into smart_yield_reward_pools (pool_address, pool_token_address, reward_token_address, start_at_block) values ($1,$2,$3, $4)",
-				utils.NormalizeAddress(p.PoolAddress),
-				utils.NormalizeAddress(p.PoolTokenAddress),
-				utils.NormalizeAddress(p.RewardTokenAddress),
-				p.StartAtBlock,
-			)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-
 		log.Println("done")
 	},
 }
@@ -101,5 +82,4 @@ func init() {
 	addDBFlags(syncSyPoolsCmd)
 
 	syncSyPoolsCmd.Flags().String("file", "./pools.kovan.json", "Path to list of pools in json format")
-	viper.BindPFlag("file", syncSyPoolsCmd.Flag("file"))
 }

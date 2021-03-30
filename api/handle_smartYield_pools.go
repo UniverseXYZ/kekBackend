@@ -35,10 +35,11 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 			   receipt_token_address,
 			   underlying_address,
 			   underlying_symbol,
-			   underlying_decimals
+			   underlying_decimals,
+			   coalesce((select pool_address from smart_yield_reward_pools where pool_token_address = sy_address ), '') as reward_pool_address
 		from smart_yield_pools p
 		where sy_address = $1
-	`, poolAddress).Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.CTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals)
+	`, poolAddress).Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.CTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals, &p.RewardPoolAddress)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -73,7 +74,7 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 			order by included_in_block desc
 			limit 1;
 		`, p.SmartYieldAddress).Scan(&state.BlockNumber, &state.BlockTimestamp, &state.SeniorLiquidity, &state.JuniorLiquidity, &state.JTokenPrice, &state.SeniorAPY, &state.JuniorAPY, &state.OriginatorApy, &state.OriginatorNetApy, &state.NumberOfSeniors, &state.NumberOfJuniors, &state.NumberOfJuniorsLocked, &state.AvgSeniorMaturityDays, &state.JuniorLiquidityLocked)
-	if err != nil {
+	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
 	}
@@ -115,7 +116,8 @@ func (a *API) handlePools(c *gin.Context) {
 			   receipt_token_address,
 			   underlying_address,
 			   underlying_symbol,
-			   underlying_decimals
+			   underlying_decimals,
+			   coalesce((select pool_address from smart_yield_reward_pools where pool_token_address = sy_address ), '') as reward_pool_address
 		from smart_yield_pools p
 		%s
 		%s %s`,
@@ -136,7 +138,7 @@ func (a *API) handlePools(c *gin.Context) {
 	for rows.Next() {
 		var p types.SYPool
 
-		err := rows.Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.CTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals)
+		err := rows.Scan(&p.ProtocolId, &p.ControllerAddress, &p.ModelAddress, &p.ProviderAddress, &p.SmartYieldAddress, &p.OracleAddress, &p.JuniorBondAddress, &p.SeniorBondAddress, &p.CTokenAddress, &p.UnderlyingAddress, &p.UnderlyingSymbol, &p.UnderlyingDecimals, &p.RewardPoolAddress)
 		if err != nil {
 			Error(c, err)
 			return
