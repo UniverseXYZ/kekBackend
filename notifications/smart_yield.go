@@ -32,6 +32,10 @@ func (jd *SmartYieldJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*
 	log.Tracef("executing token bought from pool %s by %s", jd.PoolAddress, jd.Buyer)
 
 	syPool := state.PoolBySmartYieldAddress(jd.PoolAddress)
+	rewardsPool := state.RewardPoolForSYAddress(jd.PoolAddress)
+	if rewardsPool == nil {
+		return nil, nil
+	}
 
 	err := saveNotification(
 		ctx, tx,
