@@ -27,7 +27,7 @@ func NewDelegateStartJob(data *DelegateJobData) (*Job, error) {
 }
 
 func (jd *DelegateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
-	log.Tracef("executing delagate start form %s to %s", jd.From, jd.To)
+	log.Tracef("executing delegate start form %s to %s", jd.From, jd.To)
 
 	err := saveNotification(
 		ctx, tx,
