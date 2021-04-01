@@ -42,7 +42,7 @@ func (jd *SmartYieldJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*
 		jd.Buyer,
 		SmartYieldTokenBought,
 		jd.StartTime,
-		jd.StartTime*60*60*24,
+		jd.StartTime+60*60*24,
 		fmt.Sprintf("Stake your %s junior tokens to earn extra yield", utils.PrettyToken(jd.Amount, syPool.UnderlyingDecimals)),
 		smartYieldMetadata(jd, syPool),
 		jd.IncludedInBlockNumber,
