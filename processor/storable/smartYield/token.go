@@ -1,13 +1,17 @@
 package smartYield
 
 import (
+	"context"
 	"database/sql"
 	"encoding/hex"
 	"math/big"
+	"time"
 
 	web3types "github.com/alethio/web3-go/types"
+	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
+	"github.com/shopspring/decimal"
 
 	"github.com/barnbridge/barnbridge-backend/state"
 	"github.com/barnbridge/barnbridge-backend/types"
@@ -97,6 +101,8 @@ func (s *Storable) storeTokenBuyTrades(tx *sql.Tx) error {
 		return nil
 	}
 
+	var jobs []*notifications.Job
+
 	stmt, err := tx.Prepare(pq.CopyIn("smart_yield_token_buy", "sy_address", "buyer_address", "underlying_in", "tokens_out", "fee", "tx_hash", "tx_index", "log_index", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
@@ -107,6 +113,20 @@ func (s *Storable) storeTokenBuyTrades(tx *sql.Tx) error {
 		if err != nil {
 			return err
 		}
+
+		jd := notifications.SmartYieldJobData{
+			StartTime:             s.processed.blockTimestamp,
+			PoolAddress:           a.SYAddress,
+			Buyer:                 a.BuyerAddress,
+			Amount:                decimal.NewFromBigInt(a.TokensOut, 0),
+			IncludedInBlockNumber: s.processed.blockNumber,
+		}
+		j, err := notifications.NewSmartYieldTokenBoughtJob(&jd)
+		if err != nil {
+			return errors.Wrap(err, "could not create notification job")
+		}
+
+		jobs = append(jobs, j)
 	}
 
 	_, err = stmt.Exec()
@@ -128,6 +148,15 @@ func (s *Storable) storeTokenBuyTrades(tx *sql.Tx) error {
 `, a.ProtocolId, a.SYAddress, a.UnderlyingTokenAddress, a.BuyerAddress, a.UnderlyingIn.String(), "JUNIOR", JuniorDeposit, a.TransactionHash, a.TransactionIndex, a.LogIndex, s.processed.blockTimestamp, s.processed.blockNumber)
 		if err != nil {
 			return err
+		}
+	}
+
+	if s.config.Notifications && len(jobs) > 0 {
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second*2)
+		defer cancel()
+		err = notifications.ExecuteJobsWithTx(ctx, tx, jobs...)
+		if err != nil && err != context.DeadlineExceeded {
+			return errors.Wrap(err, "could not execute notification jobs")
 		}
 	}
 
