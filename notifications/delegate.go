@@ -34,7 +34,7 @@ func (jd *DelegateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Jo
 		jd.To,
 		DelegateStart,
 		jd.StartTime,
-		jd.StartTime*60*60*24,
+		jd.StartTime+60*60*24,
 		fmt.Sprintf("%s vBOND has been delegated to you from %s", utils.PrettyBond(jd.Amount), jd.From),
 		delegateMetadata(jd),
 		jd.IncludedInBlockNumber,
