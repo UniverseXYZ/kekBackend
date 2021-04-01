@@ -29,7 +29,7 @@ func NewSmartYieldTokenBoughtJob(data *SmartYieldJobData) (*Job, error) {
 }
 
 func (jd *SmartYieldJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Job, error) {
-	log.Tracef("executing token bought form pool %s by %s", jd.PoolAddress, jd.Buyer)
+	log.Tracef("executing token bought from pool %s by %s", jd.PoolAddress, jd.Buyer)
 
 	syPool := state.PoolBySmartYieldAddress(jd.PoolAddress)
 
