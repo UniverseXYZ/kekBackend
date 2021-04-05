@@ -63,7 +63,7 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 				   originator_apy,
 				   originator_net_apy,
 				   number_of_seniors(pool_address)                      as number_of_seniors,
-				   number_of_jtoken_holders(pool_address)               as number_of_juniors,
+				   number_of_active_juniors(pool_address)               as number_of_juniors,
 			       number_of_juniors_locked(pool_address)               as number_of_juniors_locked,
 				    (abond_matures_at - (select extract (epoch from now())))::double precision / (60*60*24)     as avg_senior_buy,
 				   coalesce(junior_liquidity_locked(pool_address), 0)   as junior_liquidity_locked
@@ -154,7 +154,7 @@ func (a *API) handlePools(c *gin.Context) {
 				   originator_apy,
 				   originator_net_apy,
 				   number_of_seniors(pool_address)                      as number_of_seniors,
-				   number_of_jtoken_holders(pool_address)               as number_of_juniors,
+				   number_of_active_juniors(pool_address)               as number_of_juniors,
 			       number_of_juniors_locked(pool_address)               as number_of_juniors_locked,
 				   (abond_matures_at - (select extract (epoch from now())))::double precision / (60*60*24)     as avg_senior_buy,
 				   coalesce(junior_liquidity_locked(pool_address), 0)   as junior_liquidity_locked
