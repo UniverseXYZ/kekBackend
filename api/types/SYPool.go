@@ -48,4 +48,5 @@ type SYRewardPool struct {
 	PoolTokenDecimals  int64  `json:"poolTokenDecimals"`
 	ProtocolID         string `json:"protocolId"`
 	UnderlyingSymbol   string `json:"underlyingSymbol"`
+	UnderlyingAddress  string `json:"underlyingAddress"`
 }
