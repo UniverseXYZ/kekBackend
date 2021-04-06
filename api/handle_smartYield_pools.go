@@ -63,7 +63,7 @@ func (a *API) handlePoolDetails(c *gin.Context) {
 				   originator_apy,
 				   originator_net_apy,
 				   number_of_seniors(pool_address)                      as number_of_seniors,
-				   number_of_jtoken_holders(pool_address)               as number_of_juniors,
+				   number_of_active_juniors(pool_address)               as number_of_juniors,
 			       number_of_juniors_locked(pool_address)               as number_of_juniors_locked,
 				    (abond_matures_at - (select extract (epoch from now())))::double precision / (60*60*24)     as avg_senior_buy,
 				   coalesce(junior_liquidity_locked(pool_address), 0)   as junior_liquidity_locked
@@ -154,7 +154,7 @@ func (a *API) handlePools(c *gin.Context) {
 				   originator_apy,
 				   originator_net_apy,
 				   number_of_seniors(pool_address)                      as number_of_seniors,
-				   number_of_jtoken_holders(pool_address)               as number_of_juniors,
+				   number_of_active_juniors(pool_address)               as number_of_juniors,
 			       number_of_juniors_locked(pool_address)               as number_of_juniors_locked,
 				   (abond_matures_at - (select extract (epoch from now())))::double precision / (60*60*24)     as avg_senior_buy,
 				   coalesce(junior_liquidity_locked(pool_address), 0)   as junior_liquidity_locked
@@ -186,6 +186,7 @@ func (a *API) handlePools(c *gin.Context) {
 func (a *API) handleRewardPools(c *gin.Context) {
 	protocols := strings.ToLower(c.DefaultQuery("protocolId", "all"))
 	underlyingSymbol := strings.ToUpper(c.DefaultQuery("underlyingSymbol", "all"))
+	underlyingAddress := strings.ToLower(c.DefaultQuery("underlyingAddress", "all"))
 
 	filters := new(Filters)
 	if protocols != "all" {
@@ -197,13 +198,18 @@ func (a *API) handleRewardPools(c *gin.Context) {
 		filters.Add("p.underlying_symbol", underlyingSymbol)
 	}
 
+	if underlyingAddress != "all" {
+		filters.Add("p.underlying_address", utils.NormalizeAddress(underlyingAddress))
+	}
+
 	query, params := buildQueryWithFilter(`select 
 				       r.pool_address,
 				       r.pool_token_address,
 				       r.reward_token_address,
 				       p.underlying_decimals,
 				       p.protocol_id,
-				       p.underlying_symbol
+				       p.underlying_symbol,
+	                   p.underlying_address
 				from smart_yield_reward_pools as r
 				inner join smart_yield_pools as p
 				on p.sy_address = r.pool_token_address %s 
@@ -221,7 +227,7 @@ func (a *API) handleRewardPools(c *gin.Context) {
 
 	for rows.Next() {
 		var p types.SYRewardPool
-		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress, &p.PoolTokenDecimals, &p.ProtocolID, &p.UnderlyingSymbol)
+		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress, &p.PoolTokenDecimals, &p.ProtocolID, &p.UnderlyingSymbol, &p.UnderlyingAddress)
 		if err != nil {
 			Error(c, err)
 			return

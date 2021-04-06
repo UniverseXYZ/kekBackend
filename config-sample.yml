@@ -98,6 +98,8 @@ storable:
     notifications: false
   yieldFarming:
     address : "0xb0fa2beee3cf36a7ac7e99b885b48538ab364853"
+  smartYield:
+    notifications: false
   smartYieldState:
     compound-comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
     blocks-per-minute: 4

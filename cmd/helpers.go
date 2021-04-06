@@ -162,6 +162,7 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().String("storable.governance.address", "", "Address of the governance contract")
 	cmd.Flags().Bool("storable.governance.notifications", false, "Emit notifications for governance")
 	cmd.Flags().String("storable.yieldFarming.address", "", "Address of the yield farming staking contract")
+	cmd.Flags().Bool("storable.smartYield.notifications", false, "Emit notifications for smart yield")
 	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "", "Address of compound comptroller")
 	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
 	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "", "Address of rewards pool factory")
@@ -175,6 +176,7 @@ func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.governance.notifications", cmd.Flag("storable.governance.notifications"))
 	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
 	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
+	viper.BindPFlag("storable.smartYield.notifications", cmd.Flag("storable.smartYield.notifications"))
 	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
 	viper.BindPFlag("storable.smartYieldRewards.pool-factory-address", cmd.Flag("storable.smartYieldRewards.pool-factory-address"))
 }
@@ -234,7 +236,9 @@ func initCore() *core.Core {
 			YieldFarming: yieldFarming.Config{
 				Address: viper.GetString("storable.yieldFarming.address"),
 			},
-			SmartYield: smartYield.Config{},
+			SmartYield: smartYield.Config{
+				Notifications: viper.GetBool("storable.smartYield.notifications"),
+			},
 			SmartYieldState: smartYieldState.Config{
 				ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
 				BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),

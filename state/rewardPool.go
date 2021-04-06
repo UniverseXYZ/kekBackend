@@ -19,6 +19,16 @@ func RewardPoolByAddress(address string) *types.SYRewardPool {
 	return nil
 }
 
+func RewardPoolForSYAddress(address string) *types.SYRewardPool {
+	for _, p := range instance.rewardPools {
+		if utils.NormalizeAddress(address) == utils.NormalizeAddress(p.PoolTokenAddress) {
+			return &p
+		}
+	}
+
+	return nil
+}
+
 func AddNewPoolToState(pool types.SYRewardPool) {
 	instance.rewardPools = append(instance.rewardPools, pool)
 }

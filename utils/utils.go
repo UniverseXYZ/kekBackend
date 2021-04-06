@@ -88,3 +88,8 @@ func PrettyBond(d decimal.Decimal) string {
 	tenPow18 := decimal.NewFromInt(10).Pow(decimal.NewFromInt(18))
 	return d.DivRound(tenPow18, 18).StringFixed(2)
 }
+
+func PrettyToken(d decimal.Decimal, precision int64) string {
+	tenPowPrecision := decimal.NewFromInt(10).Pow(decimal.NewFromInt(precision))
+	return d.DivRound(tenPowPrecision, int32(precision)).StringFixed(2)
+}

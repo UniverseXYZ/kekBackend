@@ -14,6 +14,21 @@
       "underlyingSymbol": "USDC",
       "underlyingDecimals": 6,
       "startAtBlock": 23865225
+    },
+    {
+      "protocolId": "compound/v2",
+      "controllerAddress": "0xD2fDe777dbdd43476F875c1F6E6C52a6ba375e59",
+      "modelAddress": "0x353970e78a342d040bC666679507Be9935c5F475",
+      "providerAddress": "0xB33A82446D6d7beC43628A1367078A6d12eB0Afa",
+      "smartYieldAddress": "0xebF32075B5eE6e9aFf265D3Ec6C69A2b381B61B1",
+      "oracleAddress": "0xbDf141238Baa2F4AD3d3933C8982490B2d89FE58",
+      "juniorBondAddress": "0x95A79EbD74E4a4c7C488Ca53d7a836D2367CC25a",
+      "seniorBondAddress": "0x7Af08DA8f3F3390Ce5b02bBd54b956268DFAc503",
+      "receiptTokenAddress": "0xf0d0eb522cfa50b716b3b1604c4f0fa6f04376ad",
+      "underlyingAddress": "0x4F96Fe3b7A6Cf9725f59d353F723c1bDb64CA6Aa",
+      "underlyingSymbol": "DAI",
+      "underlyingDecimals": 18,
+      "startAtBlock": 24133694
     }
   ],
   "rewardPools": [
