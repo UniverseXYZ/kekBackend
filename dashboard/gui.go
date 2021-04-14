@@ -1,8 +1,8 @@
 package dashboard
 
 import (
-	"github.com/barnbridge/barnbridge-backend/core"
 	"github.com/gin-gonic/gin"
+	"github.com/kekDAO/kekBackend/core"
 	"github.com/sirupsen/logrus"
 )
 

@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
+	"github.com/kekDAO/kekBackend/api/types"
 )
 
 func (a *API) history(p types.Proposal) ([]types.HistoryEvent, error) {

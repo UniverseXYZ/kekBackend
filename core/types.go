@@ -1,10 +1,10 @@
 package core
 
 import (
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
-	"github.com/barnbridge/barnbridge-backend/processor"
-	"github.com/barnbridge/barnbridge-backend/scraper"
-	"github.com/barnbridge/barnbridge-backend/taskmanager"
+	"github.com/kekDAO/kekBackend/eth/bestblock"
+	"github.com/kekDAO/kekBackend/processor"
+	"github.com/kekDAO/kekBackend/scraper"
+	"github.com/kekDAO/kekBackend/taskmanager"
 )
 
 type Features struct {

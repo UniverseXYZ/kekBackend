@@ -10,8 +10,8 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
-	types2 "github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/api/types"
+	types2 "github.com/kekDAO/kekBackend/types"
 )
 
 func (a *API) ProposalDetailsHandler(c *gin.Context) {

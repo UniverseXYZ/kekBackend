@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/types"
 )
 
 var syncSyPoolsCmd = &cobra.Command{

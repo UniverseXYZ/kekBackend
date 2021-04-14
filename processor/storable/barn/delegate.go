@@ -7,12 +7,12 @@ import (
 	"time"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/barnbridge/barnbridge-backend/notifications"
+	"github.com/kekDAO/kekBackend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 // Delegate followed by DelegateLockDecreased + DelegateLockIncreased => user had a delegate and moved it to another user

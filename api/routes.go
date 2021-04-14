@@ -34,19 +34,6 @@ func (a *API) setRoutes() {
 	governance.GET("/treasury/transactions", a.handleTreasuryTxs)
 	governance.GET("/treasury/tokens", a.handleTreasuryTokens)
 
-	smartYield := a.engine.Group("/api/smartyield")
-	smartYield.GET("/pools", a.handlePools)
-	smartYield.GET("/pools/:address", a.handlePoolDetails)
-	smartYield.GET("/pools/:address/apy", a.handlePoolAPYTrend)
-	smartYield.GET("/users/:address/history", a.handleSYUserTransactionHistory)
-	smartYield.GET("/users/:address/redeems/senior", a.handleSeniorRedeems)
-	smartYield.GET("/users/:address/junior-past-positions", a.handleJuniorPastPositions)
-	smartYield.GET("/users/:address/portfolio-value", a.handleSYUserPortfolioValue)
-	smartYield.GET("/users/:address/portfolio-value/junior", a.handleSYUserJuniorPortfolioValue)
-	smartYield.GET("/users/:address/portfolio-value/senior", a.handleSYUserSeniorPortfolioValue)
-	smartYield.GET("/rewards/pools", a.handleRewardPools)
-	smartYield.GET("/rewards/pools/:poolAddress/transactions", a.handleRewardPoolsStakingActions)
-
 	notifs := a.engine.Group("/api/notifications")
 	notifs.GET("/list", a.handleNotifications)
 }

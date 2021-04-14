@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/barnbridge/barnbridge-backend/state"
-	"github.com/barnbridge/barnbridge-backend/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/state"
+	"github.com/kekDAO/kekBackend/types"
+	"github.com/kekDAO/kekBackend/utils"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )

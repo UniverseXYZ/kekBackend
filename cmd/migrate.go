@@ -3,7 +3,7 @@ package cmd
 import (
 	"database/sql"
 
-	_ "github.com/barnbridge/barnbridge-backend/migrations"
+	_ "github.com/kekDAO/kekBackend/migrations"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose"
 	"github.com/spf13/cobra"

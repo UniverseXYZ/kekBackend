@@ -1,4 +1,4 @@
-# BarnBridge backend
+# kekDAO backend
 
 Getting started as a dev
 ```shell

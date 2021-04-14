@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
+	"github.com/kekDAO/kekBackend/api/types"
 	"github.com/pkg/errors"
 )
 

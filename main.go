@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/barnbridge/barnbridge-backend/cmd"
+	"github.com/kekDAO/kekBackend/cmd"
 )
 
 var (

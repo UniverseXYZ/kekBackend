@@ -18,7 +18,7 @@ var (
 	verbose, vverbose bool
 
 	RootCmd = &cobra.Command{
-		Use:   "barnbridge-backend",
+		Use:   "kekBackend",
 		Short: "Ethereum data and indexer",
 		Long:  "Scrape ethereum data from any web3-compatible node and index it into a postgres database",
 		PersistentPreRun: func(cmd *cobra.Command, args []string) {

@@ -26,7 +26,7 @@ jobs:
         SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
-        channel: infra-ci-barnbridge
+        channel: infra-ci-kekDAO
         status: ":pepegalight: STARTED"
         color: warning
 
@@ -66,7 +66,7 @@ jobs:
     - name: Build, tag and push the image
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-        ECR_REPOSITORY: barnbridge-backend
+        ECR_REPOSITORY: kekBackend
       run: |
         docker build \
           -t ${ECR_REGISTRY}/${ECR_REPOSITORY}:${IMAGE_TAG}    \
@@ -80,7 +80,7 @@ jobs:
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
-        channel: infra-ci-barnbridge
+        channel: infra-ci-kekDAO
         status: ":white_check_mark: ${{ env.IMAGE_TAG }}"
         color: good
 
@@ -91,7 +91,7 @@ jobs:
       uses: voxmedia/github-action-slack-notify-build@v1
       with:
         message_id: ${{ steps.slack.outputs.message_id }}
-        channel: infra-ci-barnbridge
+        channel: infra-ci-kekDAO
         status: ":octagonal_sign: FAILED"
         color: danger
 

@@ -3,7 +3,7 @@ package state
 import (
 	web3types "github.com/alethio/web3-go/types"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 func MonitoredAccounts() []string {

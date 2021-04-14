@@ -6,7 +6,7 @@ import (
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 func (g *GovStorable) getBaseLog(log web3types.Log) (*BaseLog, error) {

@@ -5,8 +5,8 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/barnbridge/barnbridge-backend/api"
-	"github.com/barnbridge/barnbridge-backend/dashboard"
+	"github.com/kekDAO/kekBackend/api"
+	"github.com/kekDAO/kekBackend/dashboard"
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -23,8 +23,6 @@ var runCmd = &cobra.Command{
 			"storable.barn.address",
 			"storable.governance.address",
 			"storable.yieldFarming.address",
-			"storable.smartYieldState.compound-comptroller",
-			"storable.smartYieldRewards.pool-factory-address",
 		})
 
 		stopChan := make(chan os.Signal, 1)

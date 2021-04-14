@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	types2 "github.com/barnbridge/barnbridge-backend/types"
+	types2 "github.com/kekDAO/kekBackend/types"
 )
 
 type Proposal struct {

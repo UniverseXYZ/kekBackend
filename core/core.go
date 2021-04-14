@@ -14,13 +14,13 @@ import (
 	"github.com/pressly/goose"
 	"github.com/sirupsen/logrus"
 
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
-	"github.com/barnbridge/barnbridge-backend/integrity"
-	"github.com/barnbridge/barnbridge-backend/metrics"
-	"github.com/barnbridge/barnbridge-backend/processor"
-	"github.com/barnbridge/barnbridge-backend/scraper"
-	"github.com/barnbridge/barnbridge-backend/state"
-	"github.com/barnbridge/barnbridge-backend/taskmanager"
+	"github.com/kekDAO/kekBackend/eth/bestblock"
+	"github.com/kekDAO/kekBackend/integrity"
+	"github.com/kekDAO/kekBackend/metrics"
+	"github.com/kekDAO/kekBackend/processor"
+	"github.com/kekDAO/kekBackend/scraper"
+	"github.com/kekDAO/kekBackend/state"
+	"github.com/kekDAO/kekBackend/taskmanager"
 )
 
 var log = logrus.WithField("module", "core")

@@ -3,7 +3,7 @@ package core
 import (
 	"database/sql"
 
-	"github.com/barnbridge/barnbridge-backend/metrics"
+	"github.com/kekDAO/kekBackend/metrics"
 )
 
 func (c *Core) DB() *sql.DB {
