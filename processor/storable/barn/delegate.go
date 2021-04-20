@@ -94,7 +94,7 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("barn_delegate_actions", "tx_hash", "tx_index", "log_index", "logged_by", "sender", "receiver", "action_type", "timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("supernova_delegate_actions", "tx_hash", "tx_index", "log_index", "logged_by", "sender", "receiver", "action_type", "timestamp", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}
@@ -125,7 +125,7 @@ func (b *BarnStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx
 		return nil
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("barn_delegate_changes", "tx_hash", "tx_index", "log_index", "logged_by", "action_type", "sender", "receiver", "amount", "receiver_new_delegated_power", "timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("supernova_delegate_changes", "tx_hash", "tx_index", "log_index", "logged_by", "action_type", "sender", "receiver", "amount", "receiver_new_delegated_power", "timestamp", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}

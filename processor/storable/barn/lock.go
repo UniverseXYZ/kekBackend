@@ -33,7 +33,7 @@ func (b *BarnStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
 
 	log.WithField("handler", "locks").WithField("count", len(locks)).Trace("found Lock events")
 
-	stmt, err := tx.Prepare(pq.CopyIn("barn_locks", "tx_hash", "tx_index", "log_index", "logged_by", "user_address", "locked_until", "locked_at", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("supernova_locks", "tx_hash", "tx_index", "log_index", "logged_by", "user_address", "locked_until", "locked_at", "included_in_block"))
 	if err != nil {
 		return errors.Wrap(err, "could not prepare statement")
 	}

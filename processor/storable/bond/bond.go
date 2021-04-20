@@ -75,7 +75,7 @@ func (b BondStorable) ToDB(tx *sql.Tx) error {
 		transfers = append(transfers, t)
 	}
 
-	stmt, err := tx.Prepare(pq.CopyIn("bond_transfers", "tx_hash", "tx_index", "log_index", "sender", "receiver", "value", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("kek_transfers", "tx_hash", "tx_index", "log_index", "sender", "receiver", "value", "included_in_block"))
 	if err != nil {
 		return err
 	}
