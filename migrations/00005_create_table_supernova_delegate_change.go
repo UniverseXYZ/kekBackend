@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBarnDelegateChange, downCreateTableBarnDelegateChange)
+	goose.AddMigration(upCreateTableSupernovaDelegateChange, downCreateTableSupernovaDelegateChange)
 }
 
-func upCreateTableBarnDelegateChange(tx *sql.Tx) error {
+func upCreateTableSupernovaDelegateChange(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 
 	drop type if exists delegate_change_type;
@@ -46,7 +46,7 @@ func upCreateTableBarnDelegateChange(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableBarnDelegateChange(tx *sql.Tx) error {
+func downCreateTableSupernovaDelegateChange(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		drop trigger refresh_supernova_users on supernova_delegate_changes;
 		drop table supernova_delegate_changes;

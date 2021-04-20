@@ -12,6 +12,7 @@ func init() {
 
 func upCreateTableAccountErc20Transfers(tx *sql.Tx) error {
 	_, err := tx.Exec(`
+	create type transfer_type as enum('IN','OUT');
 	create table account_erc20_transfers
 	(
 		token_address text not null,

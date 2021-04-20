@@ -13,6 +13,7 @@ func init() {
 func upCreateTableWithdrawals(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 
+	create type staking_action_type as enum('DEPOSIT','WITHDRAW');
 	create table yield_farming_actions
 	(
 		tx_hash text not null,

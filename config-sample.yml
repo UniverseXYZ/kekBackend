@@ -88,9 +88,9 @@ redis:
 abi-path: "./abis"
 
 storable:
-  bond:
+  kek:
     address: "0x0391D2021f89DC339F60Fff84546EA23E337750f"
-  barn:
+  supernova:
     address: "0x10e138877df69Ca44Fdc68655f86c88CDe142D7F"
     notifications: false
   governance:

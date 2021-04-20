@@ -1,4 +1,4 @@
-package barn
+package supernova
 
 import (
 	"math/big"

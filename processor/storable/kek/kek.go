@@ -1,4 +1,4 @@
-package bond
+package kek
 
 import (
 	"database/sql"
@@ -14,26 +14,26 @@ import (
 	"github.com/kekDAO/kekBackend/utils"
 )
 
-type BondStorable struct {
-	config  Config
-	Raw     *types.RawData
-	bondAbi abi.ABI
+type KekStorable struct {
+	config Config
+	Raw    *types.RawData
+	kekAbi abi.ABI
 }
 
-func NewBondStorable(config Config, raw *types.RawData, bondAbi abi.ABI) *BondStorable {
-	return &BondStorable{
-		config:  config,
-		Raw:     raw,
-		bondAbi: bondAbi,
+func NewKekStorable(config Config, raw *types.RawData, kekAbi abi.ABI) *KekStorable {
+	return &KekStorable{
+		config: config,
+		Raw:    raw,
+		kekAbi: kekAbi,
 	}
 }
 
-func (b BondStorable) ToDB(tx *sql.Tx) error {
-	var bondTransfers []web3types.Log
+func (b KekStorable) ToDB(tx *sql.Tx) error {
+	var kekTransfers []web3types.Log
 	var transfers []types.Transfer
 	for _, data := range b.Raw.Receipts {
 		for _, log := range data.Logs {
-			if utils.CleanUpHex(log.Address) != utils.CleanUpHex(b.config.BondAddress) {
+			if utils.CleanUpHex(log.Address) != utils.CleanUpHex(b.config.KekAddress) {
 				continue
 			}
 
@@ -41,20 +41,20 @@ func (b BondStorable) ToDB(tx *sql.Tx) error {
 				continue
 			}
 
-			if utils.LogIsEvent(log, b.bondAbi, "Transfer") {
-				bondTransfers = append(bondTransfers, log)
+			if utils.LogIsEvent(log, b.kekAbi, "Transfer") {
+				kekTransfers = append(kekTransfers, log)
 			}
 		}
 	}
 
-	for _, log := range bondTransfers {
+	for _, log := range kekTransfers {
 		var t types.Transfer
 		data, err := hex.DecodeString(utils.Trim0x(log.Data))
 		if err != nil {
 			return errors.Wrap(err, "could not decode log data")
 		}
 
-		err = b.bondAbi.UnpackIntoInterface(&t, "Transfer", data)
+		err = b.kekAbi.UnpackIntoInterface(&t, "Transfer", data)
 		if err != nil {
 			return errors.Wrap(err, "could not unpack log data")
 		}
@@ -63,13 +63,13 @@ func (b BondStorable) ToDB(tx *sql.Tx) error {
 		t.To = utils.Topic2Address(log.Topics[2])
 		t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 		if err != nil {
-			return errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
+			return errors.Wrap(err, "could not convert transactionIndex from kek contract to int64")
 		}
 
 		t.TransactionHash = log.TransactionHash
 		t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
 		if err != nil {
-			return errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+			return errors.Wrap(err, "could not convert logIndex from  kek contract to int64")
 		}
 
 		transfers = append(transfers, t)

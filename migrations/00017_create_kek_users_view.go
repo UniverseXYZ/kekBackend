@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(UpBondUsersView, DownBondUsersView)
+	goose.AddMigration(UpKekUsersView, DownKekUsersView)
 }
 
-func UpBondUsersView(tx *sql.Tx) error {
+func UpKekUsersView(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create or replace view kek_users_with_balance as
 		with users as ( select distinct sender as address
@@ -29,7 +29,7 @@ func UpBondUsersView(tx *sql.Tx) error {
 	return err
 }
 
-func DownBondUsersView(tx *sql.Tx) error {
+func DownKekUsersView(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		drop view kek_users_with_balance;
 	`)

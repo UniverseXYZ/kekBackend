@@ -1,4 +1,4 @@
-package barn
+package supernova
 
 import (
 	"database/sql"
@@ -12,7 +12,7 @@ import (
 	"github.com/kekDAO/kekBackend/utils"
 )
 
-func (b *BarnStorable) handleStakingActions(logs []web3types.Log, tx *sql.Tx) error {
+func (b *SupernovaStorable) handleStakingActions(logs []web3types.Log, tx *sql.Tx) error {
 	var stakingActions []StakingAction
 
 	for _, log := range logs {
@@ -66,8 +66,8 @@ func (b *BarnStorable) handleStakingActions(logs []web3types.Log, tx *sql.Tx) er
 	return nil
 }
 
-func (b *BarnStorable) decodeDepositEvent(log web3types.Log) (*StakingAction, error) {
-	if !utils.LogIsEvent(log, b.barnAbi, DepositEvent) {
+func (b *SupernovaStorable) decodeDepositEvent(log web3types.Log) (*StakingAction, error) {
+	if !utils.LogIsEvent(log, b.supernovaAbi, DepositEvent) {
 		return nil, nil
 	}
 
@@ -79,7 +79,7 @@ func (b *BarnStorable) decodeDepositEvent(log web3types.Log) (*StakingAction, er
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(&deposit, DepositEvent, data)
+	err = b.supernovaAbi.UnpackIntoInterface(&deposit, DepositEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -98,8 +98,8 @@ func (b *BarnStorable) decodeDepositEvent(log web3types.Log) (*StakingAction, er
 	}, nil
 }
 
-func (b *BarnStorable) decodeWithdrawEvent(log web3types.Log) (*StakingAction, error) {
-	if !utils.LogIsEvent(log, b.barnAbi, WithdrawEvent) {
+func (b *SupernovaStorable) decodeWithdrawEvent(log web3types.Log) (*StakingAction, error) {
+	if !utils.LogIsEvent(log, b.supernovaAbi, WithdrawEvent) {
 		return nil, nil
 	}
 
@@ -111,7 +111,7 @@ func (b *BarnStorable) decodeWithdrawEvent(log web3types.Log) (*StakingAction, e
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(&withdraw, "Withdraw", data)
+	err = b.supernovaAbi.UnpackIntoInterface(&withdraw, "Withdraw", data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -123,12 +123,12 @@ func (b *BarnStorable) decodeWithdrawEvent(log web3types.Log) (*StakingAction, e
 
 	stakingAction.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from barn contract to int64")
+		return nil, errors.Wrap(err, "could not convert transactionIndex from supernova contract to int64")
 	}
 
 	stakingAction.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  barn contract to int64")
+		return nil, errors.Wrap(err, "could not convert logIndex from  supernova contract to int64")
 	}
 
 	stakingAction.Amount = withdraw.AmountWithdrew.String()

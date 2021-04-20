@@ -15,9 +15,9 @@ import (
 	"github.com/kekDAO/kekBackend/metrics"
 	"github.com/kekDAO/kekBackend/processor/storable"
 	"github.com/kekDAO/kekBackend/processor/storable/accountERC20Transfers"
-	"github.com/kekDAO/kekBackend/processor/storable/barn"
-	"github.com/kekDAO/kekBackend/processor/storable/bond"
 	"github.com/kekDAO/kekBackend/processor/storable/governance"
+	"github.com/kekDAO/kekBackend/processor/storable/kek"
+	"github.com/kekDAO/kekBackend/processor/storable/supernova"
 	"github.com/kekDAO/kekBackend/processor/storable/yieldFarming"
 	"github.com/kekDAO/kekBackend/types"
 )
@@ -72,18 +72,18 @@ func (p *Processor) registerStorables() error {
 	p.storables = append(p.storables, storable.NewStorableBlock(p.Raw.Block))
 
 	{
-		if _, exist := p.abis["bond"]; !exist {
-			return errors.New("could not find abi for bond contract")
+		if _, exist := p.abis["kek"]; !exist {
+			return errors.New("could not find abi for kek contract")
 		}
 
-		p.storables = append(p.storables, bond.NewBondStorable(p.config.Bond, p.Raw, p.abis["bond"]))
+		p.storables = append(p.storables, kek.NewKekStorable(p.config.Kek, p.Raw, p.abis["kek"]))
 	}
 
 	{
-		if _, exist := p.abis["barn"]; !exist {
-			return errors.New("could not find abi for barn contract")
+		if _, exist := p.abis["supernova"]; !exist {
+			return errors.New("could not find abi for supernova contract")
 		}
-		p.storables = append(p.storables, barn.NewBarnStorable(p.config.Barn, p.Raw, p.abis["barn"]))
+		p.storables = append(p.storables, supernova.NewSupernovaStorable(p.config.Supernova, p.Raw, p.abis["supernova"]))
 	}
 
 	{

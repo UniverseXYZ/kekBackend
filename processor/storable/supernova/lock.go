@@ -1,4 +1,4 @@
-package barn
+package supernova
 
 import (
 	"database/sql"
@@ -11,7 +11,7 @@ import (
 	"github.com/kekDAO/kekBackend/utils"
 )
 
-func (b *BarnStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
+func (b *SupernovaStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
 	var locks []Lock
 
 	for _, log := range logs {
@@ -60,8 +60,8 @@ func (b *BarnStorable) handleLocks(logs []web3types.Log, tx *sql.Tx) error {
 	return nil
 }
 
-func (b *BarnStorable) decodeLockEvent(log web3types.Log) (*Lock, error) {
-	if !utils.LogIsEvent(log, b.barnAbi, LockEvent) {
+func (b *SupernovaStorable) decodeLockEvent(log web3types.Log) (*Lock, error) {
+	if !utils.LogIsEvent(log, b.supernovaAbi, LockEvent) {
 		return nil, nil
 	}
 
@@ -80,7 +80,7 @@ func (b *BarnStorable) decodeLockEvent(log web3types.Log) (*Lock, error) {
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(&lock, LockEvent, data)
+	err = b.supernovaAbi.UnpackIntoInterface(&lock, LockEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}

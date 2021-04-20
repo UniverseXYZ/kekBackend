@@ -7,11 +7,12 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBarnStakingActions, downCreateTableBarnStakingActions)
+	goose.AddMigration(upCreateTableSupernovaStakingActions, downCreateTableSupernovaStakingActions)
 }
 
-func upCreateTableBarnStakingActions(tx *sql.Tx) error {
+func upCreateTableSupernovaStakingActions(tx *sql.Tx) error {
 	_, err := tx.Exec(`
+	create type action_type as enum('DEPOSIT','WITHDRAW');
 	create table supernova_staking_actions
 	(
 		tx_hash text not null,
@@ -50,7 +51,7 @@ func upCreateTableBarnStakingActions(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableBarnStakingActions(tx *sql.Tx) error {
+func downCreateTableSupernovaStakingActions(tx *sql.Tx) error {
 	_, err := tx.Exec(`
         drop function refresh_supernova_users;
 		drop trigger refresh_supernova_users on supernova_staking_actions;

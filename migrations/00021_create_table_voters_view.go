@@ -13,7 +13,7 @@ func init() {
 func upCreateTableVotersView(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create or replace view voters as
-		select user_address,balance_of(user_address) as bond_staked,
+		select user_address,balance_of(user_address) as kek_staked,
 		   coalesce(( select locked_until
 			 from supernova_locks
 			 where user_address = supernova_users.user_address

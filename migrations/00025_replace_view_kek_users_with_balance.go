@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upReplaceViewBondUsersWithBalance, downReplaceViewBondUsersWithBalance)
+	goose.AddMigration(upReplaceViewKekUsersWithBalance, downReplaceViewKekUsersWithBalance)
 }
 
-func upReplaceViewBondUsersWithBalance(tx *sql.Tx) error {
+func upReplaceViewKekUsersWithBalance(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		create or replace view kek_users_with_balance as
 		with transfers as ( select sender as address, -value as amount
@@ -40,7 +40,7 @@ func upReplaceViewBondUsersWithBalance(tx *sql.Tx) error {
 	return err
 }
 
-func downReplaceViewBondUsersWithBalance(tx *sql.Tx) error {
+func downReplaceViewKekUsersWithBalance(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		drop view if exists kek_users_with_balance_no_staking;
 	`)

@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBarnLocks, downCreateTableBarnLocks)
+	goose.AddMigration(upCreateTableSupernovaLocks, downCreateTableSupernovaLocks)
 }
 
-func upCreateTableBarnLocks(tx *sql.Tx) error {
+func upCreateTableSupernovaLocks(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	create table supernova_locks
 	(
@@ -32,7 +32,7 @@ func upCreateTableBarnLocks(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableBarnLocks(tx *sql.Tx) error {
+func downCreateTableSupernovaLocks(tx *sql.Tx) error {
 	_, err := tx.Exec("drop table supernova_locks")
 	return err
 }

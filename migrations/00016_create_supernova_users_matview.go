@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(UpBarnUsersMatView, DownBarnUsersMatView)
+	goose.AddMigration(UpSupernovaUsersMatView, DownSupernovaUsersMatView)
 }
 
-func UpBarnUsersMatView(tx *sql.Tx) error {
+func UpSupernovaUsersMatView(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 	create materialized view supernova_users as
 	select distinct user_address
@@ -25,7 +25,7 @@ func UpBarnUsersMatView(tx *sql.Tx) error {
 	return err
 }
 
-func DownBarnUsersMatView(tx *sql.Tx) error {
+func DownSupernovaUsersMatView(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 		drop materialized view supernova_users;
 	`)

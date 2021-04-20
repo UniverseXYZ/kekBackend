@@ -7,10 +7,10 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateTableBarnDelegateActions, downCreateTableBarnDelegateActions)
+	goose.AddMigration(upCreateTableSupernovaDelegateActions, downCreateTableSupernovaDelegateActions)
 }
 
-func upCreateTableBarnDelegateActions(tx *sql.Tx) error {
+func upCreateTableSupernovaDelegateActions(tx *sql.Tx) error {
 	_, err := tx.Exec(`
 
 	drop type if exists delegate_action_type;
@@ -37,7 +37,7 @@ func upCreateTableBarnDelegateActions(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateTableBarnDelegateActions(tx *sql.Tx) error {
+func downCreateTableSupernovaDelegateActions(tx *sql.Tx) error {
 	_, err := tx.Exec("drop table supernova_delegate_actions")
 	return err
 }

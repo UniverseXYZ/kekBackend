@@ -30,7 +30,7 @@ type Proposal struct {
 	StateTimeLeft *int64        `json:"stateTimeLeft"`
 	ForVotes      string        `json:"forVotes"`
 	AgainstVotes  string        `json:"againstVotes"`
-	BondStaked    string        `json:"-"`
+	KekStaked     string        `json:"-"`
 
 	History []HistoryEvent `json:"history"`
 }

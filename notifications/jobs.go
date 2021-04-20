@@ -75,10 +75,6 @@ func ExecuteJobsWithTx(ctx context.Context, tx *sql.Tx, jobs ...*Job) error {
 		case DelegateStart:
 			je = &DelegateJobData{}
 
-		// smart yield
-		case SmartYieldTokenBought:
-			je = &SmartYieldJobData{}
-
 		default:
 			return errors.Errorf("unknown job type %s", j.JobType)
 		}

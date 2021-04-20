@@ -1,4 +1,4 @@
-package barn
+package supernova
 
 const (
 	DepositEvent                = "Deposit"

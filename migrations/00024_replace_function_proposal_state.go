@@ -7,32 +7,11 @@ import (
 )
 
 func init() {
-	goose.AddMigration(upCreateFunctionProposalState, downCreateFunctionProposalState)
+	goose.AddMigration(upReplaceFunctionProposalState, downReplaceFunctionProposalState)
 }
 
-func upCreateFunctionProposalState(tx *sql.Tx) error {
+func upReplaceFunctionProposalState(tx *sql.Tx) error {
 	_, err := tx.Exec(`
-		create or replace function kek_staked_at_ts(ts timestamp with time zone) returns numeric(78)
-			language plpgsql as
-		$$
-		declare
-			value numeric(78);
-		begin
-			with values as ( select action_type, sum(amount) as amount
-							 from supernova_staking_actions
-							 where included_in_block < ( select number
-														 from blocks
-														 where block_creation_time < ts
-														 order by block_creation_time desc
-														 limit 1 )
-							 group by action_type )
-			select into value coalesce(( select amount from values where action_type = 'DEPOSIT' ),0) -
-							  coalesce(( select amount from values where action_type = 'WITHDRAW' ),0);
-		
-			return value;
-		end;
-		$$;
-
 		create or replace function proposal_state(id bigint) returns text
 			language plpgsql as
 		$$
@@ -44,7 +23,7 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 			gracePeriodDuration        bigint;
 			acceptanceThreshold        bigint;
 			minQuorum                  bigint;
-			kekStaked                  numeric(78);
+			kekStaked                 numeric(78);
 			forVotes                   numeric(78);
 			againstVotes               numeric(78);
 			eta                        bigint;
@@ -80,10 +59,10 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 											   coalesce(( select coalesce(power, 0) from total_votes where support = false ), 0);
 		
 			-- check if quorum is met
-			if (forVotes + againstVotes < minQuorum / 100 * kekStaked) then return 'FAILED'; end if;
+			if (forVotes + againstVotes < minQuorum::numeric(78) / 100 * kekStaked) then return 'FAILED'; end if;
 		
 			-- check if votes met the acceptance threshold
-			if (forVotes < ((forVotes + againstVotes) * acceptanceThreshold / 100)) then return 'FAILED'; end if;
+			if (forVotes < ((forVotes + againstVotes) * acceptanceThreshold::numeric(78) / 100)) then return 'FAILED'; end if;
 		
 			if ( select count(*) from governance_events where proposal_id = id and event_type = 'QUEUED' ) = 0 then
 				return 'ACCEPTED';
@@ -114,11 +93,6 @@ func upCreateFunctionProposalState(tx *sql.Tx) error {
 	return err
 }
 
-func downCreateFunctionProposalState(tx *sql.Tx) error {
-	_, err := tx.Exec(`
-		drop function if exists proposal_state;
-		drop function if exists kek_staked_at_ts;
-	`)
-
-	return err
+func downReplaceFunctionProposalState(tx *sql.Tx) error {
+	return nil
 }

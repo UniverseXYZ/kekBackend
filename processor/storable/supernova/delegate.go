@@ -1,4 +1,4 @@
-package barn
+package supernova
 
 import (
 	"context"
@@ -18,9 +18,9 @@ import (
 // Delegate followed by DelegateLockDecreased + DelegateLockIncreased => user had a delegate and moved it to another user
 // Delegate followed by DelegateLockDecreased => user called stopDelegate
 // Delegate followed by DelegateLockIncreased => user called delegate without previously delegating
-// single DelegateLockIncreased => user deposited some more BOND which was automatically delegated
-// single DelegateLockDecreased => user withdrew some BOND
-func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
+// single DelegateLockIncreased => user deposited some more KEK which was automatically delegated
+// single DelegateLockDecreased => user withdrew some KEK
+func (b *SupernovaStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 	var delegateActions []DelegateAction
 	var delegateChanges []DelegateChange
 	var jobs []*notifications.Job
@@ -88,7 +88,7 @@ func (b *BarnStorable) handleDelegate(logs []web3types.Log, tx *sql.Tx) error {
 	return nil
 }
 
-func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx) error {
+func (b *SupernovaStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx) error {
 	if len(actions) == 0 {
 		log.WithField("handler", "delegate actions").Debug("no events found")
 		return nil
@@ -119,7 +119,7 @@ func (b *BarnStorable) storeDelegateActions(actions []DelegateAction, tx *sql.Tx
 	return nil
 }
 
-func (b *BarnStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx) error {
+func (b *SupernovaStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx) error {
 	if len(changes) == 0 {
 		log.WithField("handler", "delegate changes").Debug("no events found")
 		return nil
@@ -150,8 +150,8 @@ func (b *BarnStorable) storeDelegateChanges(changes []DelegateChange, tx *sql.Tx
 	return nil
 }
 
-func (b *BarnStorable) decodeDelegateEvent(log web3types.Log) (*DelegateAction, error) {
-	if !utils.LogIsEvent(log, b.barnAbi, DelegateEvent) {
+func (b *SupernovaStorable) decodeDelegateEvent(log web3types.Log) (*DelegateAction, error) {
+	if !utils.LogIsEvent(log, b.supernovaAbi, DelegateEvent) {
 		return nil, nil
 	}
 
@@ -179,8 +179,8 @@ func (b *BarnStorable) decodeDelegateEvent(log web3types.Log) (*DelegateAction, 
 
 }
 
-func (b *BarnStorable) decodeDelegatePowerIncreased(log web3types.Log) (*DelegateChange, error) {
-	if !utils.LogIsEvent(log, b.barnAbi, DelegatePowerIncreasedEvent) {
+func (b *SupernovaStorable) decodeDelegatePowerIncreased(log web3types.Log) (*DelegateChange, error) {
+	if !utils.LogIsEvent(log, b.supernovaAbi, DelegatePowerIncreasedEvent) {
 		return nil, nil
 	}
 
@@ -201,7 +201,7 @@ func (b *BarnStorable) decodeDelegatePowerIncreased(log web3types.Log) (*Delegat
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(d, DelegatePowerIncreasedEvent, data)
+	err = b.supernovaAbi.UnpackIntoInterface(d, DelegatePowerIncreasedEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
@@ -209,8 +209,8 @@ func (b *BarnStorable) decodeDelegatePowerIncreased(log web3types.Log) (*Delegat
 	return d, nil
 }
 
-func (b *BarnStorable) decodeDelegatePowerDecreased(log web3types.Log) (*DelegateChange, error) {
-	if !utils.LogIsEvent(log, b.barnAbi, DelegatePowerDecreasedEvent) {
+func (b *SupernovaStorable) decodeDelegatePowerDecreased(log web3types.Log) (*DelegateChange, error) {
+	if !utils.LogIsEvent(log, b.supernovaAbi, DelegatePowerDecreasedEvent) {
 		return nil, nil
 	}
 
@@ -231,7 +231,7 @@ func (b *BarnStorable) decodeDelegatePowerDecreased(log web3types.Log) (*Delegat
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	err = b.barnAbi.UnpackIntoInterface(d, DelegatePowerDecreasedEvent, data)
+	err = b.supernovaAbi.UnpackIntoInterface(d, DelegatePowerDecreasedEvent, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}

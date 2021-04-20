@@ -10,13 +10,13 @@ type Overview struct {
 	AvgLockTimeSeconds     int64  `json:"avgLockTimeSeconds"`
 	Holders                int64  `json:"holders"`
 	TotalDelegatedPower    string `json:"totalDelegatedPower"`
-	TotalVBond             string `json:"totalVbond"`
+	TotalVKek              string `json:"TotalVKek"`
 	Voters                 int64  `json:"voters"`
-	BarnUsers              int64  `json:"barnUsers"`
+	SupernovaUsers         int64  `json:"supernovaUsers"`
 	HoldersStakingExcluded int64  `json:"holdersStakingExcluded"`
 }
 
-func (a *API) BondOverview(c *gin.Context) {
+func (a *API) KekOverview(c *gin.Context) {
 	var overview Overview
 
 	err := a.db.QueryRow(`select coalesce(avg(locked_until - locked_at),0)::bigint from supernova_locks;`).Scan(&overview.AvgLockTimeSeconds)
@@ -25,7 +25,7 @@ func (a *API) BondOverview(c *gin.Context) {
 		return
 	}
 
-	err = a.db.QueryRow(`select coalesce(sum(voting_power(user_address)),0) as total_voting_power from supernova_users;`).Scan(&overview.TotalVBond)
+	err = a.db.QueryRow(`select coalesce(sum(voting_power(user_address)),0) as total_voting_power from supernova_users;`).Scan(&overview.TotalVKek)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
@@ -65,7 +65,7 @@ func (a *API) BondOverview(c *gin.Context) {
 		return
 	}
 
-	err = a.db.QueryRow(`select count(*) from voters where bond_staked + voting_power > 0`).Scan(&overview.BarnUsers)
+	err = a.db.QueryRow(`select count(*) from voters where kek_staked + voting_power > 0`).Scan(&overview.SupernovaUsers)
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
 		return
