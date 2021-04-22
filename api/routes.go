@@ -36,4 +36,8 @@ func (a *API) setRoutes() {
 
 	notifs := a.engine.Group("/api/notifications")
 	notifs.GET("/list", a.handleNotifications)
+
+	yieldfarming := a.engine.Group("/api/yieldfarming")
+	yieldfarming.GET("/staking-actions/list", a.handleStakingActionsList)
+	yieldfarming.GET("/staking-actions/chart", a.handleStakinsActionsChart)
 }
