@@ -6,7 +6,6 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/kekDAO/kekBackend/types"
-	"github.com/kekDAO/kekBackend/utils"
 )
 
 type State struct {
@@ -33,31 +32,6 @@ func Refresh() error {
 	if err != nil {
 		return errors.Wrap(err, "could not load monitored accounts ")
 	}
-
-	return nil
-}
-
-func loadAllRewardPools() error {
-	rows, err := instance.db.Query(`select pool_address,pool_token_address,reward_token_address, start_at_block from smart_yield_reward_pools;`)
-	if err != nil {
-		return errors.Wrap(err, "could not query database for SmartYield Reward pools")
-	}
-
-	var pools []types.SYRewardPool
-	for rows.Next() {
-		var p types.SYRewardPool
-		err := rows.Scan(&p.PoolAddress, &p.PoolTokenAddress, &p.RewardTokenAddress, &p.StartAtBlock)
-		if err != nil {
-			return errors.Wrap(err, "could not scan reward pools from database")
-		}
-		p.PoolAddress = utils.NormalizeAddress(p.PoolAddress)
-		p.PoolTokenAddress = utils.NormalizeAddress(p.PoolTokenAddress)
-		p.RewardTokenAddress = utils.NormalizeAddress(p.RewardTokenAddress)
-
-		pools = append(pools, p)
-	}
-
-	instance.rewardPools = pools
 
 	return nil
 }

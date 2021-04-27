@@ -62,7 +62,7 @@ func init() {
 	cobra.OnInitialize(func() {
 		viper.Set("version", RootCmd.Version)
 	})
-	viper.SetEnvPrefix("BB")
+	viper.SetEnvPrefix("KD")
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_", "-", "_"))
 	viper.AutomaticEnv()
 

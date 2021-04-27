@@ -7,7 +7,6 @@ var dbTables = []string{
 	"supernova_locks",
 	"supernova_staking_actions",
 	"kek_transfers",
-	"erc721_transfers",
 	"governance_abrogation_proposals",
 	"governance_abrogation_votes",
 	"governance_abrogation_votes_canceled",
