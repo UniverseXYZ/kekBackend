@@ -10,9 +10,9 @@ gen:
 	go generate ./...
 
 reset:
-	./barnbridge-backend reset --force
-	./barnbridge-backend migrate
+	./kekBackend reset --force
+	./kekBackend migrate
 
 clean-run: build reset
-	./barnbridge-backend sync-sy-pools
-	./barnbridge-backend scrape --vv
+	./kekBackend sync-sy-pools
+	./kekBackend scrape --vv

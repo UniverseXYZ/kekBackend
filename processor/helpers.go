@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"strconv"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 // extractBlockNumber returns the block number as int64 by extracting it from the raw data

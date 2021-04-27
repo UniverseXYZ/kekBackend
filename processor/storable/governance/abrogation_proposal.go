@@ -7,13 +7,13 @@ import (
 	"time"
 
 	web3types "github.com/alethio/web3-go/types"
-	"github.com/barnbridge/barnbridge-backend/notifications"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/kekDAO/kekBackend/notifications"
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/contracts"
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/contracts"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 func (g *GovStorable) handleAbrogationProposal(logs []web3types.Log, tx *sql.Tx) error {

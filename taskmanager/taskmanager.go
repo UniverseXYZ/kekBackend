@@ -4,13 +4,13 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/barnbridge/barnbridge-backend/metrics"
+	"github.com/kekDAO/kekBackend/metrics"
 
 	"github.com/sirupsen/logrus"
 
 	"github.com/go-redis/redis"
 
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
+	"github.com/kekDAO/kekBackend/eth/bestblock"
 )
 
 var log = logrus.WithField("module", "taskmanager")

@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	"github.com/barnbridge/barnbridge-backend/api"
+	"github.com/kekDAO/kekBackend/api"
 )
 
 var apiCmd = &cobra.Command{

@@ -9,8 +9,8 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/types"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 const (
@@ -40,13 +40,13 @@ func (s *Storable) decodeTransfer(log web3types.Log) (*types.Transfer, error) {
 
 	t.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
+		return nil, errors.Wrap(err, "could not convert transactionIndex from kek contract to int64")
 	}
 
 	t.TransactionHash = log.TransactionHash
 	t.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, errors.Wrap(err, "could not convert logIndex from  kek contract to int64")
 	}
 
 	return &t, nil

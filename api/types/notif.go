@@ -1,7 +1,7 @@
 package types
 
 import (
-	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/types"
 )
 
 type Notification struct {

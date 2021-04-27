@@ -3,7 +3,7 @@ package dashboard
 import (
 	"net/http"
 
-	"github.com/barnbridge/barnbridge-backend/dashboard/types"
+	"github.com/kekDAO/kekBackend/dashboard/types"
 
 	"github.com/spf13/viper"
 

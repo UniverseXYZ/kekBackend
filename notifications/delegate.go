@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
@@ -35,7 +35,7 @@ func (jd *DelegateJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx) ([]*Jo
 		DelegateStart,
 		jd.StartTime,
 		jd.StartTime+60*60*24,
-		fmt.Sprintf("%s vBOND has been delegated to you from %s", utils.PrettyBond(jd.Amount), jd.From),
+		fmt.Sprintf("%s vKEK has been delegated to you from %s", utils.PrettyKek(jd.Amount), jd.From),
 		delegateMetadata(jd),
 		jd.IncludedInBlockNumber,
 	)

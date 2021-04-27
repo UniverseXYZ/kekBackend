@@ -5,9 +5,9 @@ import (
 	"strconv"
 	"time"
 
-	types2 "github.com/barnbridge/barnbridge-backend/types"
+	types2 "github.com/kekDAO/kekBackend/types"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 
 	"github.com/lib/pq"
 

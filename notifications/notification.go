@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/types"
 	"github.com/pkg/errors"
 )
 

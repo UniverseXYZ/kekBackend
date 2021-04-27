@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/utils"
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 )
@@ -102,7 +102,7 @@ func (jd *ProposalCreatedJobData) ExecuteWithTx(ctx context.Context, tx *sql.Tx)
 		ProposalCreated,
 		jd.CreateTime,
 		jd.CreateTime+jd.WarmUpDuration-300,
-		fmt.Sprintf("Proposal PID-%d has been created by %s and entered the warm-up phase. You have %s to stake your BOND", jd.Id, jd.Proposer, utils.HumanDuration(jd.WarmUpDuration)),
+		fmt.Sprintf("Proposal PID-%d has been created by %s and entered the warm-up phase. You have %s to stake your KEK", jd.Id, jd.Proposer, utils.HumanDuration(jd.WarmUpDuration)),
 		jobDataMetadata((*ProposalJobData)(jd), jd.WarmUpDuration),
 		jd.IncludedInBlockNumber,
 	)
@@ -800,7 +800,7 @@ func votingStatus(ctx context.Context, tx *sql.Tx, id int64) (*votes, error) {
 	var v votes
 	sel := `
 		select 
-			   ( select gp.min_quorum::numeric(78) / 100 * bond_staked_at_ts(to_timestamp(gp.create_time + gp.warm_up_duration))
+			   ( select gp.min_quorum::numeric(78) / 100 * kek_staked_at_ts(to_timestamp(gp.create_time + gp.warm_up_duration))
 				 from governance_proposals as "gp"
 				 where gp.proposal_id = $1 )                            as "quorum_to_meet",
 			   coalesce(sum(case when "support" = true then "power" else 0 end), 0)  as "for_votes",

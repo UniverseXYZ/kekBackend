@@ -10,8 +10,8 @@ import (
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
-	types2 "github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/api/types"
+	types2 "github.com/kekDAO/kekBackend/types"
 )
 
 func (a *API) ProposalDetailsHandler(c *gin.Context) {
@@ -36,7 +36,7 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		minQuorum           int64
 		forVotes            string
 		againstVotes        string
-		bondStaked          string
+		kekStaked           string
 		state               types.ProposalState
 	)
 
@@ -59,11 +59,11 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 			   min_quorum,
 		       coalesce(( select sum(power) from proposal_votes(proposal_id) where support = true ), 0) as for_votes,
 			   coalesce(( select sum(power) from proposal_votes(proposal_id) where support = false ), 0) as against_votes,
-		       coalesce(( select bond_staked_at_ts(to_timestamp(create_time+warm_up_duration)) ), 0) as bond_staked,
+		       coalesce(( select kek_staked_at_ts(to_timestamp(create_time+warm_up_duration)) ), 0) as kek_staked,
 			   ( select * from proposal_state(proposal_id) ) as proposal_state
 		from governance_proposals
 		where proposal_id = $1
-	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &forVotes, &againstVotes, &bondStaked, &state)
+	`, proposalID).Scan(&id, &proposer, &description, &title, &createTime, &targets, &values, &signatures, &calldatas, &timestamp, &warmUpDuration, &activeDuration, &queueDuration, &gracePeriodDuration, &acceptanceThreshold, &minQuorum, &forVotes, &againstVotes, &kekStaked, &state)
 
 	if err != nil && err != sql.ErrNoRows {
 		Error(c, err)
@@ -96,7 +96,7 @@ func (a *API) ProposalDetailsHandler(c *gin.Context) {
 		StateTimeLeft:       getTimeLeft(state, createTime, warmUpDuration, activeDuration, queueDuration, gracePeriodDuration),
 		ForVotes:            forVotes,
 		AgainstVotes:        againstVotes,
-		BondStaked:          bondStaked,
+		KekStaked:           kekStaked,
 	}
 
 	history, err := a.history(proposal)

@@ -21,7 +21,7 @@ dashboard:
 # database fields
 db:
   # Database host
-  host: "barnbridge-postgres"
+  host: "kek-postgres"
 
   # Database port
   port: 5432
@@ -30,10 +30,10 @@ db:
   sslmode: "disable"
 
   # Database name
-  dbname: "barnbridge"
+  dbname: "kek"
 
   # Database user (also allowed via PG_USER env var)
-  user: "barnbridge"
+  user: "kek"
 
 # ethereum-related fields
 eth:
@@ -80,7 +80,7 @@ logging: "*=info"
 # redis-related fields
 redis:
   # URL of redis server (default:"localhost:6379")
-  server: "barnbridge-redis:6379"
+  server: "kek-redis:6379"
 
   # The name of the redis list the scraper will use for task management (default: "todo")
   list: "todo"
@@ -88,9 +88,9 @@ redis:
 abi-path: "./abis"
 
 storable:
-  bond:
+  kek:
     address: "0x0391D2021f89DC339F60Fff84546EA23E337750f"
-  barn:
+  supernova:
     address: "0x10e138877df69Ca44Fdc68655f86c88CDe142D7F"
     notifications: false
   governance:
@@ -98,11 +98,4 @@ storable:
     notifications: false
   yieldFarming:
     address : "0xb0fa2beee3cf36a7ac7e99b885b48538ab364853"
-  smartYield:
-    notifications: false
-  smartYieldState:
-    compound-comptroller: "0x3d9819210a31b4961b30ef54be2aed79b9c9cd3b"
-    blocks-per-minute: 4
-  smartYieldRewards:
-    pool-factory-address: "0x2e93403C675Ccb9C564edf2dC6001233d0650582"
 

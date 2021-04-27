@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/types"
 
 	"github.com/alethio/web3-go/ethrpc/provider/httprpc"
 	"github.com/pkg/errors"

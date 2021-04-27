@@ -1,0 +1,29 @@
+package supernova
+
+import (
+	"strconv"
+
+	web3types "github.com/alethio/web3-go/types"
+	"github.com/pkg/errors"
+
+	"github.com/kekDAO/kekBackend/utils"
+)
+
+func (b *SupernovaStorable) getBaseLog(log web3types.Log) (*BaseLog, error) {
+	txIndex, err := strconv.ParseInt(log.TransactionIndex, 0, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not convert transactionIndex from supernova contract to int64")
+	}
+
+	logIndex, err := strconv.ParseInt(log.LogIndex, 0, 64)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not convert logIndex from  supernova contract to int64")
+	}
+
+	return &BaseLog{
+		LoggedBy:         utils.CleanUpHex(log.Address),
+		TransactionHash:  utils.CleanUpHex(log.TransactionHash),
+		TransactionIndex: txIndex,
+		LogIndex:         logIndex,
+	}, nil
+}

@@ -1,6 +1,6 @@
 FROM golang:1.16 AS build
 
-WORKDIR /barnbridge
+WORKDIR /kekDAO
 
 COPY go.mod go.sum ./
 RUN go mod download
@@ -10,8 +10,8 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo .
 
 FROM scratch
-COPY --from=build /barnbridge/abis /abis
-COPY --from=build /barnbridge/dashboard/web /dashboard/web
-COPY --from=build /barnbridge/barnbridge-backend /barnbridge-backend
+COPY --from=build /kekDAO/abis /abis
+COPY --from=build /kekDAO/dashboard/web /dashboard/web
+COPY --from=build /kekDAO/kekBackend /kekBackend
 COPY --from=build /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-CMD ["/barnbridge-backend", "run", "--config=/config/config.yml"]
+CMD ["/kekBackend", "run", "--config=/config/config.yml"]

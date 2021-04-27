@@ -12,8 +12,8 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/barnbridge/barnbridge-backend/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/types"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 var log = logrus.WithField("module", "storable(yield farming)")
@@ -108,13 +108,13 @@ func (y Storable) decodeLog(log web3types.Log, event string) (*StakingAction, er
 	d.Amount = extraData["amount"].(*big.Int)
 	d.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert transactionIndex from bond contract to int64")
+		return nil, errors.Wrap(err, "could not convert transactionIndex from kek contract to int64")
 	}
 
 	d.TransactionHash = log.TransactionHash
 	d.LogIndex, err = strconv.ParseInt(log.LogIndex, 0, 64)
 	if err != nil {
-		return nil, errors.Wrap(err, "could not convert logIndex from  bond contract to int64")
+		return nil, errors.Wrap(err, "could not convert logIndex from  kek contract to int64")
 	}
 
 	return &d, nil

@@ -3,8 +3,8 @@ package cmd
 import (
 	"time"
 
-	_ "github.com/barnbridge/barnbridge-backend/migrations"
 	"github.com/go-redis/redis"
+	_ "github.com/kekDAO/kekBackend/migrations"
 	_ "github.com/lib/pq"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

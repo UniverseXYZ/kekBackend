@@ -3,7 +3,7 @@ package types
 import (
 	"time"
 
-	types2 "github.com/barnbridge/barnbridge-backend/types"
+	types2 "github.com/kekDAO/kekBackend/types"
 )
 
 type Proposal struct {
@@ -30,7 +30,7 @@ type Proposal struct {
 	StateTimeLeft *int64        `json:"stateTimeLeft"`
 	ForVotes      string        `json:"forVotes"`
 	AgainstVotes  string        `json:"againstVotes"`
-	BondStaked    string        `json:"-"`
+	KekStaked     string        `json:"-"`
 
 	History []HistoryEvent `json:"history"`
 }

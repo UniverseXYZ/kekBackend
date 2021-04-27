@@ -33,7 +33,7 @@ tmp/
 
 config.yml
 config-mainnet.yml
-barnbridge-backend
+kekBackend
 .dump/
 .volumes
 /dashboard/web/assets/css/tailwind.min.css

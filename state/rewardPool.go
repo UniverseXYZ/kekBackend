@@ -1,8 +1,8 @@
 package state
 
 import (
-	"github.com/barnbridge/barnbridge-backend/types"
-	"github.com/barnbridge/barnbridge-backend/utils"
+	"github.com/kekDAO/kekBackend/types"
+	"github.com/kekDAO/kekBackend/utils"
 )
 
 func RewardPools() []types.SYRewardPool {

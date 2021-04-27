@@ -1,4 +1,4 @@
-module github.com/barnbridge/barnbridge-backend
+module github.com/kekDAO/kekBackend
 
 require (
 	github.com/alethio/ethmock v0.0.0-20190820104914-7b8327fb645e // indirect

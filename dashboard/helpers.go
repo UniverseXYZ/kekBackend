@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/viper"
 
-	"github.com/barnbridge/barnbridge-backend/dashboard/types"
+	"github.com/kekDAO/kekBackend/dashboard/types"
 )
 
 func (d *Dashboard) getDBEntries() (types.DBEntries, error) {

@@ -6,13 +6,13 @@ import (
 	"sort"
 	"time"
 
-	"github.com/barnbridge/barnbridge-backend/slack"
+	"github.com/kekDAO/kekBackend/slack"
 
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
-	"github.com/barnbridge/barnbridge-backend/taskmanager"
+	"github.com/kekDAO/kekBackend/eth/bestblock"
+	"github.com/kekDAO/kekBackend/taskmanager"
 )
 
 type Checker struct {

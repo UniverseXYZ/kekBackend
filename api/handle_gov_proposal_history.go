@@ -7,7 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/shopspring/decimal"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
+	"github.com/kekDAO/kekBackend/api/types"
 )
 
 func (a *API) history(p types.Proposal) ([]types.HistoryEvent, error) {
@@ -175,12 +175,12 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 	}
 
 	if hasCP {
-		forVotes, bondStaked, err := a.abrogationProposalData(p)
+		forVotes, kekStaked, err := a.abrogationProposalData(p)
 		if err != nil {
 			return nil, err
 		}
 
-		passed, err := abrogationProposalPassed(forVotes, bondStaked)
+		passed, err := abrogationProposalPassed(forVotes, kekStaked)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not check if abrogation proposal passed")
 		}
@@ -225,18 +225,18 @@ func (a *API) buildHistory(p types.Proposal) ([]types.HistoryEvent, error) {
 }
 
 func (a *API) abrogationProposalData(p types.Proposal) (string, string, error) {
-	var forVotes, bondStaked string
+	var forVotes, kekStaked string
 	err := a.db.QueryRow(`
 		select 
 		       coalesce(( select sum(power) from abrogation_proposal_votes($1) where support = true ), 0) as for_votes, 
-		       bond_staked_at_ts(to_timestamp((select create_time from governance_abrogation_proposals where proposal_id = $1))) as bond_staked
-	`, p.Id).Scan(&forVotes, &bondStaked)
+		       kek_staked_at_ts(to_timestamp((select create_time from governance_abrogation_proposals where proposal_id = $1))) as kek_staked
+	`, p.Id).Scan(&forVotes, &kekStaked)
 
 	if err != nil {
 		return "", "", errors.Wrap(err, "could not scan number of votes on abrogation proposal")
 	}
 
-	return forVotes, bondStaked, nil
+	return forVotes, kekStaked, nil
 }
 
 func (a *API) abrogationProposalExists(p types.Proposal) (bool, error) {
@@ -249,15 +249,15 @@ func (a *API) abrogationProposalExists(p types.Proposal) (bool, error) {
 	return count > 0, nil
 }
 
-func abrogationProposalPassed(forVotes string, bondStaked string) (bool, error) {
+func abrogationProposalPassed(forVotes string, kekStaked string) (bool, error) {
 	pro, err := decimal.NewFromString(forVotes)
 	if err != nil {
 		return false, errors.Wrap(err, "could not convert forVotes to decimal")
 	}
 
-	b, err := decimal.NewFromString(bondStaked)
+	b, err := decimal.NewFromString(kekStaked)
 	if err != nil {
-		return false, errors.Wrap(err, "could not convert bondStaked to decimal")
+		return false, errors.Wrap(err, "could not convert kekStaked to decimal")
 	}
 
 	return pro.GreaterThan(b.DivRound(decimal.NewFromInt(2), 18)), nil
@@ -274,15 +274,15 @@ func isFailedProposal(p types.Proposal) (bool, error) {
 		return false, errors.Wrap(err, "could not convert againstVotes to decimal")
 	}
 
-	bondStaked, err := decimal.NewFromString(p.BondStaked)
+	kekStaked, err := decimal.NewFromString(p.KekStaked)
 	if err != nil {
-		return false, errors.Wrap(err, "could not convert bondStaked to decimal")
+		return false, errors.Wrap(err, "could not convert kekStaked to decimal")
 	}
 
 	minQuorum := decimal.NewFromInt(p.MinQuorum)
 	acceptance := decimal.NewFromInt(p.AcceptanceThreshold)
 
-	if pro.Add(against).LessThan(bondStaked.Mul(minQuorum).DivRound(decimal.NewFromInt(100), 18)) {
+	if pro.Add(against).LessThan(kekStaked.Mul(minQuorum).DivRound(decimal.NewFromInt(100), 18)) {
 		return true, nil
 	}
 

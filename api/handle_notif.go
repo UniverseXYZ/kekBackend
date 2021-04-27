@@ -7,7 +7,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
+	"github.com/kekDAO/kekBackend/api/types"
 )
 
 func (a *API) handleNotifications(c *gin.Context) {

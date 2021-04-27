@@ -7,7 +7,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/barnbridge/barnbridge-backend/notifications"
+	"github.com/kekDAO/kekBackend/notifications"
 	"github.com/spf13/viper"
 
 	"github.com/spf13/cobra"

@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 
-	"github.com/barnbridge/barnbridge-backend/state"
+	"github.com/kekDAO/kekBackend/state"
 )
 
 var log = logrus.WithField("module", "api")

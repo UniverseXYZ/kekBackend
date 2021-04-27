@@ -11,7 +11,7 @@ services:
       - .volumes/nginx/config:/etc/nginx/conf.d
       - .volumes/nginx/auth:/etc/apache2
   redis:
-    container_name: barnbridge-backend-redis
+    container_name: kekBackend-redis
     image: redis:6-alpine
     restart: always
     command: [ "redis-server", "--appendonly", "yes" ]
@@ -20,20 +20,20 @@ services:
     volumes:
       - .volumes/redis:/data
   postgres:
-    container_name: barnbridge-backend-postgres
+    container_name: kekBackend-postgres
     image: postgres:13-alpine
     restart: always
     environment:
-      - POSTGRES_USER=barnbridge-backend
-      - POSTGRES_DB=barnbridge
+      - POSTGRES_USER=kekBackend
+      - POSTGRES_DB=kek
       - POSTGRES_PASSWORD=password
     ports:
       - 0.0.0.0:5432:5432
     volumes:
       - .volumes/postgresql:/var/lib/postgresql/data
-  barnbridge-backend:
-    container_name: barnbridge-backend
-    image: barnbridge/barnbridge-backend:latest
+  kekBackend:
+    container_name: kekBackend
+    image: kekDAO/kekBackend:latest
     restart: always
     depends_on:
       - redis
@@ -44,10 +44,10 @@ services:
     environment:
       - PG_PASSWORD=password
     volumes:
-      - .volumes/barnbridge-backend:/config
-  barnbridge-backend-test:
-    container_name: barnbridge-backend-test
-    image: barnbridge/barnbridge-backend:latest
+      - .volumes/kekBackend:/config
+  kekBackend-test:
+    container_name: kekBackend-test
+    image: kekDAO/kekBackend:latest
     restart: always
     depends_on:
       - redis
@@ -58,4 +58,4 @@ services:
     environment:
       - PG_PASSWORD=password
     volumes:
-      - .volumes/barnbridge-backend-test:/config
+      - .volumes/kekBackend-test:/config

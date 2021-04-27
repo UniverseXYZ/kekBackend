@@ -36,11 +36,11 @@ func buildQueryWithFilter(query string, filters *Filters, limit *int64, offset *
 			case []string:
 				params = append(params, pq.Array(filter.Value))
 
-				where += fmt.Sprintf("%s = ANY($%d)", filter.Key, len(params))
+				where += fmt.Sprintf("%s= ANY($%d)", filter.Key, len(params))
 			default:
 				params = append(params, filter.Value)
 
-				where += fmt.Sprintf("%s = $%d", filter.Key, len(params))
+				where += fmt.Sprintf("%s= $%d", filter.Key, len(params))
 			}
 		}
 	}

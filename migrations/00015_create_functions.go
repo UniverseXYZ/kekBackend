@@ -20,7 +20,7 @@ func UpCreateFunctions(tx *sql.Tx) error {
 	begin
 		select balance_after 
 		into result
-		from barn_staking_actions
+		from supernova_staking_actions
 		where user_address = addr
 		order by included_in_block desc, log_index desc
 		limit 1;
@@ -37,7 +37,7 @@ func UpCreateFunctions(tx *sql.Tx) error {
 	begin
 		select action_type
 		into action
-		from barn_delegate_actions
+		from supernova_delegate_actions
 		where sender = addr
 		order by included_in_block desc, log_index desc
 		limit 1;
@@ -59,7 +59,7 @@ func UpCreateFunctions(tx *sql.Tx) error {
 	begin
 		multiplier = 1 * 10 ^ 18;
 	
-		select locked_until into locked_until_ts from barn_locks where user_address = addr order by included_in_block desc, log_index desc limit 1;
+		select locked_until into locked_until_ts from supernova_locks where user_address = addr order by included_in_block desc, log_index desc limit 1;
 	
 		if not found then return multiplier; end if;
 	
@@ -83,7 +83,7 @@ func UpCreateFunctions(tx *sql.Tx) error {
 	begin
 		select receiver_new_delegated_power
 		into result
-		from barn_delegate_changes
+		from supernova_delegate_changes
 		where receiver = addr
 		order by included_in_block desc, log_index desc;
 	

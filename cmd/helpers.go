@@ -4,21 +4,17 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/barnbridge/barnbridge-backend/slack"
+	"github.com/kekDAO/kekBackend/slack"
 
-	"github.com/barnbridge/barnbridge-backend/core"
-	"github.com/barnbridge/barnbridge-backend/eth/bestblock"
-	"github.com/barnbridge/barnbridge-backend/processor"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldRewards"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
-	"github.com/barnbridge/barnbridge-backend/scraper"
-	"github.com/barnbridge/barnbridge-backend/taskmanager"
+	"github.com/kekDAO/kekBackend/core"
+	"github.com/kekDAO/kekBackend/eth/bestblock"
+	"github.com/kekDAO/kekBackend/processor"
+	"github.com/kekDAO/kekBackend/processor/storable/governance"
+	"github.com/kekDAO/kekBackend/processor/storable/kek"
+	"github.com/kekDAO/kekBackend/processor/storable/supernova"
+	"github.com/kekDAO/kekBackend/processor/storable/yieldFarming"
+	"github.com/kekDAO/kekBackend/scraper"
+	"github.com/kekDAO/kekBackend/taskmanager"
 
 	"github.com/gin-gonic/gin"
 	formatter "github.com/kwix/logrus-module-formatter"
@@ -156,29 +152,22 @@ func bindViperToEthFlags(cmd *cobra.Command) {
 }
 
 func addStorableFlags(cmd *cobra.Command) {
-	cmd.Flags().String("storable.bond.address", "", "Address of the bond token")
-	cmd.Flags().String("storable.barn.address", "", "Address of the barn contract")
-	cmd.Flags().String("storable.barn.notifications", "", "Emit notifications for Barn interactions")
+	cmd.Flags().String("storable.kek.address", "", "Address of the kek token")
+	cmd.Flags().String("storable.supernova.address", "", "Address of the supernova contract")
+	cmd.Flags().String("storable.supernova.notifications", "", "Emit notifications for Supernova interactions")
 	cmd.Flags().String("storable.governance.address", "", "Address of the governance contract")
 	cmd.Flags().Bool("storable.governance.notifications", false, "Emit notifications for governance")
 	cmd.Flags().String("storable.yieldFarming.address", "", "Address of the yield farming staking contract")
 	cmd.Flags().Bool("storable.smartYield.notifications", false, "Emit notifications for smart yield")
-	cmd.Flags().String("storable.smartYieldState.compound-comptroller", "", "Address of compound comptroller")
-	cmd.Flags().Int64("storable.smartYieldState.blocks-per-minute", 4, "How many blocks per minute on the blockchain we're scraping")
-	cmd.Flags().String("storable.smartYieldRewards.pool-factory-address", "", "Address of rewards pool factory")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
-	viper.BindPFlag("storable.bond.address", cmd.Flag("storable.bond.address"))
-	viper.BindPFlag("storable.barn.address", cmd.Flag("storable.barn.address"))
-	viper.BindPFlag("storable.barn.notifications", cmd.Flag("storable.barn.notifications"))
+	viper.BindPFlag("storable.kek.address", cmd.Flag("storable.kek.address"))
+	viper.BindPFlag("storable.supernova.address", cmd.Flag("storable.supernova.address"))
+	viper.BindPFlag("storable.supernova.notifications", cmd.Flag("storable.supernova.notifications"))
 	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
 	viper.BindPFlag("storable.governance.notifications", cmd.Flag("storable.governance.notifications"))
 	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
-	viper.BindPFlag("storable.smartYieldState.compound-comptroller", cmd.Flag("storable.smartYieldState.compound-comptroller"))
-	viper.BindPFlag("storable.smartYield.notifications", cmd.Flag("storable.smartYield.notifications"))
-	viper.BindPFlag("storable.smartYieldState.blocks-per-minute", cmd.Flag("storable.smartYieldState.blocks-per-minute"))
-	viper.BindPFlag("storable.smartYieldRewards.pool-factory-address", cmd.Flag("storable.smartYieldRewards.pool-factory-address"))
 }
 
 func requireNotEmptyFlags(requiredFlags []string) {
@@ -222,12 +211,12 @@ func initCore() *core.Core {
 		},
 		AbiPath: viper.GetString("abi-path"),
 		Processor: processor.Config{
-			Bond: bond.Config{
-				BondAddress: viper.GetString("storable.bond.address"),
+			Kek: kek.Config{
+				KekAddress: viper.GetString("storable.kek.address"),
 			},
-			Barn: barn.Config{
-				BarnAddress:   viper.GetString("storable.barn.address"),
-				Notifications: viper.GetBool("storable.barn.notifications"),
+			Supernova: supernova.Config{
+				SupernovaAddress: viper.GetString("storable.supernova.address"),
+				Notifications:    viper.GetBool("storable.supernova.notifications"),
 			},
 			Governance: governance.Config{
 				GovernanceAddress: viper.GetString("storable.governance.address"),
@@ -235,19 +224,6 @@ func initCore() *core.Core {
 			},
 			YieldFarming: yieldFarming.Config{
 				Address: viper.GetString("storable.yieldFarming.address"),
-			},
-			SmartYield: smartYield.Config{
-				Notifications: viper.GetBool("storable.smartYield.notifications"),
-			},
-			SmartYieldState: smartYieldState.Config{
-				ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
-				BlocksPerMinute:    viper.GetInt64("storable.smartYieldState.blocks-per-minute"),
-			},
-			SmartYieldPrice: smartYieldPrices.Config{
-				ComptrollerAddress: viper.GetString("storable.smartYieldState.compound-comptroller"),
-			},
-			SmartYieldRewards: smartYieldRewards.Config{
-				PoolFactoryAddress: viper.GetString("storable.smartYieldRewards.pool-factory-address"),
 			},
 		},
 	})

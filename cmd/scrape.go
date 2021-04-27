@@ -16,12 +16,10 @@ var scrapeCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		buildDBConnectionString()
 		requireNotEmptyFlags([]string{
-			"storable.bond.address",
-			"storable.barn.address",
+			"storable.kek.address",
+			"storable.supernova.address",
 			"storable.governance.address",
 			"storable.yieldFarming.address",
-			"storable.smartYieldState.compound-comptroller",
-			"storable.smartYieldRewards.pool-factory-address",
 		})
 
 		stopChan := make(chan os.Signal, 1)

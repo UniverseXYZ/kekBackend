@@ -7,7 +7,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 
-	"github.com/barnbridge/barnbridge-backend/api/types"
+	"github.com/kekDAO/kekBackend/api/types"
 )
 
 func (a *API) AbrogationVotesHandler(c *gin.Context) {

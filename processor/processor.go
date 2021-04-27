@@ -10,20 +10,16 @@ import (
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldPrices"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldState"
-	"github.com/barnbridge/barnbridge-backend/state"
+	"github.com/kekDAO/kekBackend/state"
 
-	"github.com/barnbridge/barnbridge-backend/metrics"
-	"github.com/barnbridge/barnbridge-backend/processor/storable"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/accountERC20Transfers"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/barn"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/bond"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/governance"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYield"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/smartYieldRewards"
-	"github.com/barnbridge/barnbridge-backend/processor/storable/yieldFarming"
-	"github.com/barnbridge/barnbridge-backend/types"
+	"github.com/kekDAO/kekBackend/metrics"
+	"github.com/kekDAO/kekBackend/processor/storable"
+	"github.com/kekDAO/kekBackend/processor/storable/accountERC20Transfers"
+	"github.com/kekDAO/kekBackend/processor/storable/governance"
+	"github.com/kekDAO/kekBackend/processor/storable/kek"
+	"github.com/kekDAO/kekBackend/processor/storable/supernova"
+	"github.com/kekDAO/kekBackend/processor/storable/yieldFarming"
+	"github.com/kekDAO/kekBackend/types"
 )
 
 var log = logrus.WithField("module", "data")
@@ -76,18 +72,18 @@ func (p *Processor) registerStorables() error {
 	p.storables = append(p.storables, storable.NewStorableBlock(p.Raw.Block))
 
 	{
-		if _, exist := p.abis["bond"]; !exist {
-			return errors.New("could not find abi for bond contract")
+		if _, exist := p.abis["kek"]; !exist {
+			return errors.New("could not find abi for kek contract")
 		}
 
-		p.storables = append(p.storables, bond.NewBondStorable(p.config.Bond, p.Raw, p.abis["bond"]))
+		p.storables = append(p.storables, kek.NewKekStorable(p.config.Kek, p.Raw, p.abis["kek"]))
 	}
 
 	{
-		if _, exist := p.abis["barn"]; !exist {
-			return errors.New("could not find abi for barn contract")
+		if _, exist := p.abis["supernova"]; !exist {
+			return errors.New("could not find abi for supernova contract")
 		}
-		p.storables = append(p.storables, barn.NewBarnStorable(p.config.Barn, p.Raw, p.abis["barn"]))
+		p.storables = append(p.storables, supernova.NewSupernovaStorable(p.config.Supernova, p.Raw, p.abis["supernova"]))
 	}
 
 	{
@@ -102,49 +98,6 @@ func (p *Processor) registerStorables() error {
 			errors.New("could not find abi for yield farming contract")
 		}
 		p.storables = append(p.storables, yieldFarming.NewStorable(p.config.YieldFarming, p.Raw, p.abis["yieldfarming"]))
-	}
-
-	{
-		if _, exist := p.abis["smartyield"]; !exist {
-			return errors.New("could not find smartYield abi")
-		}
-
-		if _, exist := p.abis["juniorbond"]; !exist {
-			return errors.New("could not find juniorbond  abi")
-		}
-
-		if _, exist := p.abis["seniorbond"]; !exist {
-			return errors.New("could not find seniorbond abi")
-		}
-
-		if _, exist := p.abis["compoundprovider"]; !exist {
-			return errors.New("could not find compound provider abi")
-		}
-
-		p.storables = append(p.storables, smartYield.NewStorable(p.config.SmartYield, p.Raw, p.abis))
-
-		syState, err := smartYieldState.New(p.config.SmartYieldState, p.Raw, p.abis, p.ethBatch)
-		if err != nil {
-			return errors.Wrap(err, "could not initialize SmartYieldState storable")
-		}
-		p.storables = append(p.storables, syState)
-
-		syPrices, err := smartYieldPrices.New(p.config.SmartYieldPrice, p.Raw, p.abis, p.ethBatch)
-		if err != nil {
-			return errors.Wrap(err, "could not initialize SmartYieldPrice storable")
-		}
-		p.storables = append(p.storables, syPrices)
-	}
-
-	{
-		if _, exist := p.abis["syreward"]; !exist {
-			return errors.New("could not find smart yield rewards abi")
-		}
-
-		if _, exist := p.abis["poolfactory"]; !exist {
-			return errors.New("could not find pool factory abi")
-		}
-		p.storables = append(p.storables, smartYieldRewards.NewStorable(p.config.SmartYieldRewards, p.Raw, p.abis["syreward"], p.abis["poolfactory"], p.ethConn))
 	}
 
 	{
