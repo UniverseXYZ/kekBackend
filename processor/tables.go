@@ -14,7 +14,6 @@ var dbTables = []string{
 	"governance_proposals",
 	"governance_votes",
 	"governance_votes_canceled",
-	"jtoken_transfers",
 	"yield_farming_actions",
 	"notifications",
 	"notification_jobs",
