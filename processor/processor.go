@@ -15,9 +15,11 @@ import (
 	"github.com/kekDAO/kekBackend/metrics"
 	"github.com/kekDAO/kekBackend/processor/storable"
 	"github.com/kekDAO/kekBackend/processor/storable/accountERC20Transfers"
+	"github.com/kekDAO/kekBackend/processor/storable/auction"
 	"github.com/kekDAO/kekBackend/processor/storable/governance"
 	"github.com/kekDAO/kekBackend/processor/storable/kek"
 	"github.com/kekDAO/kekBackend/processor/storable/supernova"
+	"github.com/kekDAO/kekBackend/processor/storable/universe"
 	"github.com/kekDAO/kekBackend/processor/storable/yieldFarming"
 	"github.com/kekDAO/kekBackend/types"
 )
@@ -98,6 +100,20 @@ func (p *Processor) registerStorables() error {
 			errors.New("could not find abi for yield farming contract")
 		}
 		p.storables = append(p.storables, yieldFarming.NewStorable(p.config.YieldFarming, p.Raw, p.abis["yieldfarming"]))
+	}
+
+	{
+		if _, exist := p.abis["auction"]; !exist {
+			errors.New("could not find abi for auction contract")
+		}
+		p.storables = append(p.storables, auction.NewStorable(p.config.Auction, p.Raw, p.abis["auction"]))
+	}
+
+	{
+		if _, exist := p.abis["universe"]; !exist {
+			errors.New("could not find abi for universe contract")
+		}
+		p.storables = append(p.storables, universe.NewStorable(p.config.Universe, p.Raw, p.abis["universe"]))
 	}
 
 	{
