@@ -3,11 +3,13 @@ package auction
 import (
 	"database/sql"
 	"encoding/hex"
+	"encoding/json"
 	"math/big"
 	"strconv"
 
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/lib/pq"
 	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 
@@ -25,12 +27,10 @@ type Storable struct {
 }
 
 type AuctionEvent struct {
-	UserAddress      string
-	TokenAddress     string
-	Amount           *big.Int
 	TransactionHash  string
 	TransactionIndex int64
 	LogIndex         int64
+	data             []byte
 }
 
 type LogAuctionCreated struct {
@@ -172,6 +172,8 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
+	var decodedData interface{}
+
 	switch event {
 	case AuctionCreated:
 		var decoded LogAuctionCreated
@@ -179,6 +181,7 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
+		decodedData = decoded
 	case ERC721Deposit:
 		var decoded LogERC721Deposit
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
@@ -243,6 +246,13 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		logger.Debug("Unknown auction event")
 	}
 
+	json, err := json.Marshal(decodedData)
+	if err != nil {
+		return nil, errors.Wrap(err, "could not pack data to json")
+	}
+
+	d.data = json
+
 	d.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not convert transactionIndex from kek contract to int64")
@@ -258,7 +268,7 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 }
 
 func (a Storable) storeActions(tx *sql.Tx, actions []AuctionEvent) error {
-	/*stmt, err := tx.Prepare(pq.CopyIn("auctions", "tx_hash", "tx_index", "log_index", "user_address", "token_address", "amount", "action_type", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("auctions", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
@@ -274,7 +284,7 @@ func (a Storable) storeActions(tx *sql.Tx, actions []AuctionEvent) error {
 	}
 
 	for _, a := range actions {
-		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.UserAddress, a.TokenAddress, a.Amount.String(), a.ActionType, blockTimestamp, blockNumber)
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
 		if err != nil {
 			return err
 		}
@@ -288,7 +298,7 @@ func (a Storable) storeActions(tx *sql.Tx, actions []AuctionEvent) error {
 	err = stmt.Close()
 	if err != nil {
 		return err
-	}*/
+	}
 
 	return nil
 }
