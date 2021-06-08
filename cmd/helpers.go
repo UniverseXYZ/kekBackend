@@ -9,9 +9,11 @@ import (
 	"github.com/kekDAO/kekBackend/core"
 	"github.com/kekDAO/kekBackend/eth/bestblock"
 	"github.com/kekDAO/kekBackend/processor"
+	"github.com/kekDAO/kekBackend/processor/storable/auction"
 	"github.com/kekDAO/kekBackend/processor/storable/governance"
 	"github.com/kekDAO/kekBackend/processor/storable/kek"
 	"github.com/kekDAO/kekBackend/processor/storable/supernova"
+	"github.com/kekDAO/kekBackend/processor/storable/universe"
 	"github.com/kekDAO/kekBackend/processor/storable/yieldFarming"
 	"github.com/kekDAO/kekBackend/scraper"
 	"github.com/kekDAO/kekBackend/taskmanager"
@@ -159,6 +161,8 @@ func addStorableFlags(cmd *cobra.Command) {
 	cmd.Flags().Bool("storable.governance.notifications", false, "Emit notifications for governance")
 	cmd.Flags().String("storable.yieldFarming.address", "", "Address of the yield farming staking contract")
 	cmd.Flags().Bool("storable.smartYield.notifications", false, "Emit notifications for smart yield")
+	cmd.Flags().String("storable.auction.address", "", "Address of the auction contract")
+	cmd.Flags().String("storable.universe.address", "", "Address of the universe factory contract")
 }
 
 func bindViperToStorableFlags(cmd *cobra.Command) {
@@ -168,6 +172,8 @@ func bindViperToStorableFlags(cmd *cobra.Command) {
 	viper.BindPFlag("storable.governance.address", cmd.Flag("storable.governance.address"))
 	viper.BindPFlag("storable.governance.notifications", cmd.Flag("storable.governance.notifications"))
 	viper.BindPFlag("storable.yieldFarming.address", cmd.Flag("storable.yieldFarming.address"))
+	viper.BindPFlag("storable.auction.address", cmd.Flag("storable.auction.address"))
+	viper.BindPFlag("storable.universe.address", cmd.Flag("storable.universe.address"))
 }
 
 func requireNotEmptyFlags(requiredFlags []string) {
@@ -224,6 +230,12 @@ func initCore() *core.Core {
 			},
 			YieldFarming: yieldFarming.Config{
 				Address: viper.GetString("storable.yieldFarming.address"),
+			},
+			Auction: auction.Config{
+				Address: viper.GetString("storable.auction.address"),
+			},
+			Universe: universe.Config{
+				Address: viper.GetString("storable.universe.address"),
 			},
 		},
 	})

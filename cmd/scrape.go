@@ -20,6 +20,8 @@ var scrapeCmd = &cobra.Command{
 			"storable.supernova.address",
 			"storable.governance.address",
 			"storable.yieldFarming.address",
+			"storable.auction.address",
+			"storable.universe.address",
 		})
 
 		stopChan := make(chan os.Signal, 1)
