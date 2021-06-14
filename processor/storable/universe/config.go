@@ -1,5 +1,6 @@
 package universe
 
 type Config struct {
-	Address string
+	Address          string
+	PublicCollection string
 }
