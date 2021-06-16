@@ -235,7 +235,8 @@ func initCore() *core.Core {
 				Address: viper.GetString("storable.auction.address"),
 			},
 			Universe: universe.Config{
-				Address: viper.GetString("storable.universe.address"),
+				Address:          viper.GetString("storable.universe.address"),
+				PublicCollection: viper.GetString("storable.universe.public_collection"),
 			},
 		},
 	})

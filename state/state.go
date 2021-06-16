@@ -13,6 +13,7 @@ type State struct {
 
 	rewardPools       []types.SYRewardPool
 	monitoredAccounts []string
+	monitoredNTFs     []string
 }
 
 var instance *State
@@ -31,6 +32,11 @@ func Refresh() error {
 	err := loadAllAccounts()
 	if err != nil {
 		return errors.Wrap(err, "could not load monitored accounts ")
+	}
+
+	err = loadAllNFTs()
+	if err != nil {
+		return errors.Wrap(err, "could not load monitored nfts ")
 	}
 
 	return nil
@@ -54,6 +60,28 @@ func loadAllAccounts() error {
 	}
 
 	instance.monitoredAccounts = accounts
+
+	return nil
+}
+
+func loadAllNFTs() error {
+	rows, err := instance.db.Query(`select address from monitored_nfts`)
+	if err != nil {
+		return errors.Wrap(err, "could not query database for monitored nfts")
+	}
+
+	var nfts []string
+	for rows.Next() {
+		var a string
+		err := rows.Scan(&a)
+		if err != nil {
+			return errors.Wrap(err, "could no scan monitored nfts from database")
+		}
+
+		nfts = append(nfts, a)
+	}
+
+	instance.monitoredNTFs = nfts
 
 	return nil
 }
