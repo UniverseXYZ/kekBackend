@@ -113,7 +113,7 @@ func (p *Processor) registerStorables() error {
 		if _, exist := p.abis["universe"]; !exist {
 			errors.New("could not find abi for universe contract")
 		}
-		p.storables = append(p.storables, universe.NewStorable(p.config.Universe, p.Raw, p.abis["universe"]))
+		p.storables = append(p.storables, universe.NewStorable(p.config.Universe, p.Raw, p.abis["universe"], p.abis["universeerc721"]))
 	}
 
 	{

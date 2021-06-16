@@ -21,9 +21,10 @@ import (
 var logger = logrus.WithField("module", "storable(universe)")
 
 type Storable struct {
-	config      Config
-	raw         *types.RawData
-	universeAbi abi.ABI
+	config            Config
+	raw               *types.RawData
+	universeAbi       abi.ABI
+	universeERC721Abi abi.ABI
 }
 
 type MintedEvent struct {
@@ -56,11 +57,12 @@ type UniverseERC721TokenMinted struct {
 	Time     *big.Int "json:\"time\""
 }
 
-func NewStorable(config Config, raw *types.RawData, universeAbi abi.ABI) *Storable {
+func NewStorable(config Config, raw *types.RawData, universeAbi abi.ABI, universeERC721Abi abi.ABI) *Storable {
 	return &Storable{
-		config:      config,
-		raw:         raw,
-		universeAbi: universeAbi,
+		config:            config,
+		raw:               raw,
+		universeAbi:       universeAbi,
+		universeERC721Abi: universeERC721Abi,
 	}
 }
 
@@ -89,7 +91,7 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 				state.AddMonitoredNFTToDB(d.ContractAddress)
 			}
 
-			if utils.LogIsEvent(log, u.universeAbi, Minted) &&
+			if utils.LogIsEvent(log, u.universeERC721Abi, Minted) &&
 				(state.IsMonitoredAccount(log) || u.IsPublicCollection(log)) {
 				m, err := u.decodeMintedLog(log, Minted)
 				if err != nil {
@@ -164,7 +166,7 @@ func (u Storable) decodeMintedLog(log web3types.Log, event string) (*MintedEvent
 	}
 
 	var decoded UniverseERC721TokenMinted
-	err = u.universeAbi.UnpackIntoInterface(&decoded, event, data)
+	err = u.universeERC721Abi.UnpackIntoInterface(&decoded, event, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
