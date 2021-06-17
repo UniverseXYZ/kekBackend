@@ -34,7 +34,7 @@ func (a *API) getAddressBalance(address string, name string) decimal.Decimal {
 	log.Infof("fetching value locked")
 	val, err := a.xyz.BalanceOf(nil, common.HexToAddress(address))
 	if err != nil {
-		log.Fatal(errors.Wrap(err, "could not fetch value locked in community vault"))
+		log.Error(errors.Wrap(err, "could not fetch value locked in community vault"))
 	}
 
 	valDec := decimal.NewFromBigInt(val, -18)
