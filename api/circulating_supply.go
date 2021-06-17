@@ -1,6 +1,7 @@
 package api
 
 import (
+	"math/big"
 	"time"
 
 	"github.com/ethereum/go-ethereum/common"
@@ -35,6 +36,7 @@ func (a *API) getAddressBalance(address string, name string) decimal.Decimal {
 	val, err := a.xyz.BalanceOf(nil, common.HexToAddress(address))
 	if err != nil {
 		log.Error(errors.Wrap(err, "could not fetch value locked in community vault"))
+		val = big.NewInt(0)
 	}
 
 	valDec := decimal.NewFromBigInt(val, -18)
