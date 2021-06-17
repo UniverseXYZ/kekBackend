@@ -21,6 +21,10 @@ func (a *API) setRoutes() {
 		OK(context, "OK")
 	})
 
+	a.engine.GET("/circulating-supply", func(context *gin.Context) {
+		context.String(http.StatusOK, a.CirculatingSupply.String())
+	})
+
 	governance := a.engine.Group("/api/governance")
 	governance.GET("/proposals", a.AllProposalHandler)
 	governance.GET("/proposals/:proposalID", a.ProposalDetailsHandler)
