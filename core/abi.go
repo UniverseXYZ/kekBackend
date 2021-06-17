@@ -24,7 +24,7 @@ func (c *Core) loadABIs() error {
 
 			a, err := abi.JSON(bytes.NewReader(byteValue))
 			if err != nil {
-				return errors.Wrap(err, "could not decode abi")
+				return errors.Wrap(err, "could not decode abi for: "+file.Name())
 			}
 
 			key := strings.ToLower(strings.TrimSuffix(file.Name(), ".json"))
