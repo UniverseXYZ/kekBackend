@@ -72,9 +72,11 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 
 	for _, data := range u.raw.Receipts {
 		for _, log := range data.Logs {
-			/*if utils.CleanUpHex(log.Address) != utils.CleanUpHex(u.config.Address) {
+			if (utils.CleanUpHex(log.Address) != utils.CleanUpHex(u.config.Address)) &&
+				!state.IsMonitoredAccount(log) &&
+				!u.IsPublicCollection(log) {
 				continue
-			}*/
+			}
 			if len(log.Topics) == 0 {
 				continue
 			}
