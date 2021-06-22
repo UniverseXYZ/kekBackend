@@ -72,9 +72,9 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 
 	for _, data := range u.raw.Receipts {
 		for _, log := range data.Logs {
-			if utils.CleanUpHex(log.Address) != utils.CleanUpHex(u.config.Address) {
+			/*if utils.CleanUpHex(log.Address) != utils.CleanUpHex(u.config.Address) {
 				continue
-			}
+			}*/
 			if len(log.Topics) == 0 {
 				continue
 			}
@@ -91,15 +91,16 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 				state.AddMonitoredNFTToDB(d.ContractAddress)
 			}
 
-			if utils.LogIsEvent(log, u.universeERC721Abi, Minted) &&
-				(state.IsMonitoredAccount(log) || u.IsPublicCollection(log)) {
-				m, err := u.decodeMintedLog(log, Minted)
-				if err != nil {
-					return err
+			if utils.LogIsEvent(log, u.universeERC721Abi, Minted) {
+				if state.IsMonitoredAccount(log) || u.IsPublicCollection(log) {
+					m, err := u.decodeMintedLog(log, Minted)
+					if err != nil {
+						return err
+					}
+
+					mintedEvents = append(mintedEvents, *m)
+
 				}
-
-				mintedEvents = append(mintedEvents, *m)
-
 			}
 		}
 	}
@@ -165,14 +166,15 @@ func (u Storable) decodeMintedLog(log web3types.Log, event string) (*MintedEvent
 		return nil, errors.Wrap(err, "could not decode log data")
 	}
 
-	var decoded UniverseERC721TokenMinted
-	err = u.universeERC721Abi.UnpackIntoInterface(&decoded, event, data)
+	var decoded = make(map[string]interface{})
+
+	err = u.universeERC721Abi.UnpackIntoMap(decoded, event, data)
 	if err != nil {
 		return nil, errors.Wrap(err, "could not unpack log data")
 	}
 
-	m.TokenID = decoded.TokenID.String()
-	m.TokenURI = decoded.TokenURI
+	m.TokenID = decoded["tokenId"].(*big.Int).String()
+	m.TokenURI = decoded["tokenURI"].(string)
 
 	m.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
@@ -189,12 +191,10 @@ func (u Storable) decodeMintedLog(log web3types.Log, event string) (*MintedEvent
 }
 
 func (u Storable) IsPublicCollection(log web3types.Log) bool {
-	if len(log.Topics) >= 3 {
-		if utils.NormalizeAddress(u.config.PublicCollection) == utils.Topic2Address(log.Topics[1]) ||
-			utils.NormalizeAddress(u.config.PublicCollection) == utils.Topic2Address(log.Topics[2]) {
-			return true
-		}
+	if utils.CleanUpHex(u.config.PublicCollection) == utils.CleanUpHex(log.Address) {
+		return true
 	}
+
 	return false
 }
 
