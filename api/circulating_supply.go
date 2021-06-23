@@ -48,6 +48,10 @@ func (a *API) getAddressBalance(address string, name string) decimal.Decimal {
 
 func (a *API) getBalances() decimal.Decimal {
 	var addrs = []string{
+		// DAO treasury
+		"0xa8047C2a86D5A188B0e15C3C10E2bc144cB272C2",
+		// Multisig
+		"0x75237802D46A40C4be57f518A7902528Be688Dfc",
 		// CommunityVault
 		"0xc6f269bcdE85CBA7C9d91aE5fB91f5612ff9bd8e",
 		// vesting contracts
