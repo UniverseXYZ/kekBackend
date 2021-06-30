@@ -33,6 +33,7 @@ type MintedEvent struct {
 	LogIndex         int64
 	TokenID          string
 	TokenURI         string
+	Receiver         string
 }
 
 type DeployedEvent struct {
@@ -42,19 +43,22 @@ type DeployedEvent struct {
 	TokenName        string
 	TokenSymbol      string
 	ContractAddress  string
+	Owner            string
 }
 
 type LogUniverseERC721ContractDeployed struct {
 	TokenName       string         "json:\"tokenName\""
 	TokenSymbol     string         "json:\"tokenSymbol\""
 	ContractAddress common.Address "json:\"contractAddress\""
+	Owner           common.Address "json:\"owner\""
 	Time            *big.Int       "json:\"time\""
 }
 
 type UniverseERC721TokenMinted struct {
-	TokenID  *big.Int "json:\"tokenId\""
-	TokenURI string   "json:\"tokenURI\""
-	Time     *big.Int "json:\"time\""
+	TokenID  *big.Int       "json:\"tokenId\""
+	TokenURI string         "json:\"tokenURI\""
+	Receiver common.Address "json:\"receiver\""
+	Time     *big.Int       "json:\"time\""
 }
 
 func NewStorable(config Config, raw *types.RawData, universeAbi abi.ABI, universeERC721Abi abi.ABI) *Storable {
@@ -145,6 +149,7 @@ func (u Storable) decodeLog(log web3types.Log, event string) (*DeployedEvent, er
 	d.TokenName = decoded.TokenName
 	d.TokenSymbol = decoded.TokenSymbol
 	d.ContractAddress = decoded.ContractAddress.String()
+	d.Owner = decoded.Owner.String()
 
 	d.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
@@ -177,6 +182,7 @@ func (u Storable) decodeMintedLog(log web3types.Log, event string) (*MintedEvent
 
 	m.TokenID = decoded["tokenId"].(*big.Int).String()
 	m.TokenURI = decoded["tokenURI"].(string)
+	m.Receiver = decoded["receiver"].(common.Address).String()
 
 	m.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
@@ -201,7 +207,7 @@ func (u Storable) IsPublicCollection(log web3types.Log) bool {
 }
 
 func (u Storable) storeEvents(tx *sql.Tx, events []DeployedEvent) error {
-	stmt, err := tx.Prepare(pq.CopyIn("universe", "tx_hash", "tx_index", "log_index", "token_name", "token_symbol", "contract_address", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("universe", "tx_hash", "tx_index", "log_index", "token_name", "token_symbol", "contract_address", "owner", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
@@ -217,7 +223,7 @@ func (u Storable) storeEvents(tx *sql.Tx, events []DeployedEvent) error {
 	}
 
 	for _, e := range events {
-		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenName, e.TokenSymbol, e.ContractAddress, blockTimestamp, blockNumber)
+		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenName, e.TokenSymbol, e.ContractAddress, e.Owner, blockTimestamp, blockNumber)
 		if err != nil {
 			return err
 		}
@@ -237,7 +243,7 @@ func (u Storable) storeEvents(tx *sql.Tx, events []DeployedEvent) error {
 }
 
 func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent) error {
-	stmt, err := tx.Prepare(pq.CopyIn("minted_nfts", "tx_hash", "tx_index", "log_index", "token_id", "token_uri", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("minted_nfts", "tx_hash", "tx_index", "log_index", "token_id", "token_uri", "receiver", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
@@ -253,7 +259,7 @@ func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent) error {
 	}
 
 	for _, e := range events {
-		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenID, e.TokenURI, blockTimestamp, blockNumber)
+		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenID, e.TokenURI, e.Receiver, blockTimestamp, blockNumber)
 		if err != nil {
 			return err
 		}
