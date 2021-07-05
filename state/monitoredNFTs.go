@@ -12,11 +12,8 @@ func MonitoredNFTs() []string {
 
 func IsMonitoredNFT(log web3types.Log) bool {
 	for _, a := range instance.monitoredNTFs {
-		if len(log.Topics) >= 3 {
-			if utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[1]) ||
-				utils.NormalizeAddress(a) == utils.Topic2Address(log.Topics[2]) {
-				return true
-			}
+		if utils.CleanUpHex(a) == utils.CleanUpHex(log.Address) {
+			return true
 		}
 	}
 	return false
