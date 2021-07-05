@@ -99,7 +99,6 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, u.universeERC721Abi, Minted) {
-				logger.Debug("1")
 				if state.IsMonitoredNFT(log) || u.IsPublicCollection(log) {
 					m, err := u.decodeMintedLog(log, Minted)
 					if err != nil {
