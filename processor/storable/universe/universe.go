@@ -34,6 +34,7 @@ type MintedEvent struct {
 	TokenID          string
 	TokenURI         string
 	Receiver         string
+	ContractAddress  string
 }
 
 type DeployedEvent struct {
@@ -77,8 +78,8 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 	for _, data := range u.raw.Receipts {
 		for _, log := range data.Logs {
 			if (utils.CleanUpHex(log.Address) != utils.CleanUpHex(u.config.Address)) &&
-				!state.IsMonitoredAccount(log) &&
-				!u.IsPublicCollection(log) {
+				!u.IsPublicCollection(log) &&
+				!state.IsMonitoredNFT(log) {
 				continue
 			}
 			if len(log.Topics) == 0 {
@@ -98,7 +99,7 @@ func (u *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, u.universeERC721Abi, Minted) {
-				if state.IsMonitoredAccount(log) || u.IsPublicCollection(log) {
+				if state.IsMonitoredNFT(log) || u.IsPublicCollection(log) {
 					m, err := u.decodeMintedLog(log, Minted)
 					if err != nil {
 						return err
@@ -183,6 +184,7 @@ func (u Storable) decodeMintedLog(log web3types.Log, event string) (*MintedEvent
 	m.TokenID = decoded["tokenId"].(*big.Int).String()
 	m.TokenURI = decoded["tokenURI"].(string)
 	m.Receiver = decoded["receiver"].(common.Address).String()
+	m.ContractAddress = log.Address
 
 	m.TransactionIndex, err = strconv.ParseInt(log.TransactionIndex, 0, 64)
 	if err != nil {
@@ -243,7 +245,7 @@ func (u Storable) storeEvents(tx *sql.Tx, events []DeployedEvent) error {
 }
 
 func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent) error {
-	stmt, err := tx.Prepare(pq.CopyIn("minted_nfts", "tx_hash", "tx_index", "log_index", "token_id", "token_uri", "receiver", "block_timestamp", "included_in_block"))
+	stmt, err := tx.Prepare(pq.CopyIn("minted_nfts", "tx_hash", "tx_index", "log_index", "token_id", "token_uri", "receiver", "contract_address", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
@@ -259,7 +261,7 @@ func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent) error {
 	}
 
 	for _, e := range events {
-		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenID, e.TokenURI, e.Receiver, blockTimestamp, blockNumber)
+		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenID, e.TokenURI, e.Receiver, e.ContractAddress, blockTimestamp, blockNumber)
 		if err != nil {
 			return err
 		}
