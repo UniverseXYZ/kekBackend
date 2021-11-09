@@ -130,6 +130,7 @@ func NewStorable(config Config, raw *types.RawData, auctionAbi abi.ABI) *Storabl
 
 func (a *Storable) ToDB(tx *sql.Tx) error {
 	var auctionEvents []AuctionEvent
+	var erc721DepositEvents []AuctionEvent
 
 	for _, data := range a.raw.Receipts {
 		for _, log := range data.Logs {
@@ -149,16 +150,34 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 				auctionEvents = append(auctionEvents, *d)
 			}
 
+			if utils.LogIsEvent(log, a.auctionAbi, ERC721Deposit) {
+				d, err := a.decodeLog(log, ERC721Deposit)
+				if err != nil {
+					return err
+				}
+
+				erc721DepositEvents = append(auctionEvents, *d)
+			}
+
 		}
 	}
-	if len(auctionEvents) == 0 {
+
+	if len(auctionEvents) > 0 {
+		err := a.storeActions(tx, auctionEvents)
+		if err != nil {
+			return err
+		}
+	} else {
 		logger.WithField("handler", "auction events").Debug("no event found")
-		return nil
 	}
 
-	err := a.storeActions(tx, auctionEvents)
-	if err != nil {
-		return err
+	if len(erc721DepositEvents) > 0 {
+		err := a.storeErc721DepositEvents(tx, erc721DepositEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
 	}
 
 	return nil
@@ -188,6 +207,7 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
+		decodedData = decoded
 	case ERC721Withdrawal:
 		var decoded LogERC721Withdrawal
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
@@ -269,6 +289,42 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 
 func (a Storable) storeActions(tx *sql.Tx, actions []AuctionEvent) error {
 	stmt, err := tx.Prepare(pq.CopyIn("auctions", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeErc721DepositEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("deposited_erc721", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
