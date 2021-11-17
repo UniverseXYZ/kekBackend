@@ -17,6 +17,7 @@ services:
     command: [ "redis-server", "--appendonly", "yes" ]
     ports:
       - 0.0.0.0:6379:6379
+      - 0.0.0.0:6380:6380
     volumes:
       - .volumes/redis:/data
   postgres:
