@@ -101,14 +101,22 @@ type LogAuctionCanceled struct {
 
 type LogAuctionRevenueWithdrawal struct {
 	Recipient common.Address "json:\"recipient\""
-	SuctionId *big.Int       "json:\"auctionId\""
+	AuctionId *big.Int       "json:\"auctionId\""
 	Smount    *big.Int       "json:\"amount\""
+	Time      *big.Int       "json:\"time\""
+}
+
+type LogSlotRevenueCaptured struct {
+	AuctionId *big.Int       "json:\"auctionId\""
+	SlotIndex *big.Int       "json:\"slotIndex\""
+	Amount    *big.Int       "json:\"amount\""
+	BidToken  common.Address "json:\"bidToken\""
 	Time      *big.Int       "json:\"time\""
 }
 
 type LogERC721RewardsClaim struct {
 	Claimer   common.Address "json:\"claimer\""
-	SuctionId *big.Int       "json:\"auctionId\""
+	AuctionId *big.Int       "json:\"auctionId\""
 	SlotIndex *big.Int       "json:\"slotIndex\""
 	Time      *big.Int       "json:\"time\""
 }
@@ -134,6 +142,12 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 	var auctionCanceledEvents []AuctionEvent
 	var erc721WithdrawEvents []AuctionEvent
 	var submittedBidEvents []AuctionEvent
+	var withdrawnBidEvents []AuctionEvent
+	var auctionExtendedEvents []AuctionEvent
+	var revenueWithdrawEvents []AuctionEvent
+	var slotRevenueEvents []AuctionEvent
+	var erc721ClaimEvents []AuctionEvent
+	var bidMatchedEvents []AuctionEvent
 
 	for _, data := range a.raw.Receipts {
 		for _, log := range data.Logs {
@@ -159,7 +173,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 					return err
 				}
 
-				erc721DepositEvents = append(auctionEvents, *d)
+				erc721DepositEvents = append(erc721DepositEvents, *d)
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, ERC721Withdrawal) {
@@ -167,7 +181,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 				if err != nil {
 					return err
 				}
-				erc721WithdrawEvents = append(auctionEvents, *d)
+				erc721WithdrawEvents = append(erc721WithdrawEvents, *d)
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, AuctionCanceled) {
@@ -176,7 +190,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 					return err
 				}
 
-				auctionCanceledEvents = append(auctionEvents, *d)
+				auctionCanceledEvents = append(auctionCanceledEvents, *d)
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, BidSubmitted) {
@@ -185,9 +199,62 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 					return err
 				}
 
-				submittedBidEvents = append(auctionEvents, *d)
+				submittedBidEvents = append(submittedBidEvents, *d)
 			}
 
+			if utils.LogIsEvent(log, a.auctionAbi, BidWithdrawal) {
+				d, err := a.decodeLog(log, BidWithdrawal)
+				if err != nil {
+					return err
+				}
+
+				withdrawnBidEvents = append(withdrawnBidEvents, *d)
+			}
+
+			if utils.LogIsEvent(log, a.auctionAbi, AuctionExtended) {
+				d, err := a.decodeLog(log, AuctionExtended)
+				if err != nil {
+					return err
+				}
+
+				auctionExtendedEvents = append(auctionExtendedEvents, *d)
+			}
+
+			if utils.LogIsEvent(log, a.auctionAbi, BidMatched) {
+				d, err := a.decodeLog(log, BidMatched)
+				if err != nil {
+					return err
+				}
+
+				bidMatchedEvents = append(bidMatchedEvents, *d)
+			}
+
+			if utils.LogIsEvent(log, a.auctionAbi, AuctionRevenueWithdrawal) {
+				d, err := a.decodeLog(log, AuctionRevenueWithdrawal)
+				if err != nil {
+					return err
+				}
+
+				revenueWithdrawEvents = append(revenueWithdrawEvents, *d)
+			}
+
+			if utils.LogIsEvent(log, a.auctionAbi, SlotRevenueCaptured) {
+				d, err := a.decodeLog(log, SlotRevenueCaptured)
+				if err != nil {
+					return err
+				}
+
+				slotRevenueEvents = append(slotRevenueEvents, *d)
+			}
+
+			if utils.LogIsEvent(log, a.auctionAbi, ERC721RewardsClaim) {
+				d, err := a.decodeLog(log, ERC721RewardsClaim)
+				if err != nil {
+					return err
+				}
+
+				erc721ClaimEvents = append(erc721ClaimEvents, *d)
+			}
 		}
 	}
 
@@ -229,6 +296,61 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 	if len(submittedBidEvents) > 0 {
 		err := a.storeSubmittedBidEvents(tx, submittedBidEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
+	if len(withdrawnBidEvents) > 0 {
+		err := a.storeWithdrawnBidEvents(tx, withdrawnBidEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
+	if len(auctionExtendedEvents) > 0 {
+		err := a.storeAuctionExtendedEvents(tx, auctionExtendedEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
+	if len(bidMatchedEvents) > 0 {
+		err := a.storeBidMatchedEvents(tx, bidMatchedEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
+	if len(revenueWithdrawEvents) > 0 {
+		err := a.storeRevenueWithdrawEvents(tx, revenueWithdrawEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
+	if len(slotRevenueEvents) > 0 {
+		err := a.storeCaptureSlotRevenueEvents(tx, slotRevenueEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
+
+	if len(erc721ClaimEvents) > 0 {
+		err := a.storeErc721ClaimEvents(tx, erc721ClaimEvents)
 		if err != nil {
 			return err
 		}
@@ -284,18 +406,21 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
+		decodedData = decoded
 	case BidMatched:
 		var decoded LogBidMatched
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
+		decodedData = decoded
 	case AuctionExtended:
 		var decoded LogAuctionExtended
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
+		decodedData=decoded
 	case AuctionCanceled:
 		var decoded LogAuctionCanceled
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
@@ -309,18 +434,21 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
+		decodedData = decoded
+	case SlotRevenueCaptured:
+		var decoded LogSlotRevenueCaptured
+		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not unpack log data")
+		}
+		decodedData = decoded
 	case ERC721RewardsClaim:
 		var decoded LogERC721RewardsClaim
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
 		}
-	case RoyaltiesWithdrawal:
-		var decoded LogRoyaltiesWithdrawal
-		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
-		if err != nil {
-			return nil, errors.Wrap(err, "could not unpack log data")
-		}
+		decodedData = decoded
 	default:
 		logger.Debug("Unknown auction event")
 	}
@@ -492,6 +620,222 @@ func (a Storable) storeAuctionCanceledEvents(tx *sql.Tx, actions []AuctionEvent)
 
 func (a Storable) storeSubmittedBidEvents(tx *sql.Tx, actions []AuctionEvent) error {
 	stmt, err := tx.Prepare(pq.CopyIn("bids_submitted", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeWithdrawnBidEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("bids_withdrawn", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeAuctionExtendedEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("auctions_extended", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeBidMatchedEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("matched_bids", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeRevenueWithdrawEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("withdrawn_revenues", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeCaptureSlotRevenueEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("captured_revenues", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (a Storable) storeErc721ClaimEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("claimed_erc721", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
 	if err != nil {
 		return err
 	}
