@@ -40,3 +40,4 @@ kekBackend
 blocks.txt
 dev-reset.sh
 .DS_store
+.history
