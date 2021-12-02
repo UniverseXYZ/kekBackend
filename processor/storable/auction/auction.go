@@ -102,7 +102,7 @@ type LogAuctionCanceled struct {
 type LogAuctionRevenueWithdrawal struct {
 	Recipient common.Address "json:\"recipient\""
 	AuctionId *big.Int       "json:\"auctionId\""
-	Smount    *big.Int       "json:\"amount\""
+	Amount    *big.Int       "json:\"amount\""
 	Time      *big.Int       "json:\"time\""
 }
 
@@ -160,6 +160,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 			if utils.LogIsEvent(log, a.auctionAbi, AuctionCreated) {
 				d, err := a.decodeLog(log, AuctionCreated)
+				logger.WithField("handler", "auction created event").Info("Found event")
 				if err != nil {
 					return err
 				}
@@ -169,6 +170,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 			if utils.LogIsEvent(log, a.auctionAbi, ERC721Deposit) {
 				d, err := a.decodeLog(log, ERC721Deposit)
+				logger.WithField("handler", "auction erc721 deposit").Info("Found event")
 				if err != nil {
 					return err
 				}
@@ -177,6 +179,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, ERC721Withdrawal) {
+				logger.WithField("handler", "auction erc721 withdrawal").Info("Found event")
 				d, err := a.decodeLog(log, ERC721Withdrawal)
 				if err != nil {
 					return err
@@ -185,6 +188,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, AuctionCanceled) {
+				logger.WithField("handler", "auction canceled").Info("Found event")
 				d, err := a.decodeLog(log, AuctionCanceled)
 				if err != nil {
 					return err
@@ -194,6 +198,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, BidSubmitted) {
+				logger.WithField("handler", "bid submitted").Info("Found event")
 				d, err := a.decodeLog(log, BidSubmitted)
 				if err != nil {
 					return err
@@ -203,7 +208,8 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, BidWithdrawal) {
-				d, err := a.decodeLog(log, BidWithdrawal)
+				d, err := a.decodeLog(log, BidWithdrawal)				
+				logger.WithField("handler", "bid withdrawn").Info("Found event")
 				if err != nil {
 					return err
 				}
@@ -213,6 +219,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 			if utils.LogIsEvent(log, a.auctionAbi, AuctionExtended) {
 				d, err := a.decodeLog(log, AuctionExtended)
+				logger.WithField("handler", "auction extended").Info("Found event")
 				if err != nil {
 					return err
 				}
@@ -222,6 +229,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 			if utils.LogIsEvent(log, a.auctionAbi, BidMatched) {
 				d, err := a.decodeLog(log, BidMatched)
+				logger.WithField("handler", "auction finalized").Info("Found event")
 				if err != nil {
 					return err
 				}
@@ -230,6 +238,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, AuctionRevenueWithdrawal) {
+				logger.WithField("handler", "auction revenue withdraw").Info("Found event")
 				d, err := a.decodeLog(log, AuctionRevenueWithdrawal)
 				if err != nil {
 					return err
@@ -239,6 +248,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 			}
 
 			if utils.LogIsEvent(log, a.auctionAbi, SlotRevenueCaptured) {
+				logger.WithField("handler", "auction slot captured").Info("Found event")
 				d, err := a.decodeLog(log, SlotRevenueCaptured)
 				if err != nil {
 					return err
@@ -249,6 +259,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 			if utils.LogIsEvent(log, a.auctionAbi, ERC721RewardsClaim) {
 				d, err := a.decodeLog(log, ERC721RewardsClaim)
+				logger.WithField("handler", "auction erc721 claimed").Info("Found event")
 				if err != nil {
 					return err
 				}
