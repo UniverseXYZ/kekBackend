@@ -40,8 +40,6 @@ type LogAuctionCreated struct {
 	StartTime         *big.Int       "json:\"startTime\""
 	EndTime           *big.Int       "json:\"endTime\""
 	ResetTimer        *big.Int       "json:\"resetTimer\""
-	SupportsWhitelist bool           "json:\"supportsWhitelist\""
-	Time              *big.Int       "json:\"time\""
 }
 
 type LogERC721Deposit struct {
@@ -51,7 +49,6 @@ type LogERC721Deposit struct {
 	AuctionId    *big.Int       "json:\"auctionId\""
 	SlotIndex    *big.Int       "json:\"slotIndex\""
 	NftSlotIndex *big.Int       "json:\"nftSlotIndex\""
-	Time         *big.Int       "json:\"time\""
 }
 
 type LogERC721Withdrawal struct {
@@ -61,7 +58,6 @@ type LogERC721Withdrawal struct {
 	AuctionId    *big.Int       "json:\"auctionId\""
 	SlotIndex    *big.Int       "json:\"slotIndex\""
 	NftSlotIndex *big.Int       "json:\"nftSlotIndex\""
-	Time         *big.Int       "json:\"time\""
 }
 
 type LogBidSubmitted struct {
@@ -69,14 +65,12 @@ type LogBidSubmitted struct {
 	AuctionId  *big.Int       "json:\"auctionId\""
 	CurrentBid *big.Int       "json:\"currentBid\""
 	TotalBid   *big.Int       "json:\"totalBid\""
-	Time       *big.Int       "json:\"time\""
 }
 
 type LogBidWithdrawal struct {
 	Recipient common.Address "json:\"recipient\""
 	AuctionId *big.Int       "json:\"auctionId\""
 	Amount    *big.Int       "json:\"amount\""
-	Time      *big.Int       "json:\"time\""
 }
 
 type LogBidMatched struct {
@@ -85,25 +79,21 @@ type LogBidMatched struct {
 	SlotReservePrice *big.Int       "json:\"slotReservePrice\""
 	WinningBidAmount *big.Int       "json:\"winningBidAmount\""
 	Winner           common.Address "json:\"winner\""
-	Time             *big.Int       "json:\"time\""
 }
 
 type LogAuctionExtended struct {
 	AuctionId *big.Int "json:\"auctionId\""
 	EndTime   *big.Int "json:\"endTime\""
-	Time      *big.Int "json:\"time\""
 }
 
 type LogAuctionCanceled struct {
 	AuctionId *big.Int "json:\"auctionId\""
-	Time      *big.Int "json:\"time\""
 }
 
 type LogAuctionRevenueWithdrawal struct {
 	Recipient common.Address "json:\"recipient\""
 	AuctionId *big.Int       "json:\"auctionId\""
 	Amount    *big.Int       "json:\"amount\""
-	Time      *big.Int       "json:\"time\""
 }
 
 type LogSlotRevenueCaptured struct {
@@ -111,21 +101,22 @@ type LogSlotRevenueCaptured struct {
 	SlotIndex *big.Int       "json:\"slotIndex\""
 	Amount    *big.Int       "json:\"amount\""
 	BidToken  common.Address "json:\"bidToken\""
-	Time      *big.Int       "json:\"time\""
 }
 
 type LogERC721RewardsClaim struct {
 	Claimer   common.Address "json:\"claimer\""
 	AuctionId *big.Int       "json:\"auctionId\""
 	SlotIndex *big.Int       "json:\"slotIndex\""
-	Time      *big.Int       "json:\"time\""
 }
 
 type LogRoyaltiesWithdrawal struct {
 	Amount *big.Int       "json:\"amount\""
 	To     common.Address "json:\"to\""
 	Token  common.Address "json:\"token\""
-	Time   *big.Int       "json:\"time\""
+}
+
+type LogAuctionFinalized struct {
+	AuctionId *big.Int "json:\"auctionId\""
 }
 
 func NewStorable(config Config, raw *types.RawData, auctionAbi abi.ABI) *Storable {
@@ -148,6 +139,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 	var slotRevenueEvents []AuctionEvent
 	var erc721ClaimEvents []AuctionEvent
 	var bidMatchedEvents []AuctionEvent
+	var auctionFinalisedEvents []AuctionEvent
 
 	for _, data := range a.raw.Receipts {
 		for _, log := range data.Logs {
@@ -266,6 +258,16 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 				erc721ClaimEvents = append(erc721ClaimEvents, *d)
 			}
+
+			if utils.LogIsEvent(log, a.auctionAbi, AuctionFinalized) {
+				d, err := a.decodeLog(log, AuctionFinalized)
+				logger.WithField("handler", "auction finalised").Info("Found event")
+				if err != nil {
+					return err
+				}
+
+				auctionFinalisedEvents = append(auctionFinalisedEvents, *d)
+			}
 		}
 	}
 
@@ -369,6 +371,15 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 		logger.WithField("handler", "auction events").Debug("no event found")
 	}
 
+	if len(auctionFinalisedEvents) > 0 {
+		err := a.storeAuctionFinalisedEvents(tx, auctionFinalisedEvents)
+		if err != nil {
+			return err
+		}
+	} else {
+		logger.WithField("handler", "auction events").Debug("no event found")
+	}
+
 	return nil
 }
 
@@ -455,6 +466,13 @@ func (a Storable) decodeLog(log web3types.Log, event string) (*AuctionEvent, err
 		decodedData = decoded
 	case ERC721RewardsClaim:
 		var decoded LogERC721RewardsClaim
+		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
+		if err != nil {
+			return nil, errors.Wrap(err, "could not unpack log data")
+		}
+		decodedData = decoded
+	case AuctionFinalized:
+		var decoded LogAuctionFinalized
 		err = a.auctionAbi.UnpackIntoInterface(&decoded, event, data)
 		if err != nil {
 			return nil, errors.Wrap(err, "could not unpack log data")
@@ -880,3 +898,40 @@ func (a Storable) storeErc721ClaimEvents(tx *sql.Tx, actions []AuctionEvent) err
 
 	return nil
 }
+
+func (a Storable) storeAuctionFinalisedEvents(tx *sql.Tx, actions []AuctionEvent) error {
+	stmt, err := tx.Prepare(pq.CopyIn("finalised_auctions", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+	if err != nil {
+		return err
+	}
+
+	blockNumber, err := strconv.ParseInt(a.raw.Block.Number, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	blockTimestamp, err := strconv.ParseInt(a.raw.Block.Timestamp, 0, 64)
+	if err != nil {
+		return errors.Wrap(err, "could not get block number")
+	}
+
+	for _, a := range actions {
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
