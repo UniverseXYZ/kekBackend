@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"strconv"
 
+	"github.com/alethio/web3-go/ethrpc"
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/lib/pq"
@@ -28,7 +29,7 @@ func NewKekStorable(config Config, raw *types.RawData, kekAbi abi.ABI) *KekStora
 	}
 }
 
-func (b KekStorable) ToDB(tx *sql.Tx) error {
+func (b KekStorable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	var kekTransfers []web3types.Log
 	var transfers []types.Transfer
 	for _, data := range b.Raw.Receipts {

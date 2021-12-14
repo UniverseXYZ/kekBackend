@@ -13,6 +13,7 @@ import (
 
 	"github.com/sirupsen/logrus"
 
+	"github.com/alethio/web3-go/ethrpc"
 	"github.com/alethio/web3-go/types"
 )
 
@@ -46,7 +47,7 @@ func NewStorableBlock(block types.Block) *Block {
 	return &Block{RawBlock: block}
 }
 
-func (sb *Block) ToDB(tx *sql.Tx) error {
+func (sb *Block) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	log.Trace("storing block")
 	start := time.Now()
 	defer func() { log.WithField("duration", time.Since(start)).Debug("done storing block") }()

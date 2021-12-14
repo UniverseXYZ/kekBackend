@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/alethio/web3-go/ethrpc"
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/lib/pq"
@@ -127,7 +128,7 @@ func NewStorable(config Config, raw *types.RawData, auctionAbi abi.ABI) *Storabl
 	}
 }
 
-func (a *Storable) ToDB(tx *sql.Tx) error {
+func (a *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	var auctionEvents []AuctionEvent
 	var erc721DepositEvents []AuctionEvent
 	var auctionCanceledEvents []AuctionEvent
@@ -221,7 +222,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 
 			if utils.LogIsEvent(log, a.auctionAbi, BidMatched) {
 				d, err := a.decodeLog(log, BidMatched)
-				logger.WithField("handler", "auction finalized").Info("Found event")
+				logger.WithField("handler", "bit matched").Info("Found event")
 				if err != nil {
 					return err
 				}
@@ -353,7 +354,7 @@ func (a *Storable) ToDB(tx *sql.Tx) error {
 	}
 
 	if len(slotRevenueEvents) > 0 {
-		err := a.storeCaptureSlotRevenueEvents(tx, slotRevenueEvents)
+		err := a.storeCaptureSlotEvents(tx, slotRevenueEvents, ethBatch)
 		if err != nil {
 			return err
 		}
@@ -827,8 +828,8 @@ func (a Storable) storeRevenueWithdrawEvents(tx *sql.Tx, actions []AuctionEvent)
 	return nil
 }
 
-func (a Storable) storeCaptureSlotRevenueEvents(tx *sql.Tx, actions []AuctionEvent) error {
-	stmt, err := tx.Prepare(pq.CopyIn("captured_revenues", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block"))
+func (a Storable) storeCaptureSlotEvents(tx *sql.Tx, actions []AuctionEvent, ethBatch *ethrpc.ETH) error {
+	stmt, err := tx.Prepare(pq.CopyIn("captured_slots", "tx_hash", "tx_index", "log_index", "data", "block_timestamp", "included_in_block", "sender"))
 	if err != nil {
 		return err
 	}
@@ -844,7 +845,11 @@ func (a Storable) storeCaptureSlotRevenueEvents(tx *sql.Tx, actions []AuctionEve
 	}
 
 	for _, a := range actions {
-		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber)
+		txByHash, err := ethBatch.GetTransactionByHash(a.TransactionHash)
+		if err != nil {
+			return err
+		}
+		_, err = stmt.Exec(a.TransactionHash, a.TransactionIndex, a.LogIndex, a.data, blockTimestamp, blockNumber, txByHash.From)
 		if err != nil {
 			return err
 		}
