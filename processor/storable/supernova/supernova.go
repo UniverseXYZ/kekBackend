@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"strconv"
 
+	"github.com/alethio/web3-go/ethrpc"
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/pkg/errors"
@@ -51,7 +52,7 @@ func (b *SupernovaStorable) preprocess() error {
 	return nil
 }
 
-func (b *SupernovaStorable) ToDB(tx *sql.Tx) error {
+func (b *SupernovaStorable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	err := b.preprocess()
 	if err != nil {
 		return err

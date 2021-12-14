@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/alethio/web3-go/ethrpc"
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/lib/pq"
@@ -71,7 +72,7 @@ func NewStorable(config Config, raw *types.RawData, universeAbi abi.ABI, univers
 	}
 }
 
-func (u *Storable) ToDB(tx *sql.Tx) error {
+func (u *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	var deployedEvents []DeployedEvent
 	var mintedEvents []MintedEvent
 

@@ -65,7 +65,7 @@ func New(config Config, raw *types.RawData, abis map[string]abi.ABI, ethConn *et
 // input: raw Ethereum data + a database transaction
 // output: processed/derived/enhanced data stored directly to the db
 type Storable interface {
-	ToDB(tx *sql.Tx) error
+	ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error
 }
 
 // RegisterStorables instantiates all the storables defined via code with the requested raw data
@@ -166,7 +166,7 @@ func (p *Processor) Store(db *sql.DB, m *metrics.Provider) error {
 	}
 
 	for _, s := range p.storables {
-		err = s.ToDB(tx)
+		err = s.ToDB(tx, p.ethBatch)
 		if err != nil {
 			tx.Rollback()
 			return err

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"strconv"
 
+	"github.com/alethio/web3-go/ethrpc"
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/ethereum/go-ethereum/ethclient"
@@ -37,7 +38,7 @@ func NewStorable(config Config, raw *types.RawData, erc20ABI abi.ABI, ethConn *e
 
 }
 
-func (s *Storable) ToDB(tx *sql.Tx) error {
+func (s *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	var logs []web3types.Log
 	for _, data := range s.raw.Receipts {
 		for _, log := range data.Logs {

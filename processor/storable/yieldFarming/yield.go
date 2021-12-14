@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"strconv"
 
+	"github.com/alethio/web3-go/ethrpc"
 	web3types "github.com/alethio/web3-go/types"
 	"github.com/ethereum/go-ethereum/accounts/abi"
 	"github.com/lib/pq"
@@ -42,7 +43,7 @@ func NewStorable(config Config, raw *types.RawData, yieldAbi abi.ABI) *Storable 
 	}
 }
 
-func (y *Storable) ToDB(tx *sql.Tx) error {
+func (y *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 	var stakingActions []StakingAction
 
 	for _, data := range y.raw.Receipts {
