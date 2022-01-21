@@ -6,7 +6,7 @@ require (
 	github.com/ethereum/go-ethereum v1.10.10
 	github.com/gin-contrib/cors v1.3.0
 	github.com/gin-contrib/static v0.0.0-20190913125243-df30d4057ba1
-	github.com/gin-gonic/gin v1.4.0
+	github.com/gin-gonic/gin v1.7.0
 	github.com/go-redis/redis v6.15.2+incompatible
 	github.com/hako/durafmt v0.0.0-20210316092057-3a2c319c1acd
 	github.com/kwix/logrus-module-formatter v0.0.0-20190702125859-070a70371a97
@@ -18,7 +18,6 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/viper v1.3.2
 	github.com/stretchr/testify v1.7.0
-	github.com/ugorji/go v1.1.7 // indirect
 )
 
 go 1.16
