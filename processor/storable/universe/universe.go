@@ -88,6 +88,7 @@ func (u *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 			}
 
 			if utils.LogIsEvent(log, u.universeAbi, Deployed) {
+				logger.WithField("handler", "deployed collection").Debug("Found event")
 				d, err := u.decodeLog(log, Deployed)
 				if err != nil {
 					return err
@@ -101,6 +102,7 @@ func (u *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 
 			if utils.LogIsEvent(log, u.universeERC721Abi, Minted) {
 				if state.IsMonitoredNFT(log) || u.IsPublicCollection(log) {
+					logger.WithField("handler", "minted erc721").Debug("Found event")
 					m, err := u.decodeMintedLog(log, Minted)
 					if err != nil {
 						return err
@@ -119,16 +121,16 @@ func (u *Storable) ToDB(tx *sql.Tx, ethBatch *ethrpc.ETH) error {
 			return err
 		}
 	} else {
-		logger.WithField("handler", "deployed events").Debug("no events found")
+		logger.WithField("handler", "deployed collection").Debug("no events found")
 	}
 
 	if len(mintedEvents) > 0 {
-		err := u.storeMintedEvents(tx, mintedEvents)
+		err := u.storeMintedEvents(tx, mintedEvents, ethBatch)
 		if err != nil {
 			return err
 		}
 	} else {
-		logger.WithField("handler", "minted events").Debug("no events found")
+		logger.WithField("handler", "minted erc721").Debug("no events found")
 	}
 
 	return nil
@@ -245,8 +247,8 @@ func (u Storable) storeEvents(tx *sql.Tx, events []DeployedEvent) error {
 	return nil
 }
 
-func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent) error {
-	stmt, err := tx.Prepare(pq.CopyIn("minted_nfts", "tx_hash", "tx_index", "log_index", "token_id", "token_uri", "receiver", "contract_address", "block_timestamp", "included_in_block"))
+func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent, ethBatch *ethrpc.ETH) error {
+	stmt, err := tx.Prepare(pq.CopyIn("minted_nfts", "tx_hash", "tx_index", "log_index", "token_id", "token_uri", "receiver", "contract_address", "block_timestamp", "included_in_block", "creator"))
 	if err != nil {
 		return err
 	}
@@ -262,7 +264,11 @@ func (u Storable) storeMintedEvents(tx *sql.Tx, events []MintedEvent) error {
 	}
 
 	for _, e := range events {
-		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenID, e.TokenURI, e.Receiver, e.ContractAddress, blockTimestamp, blockNumber)
+		txByHash, err := ethBatch.GetTransactionByHash(e.TransactionHash)
+		if err != nil {
+			return err
+		}
+		_, err = stmt.Exec(e.TransactionHash, e.TransactionIndex, e.LogIndex, e.TokenID, e.TokenURI, e.Receiver, e.ContractAddress, blockTimestamp, blockNumber, txByHash.From)
 		if err != nil {
 			return err
 		}
